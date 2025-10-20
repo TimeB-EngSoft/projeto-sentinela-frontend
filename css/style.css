@@ -401,3 +401,206 @@ footer .container {
     .form-buttons { flex-direction: column; }
     .form-buttons .btn { width: 100%; text-align: center; }
 }
+
+
+/* LOGIN PAGE STYLES */
+/* Seleciona QUALQUER elemento com a classe .login */
+.login {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Container Principal */
+.login-container {
+    display: flex;
+    width: 90%;
+    max-width: 1000px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Seção do Formulário (Esquerda) */
+.login-form {
+    flex: 1;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-form h1 {
+    font-size: 28px;
+    color: #D9534F; /* Tom de vermelho/laranja do título */
+    margin-bottom: 5px;
+}
+
+.login-form .subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* Grupo de Input (Ícone + Campo) */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 12px 12px 40px; /* Espaço para o ícone */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #D9534F;
+}
+
+/* Link "Esqueci minha senha" */
+.forgot-password {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    text-decoration: none;
+    margin-bottom: 25px;
+}
+
+/* Botão de Login */
+.btn-login {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background-image: linear-gradient(to right, #e06846, #c74844);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.btn-login:hover {
+    opacity: 0.9;
+}
+
+/* Caixa de Informação Demo */
+.demo-info {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 30px;
+    font-size: 12px;
+}
+
+.demo-info p {
+    margin-bottom: 10px;
+}
+
+.demo-info ul {
+    list-style: none;
+    padding-left: 15px;
+    color: #555;
+}
+
+.demo-info ul li {
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.demo-info ul li::before {
+    content: '•';
+    position: absolute;
+    left: -15px;
+    color: #D9534F;
+}
+
+.demo-info .small-text {
+    font-size: 11px;
+    color: #888;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+/* Links do Rodapé */
+.footer-links {
+    margin-top: auto; /* Empurra para o final */
+    padding-top: 20px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.footer-links a {
+    color: #D9534F;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.footer-links .back-link {
+    display: block;
+    margin-top: 10px;
+    color: #777;
+    font-weight: 400;
+}
+
+
+body .login{
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+
+/* Seção da Ilustração (Direita) */
+.login-illustration {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fdf5f3; /* Cor de fundo suave para combinar */
+}
+
+.login-illustration img {
+    max-width: 90%;
+    height: auto;
+}
+
+/* Responsividade para Telas Menores */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .login-illustration {
+        display: none; /* Esconde a ilustração em telas pequenas */
+    }
+    .login-form {
+        padding: 40px 20px;
+    }
+}

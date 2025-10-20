@@ -74,3 +74,33 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 });
+
+// Seleciona o formulário de login
+const loginForm = document.getElementById('form-login');
+
+// Adiciona um "ouvinte" para o evento de envio do formulário
+loginForm.addEventListener('submit', function(event) {
+    // Previne o comportamento padrão do formulário (que é recarregar a página)
+    event.preventDefault();
+
+    // Pega os valores dos campos de email e senha
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    // Validação simples: verifica se os campos não estão vazios
+    if (email.trim() === '' || password.trim() === '') {
+        alert('Por favor, preencha todos os campos.');
+        return; // Para a execução se a validação falhar
+    }
+
+    // Se a validação passar, você pode prosseguir
+    // Aqui, estamos apenas exibindo uma mensagem de sucesso no console
+    console.log('Tentativa de login com:');
+    console.log('Email/CPF:', email);
+    console.log('Senha:', password);
+
+    alert('Login realizado com sucesso! (Demonstração)');
+    
+    // Em um sistema real, aqui você faria uma chamada para a API do seu backend
+    // para verificar as credenciais do usuário.
+});
