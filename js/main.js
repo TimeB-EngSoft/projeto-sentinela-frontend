@@ -104,3 +104,37 @@ loginForm.addEventListener('submit', function(event) {
     // Em um sistema real, aqui você faria uma chamada para a API do seu backend
     // para verificar as credenciais do usuário.
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('accessForm');
+    const requiredFields = form.querySelectorAll('[required]');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Impede o envio padrão do formulário
+
+        let isValid = true;
+
+        // Remove erros antigos
+        requiredFields.forEach(field => {
+            field.classList.remove('error');
+        });
+
+        // Validação dos campos
+        requiredFields.forEach(field => {
+            // .trim() remove espaços em branco do início e do fim
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('error'); // Adiciona borda vermelha
+            }
+        });
+
+        if (isValid) {
+            // Se tudo estiver certo, exibe um alerta de sucesso
+            alert('Solicitação enviada com sucesso! Aguarde a análise.');
+            form.reset(); // Limpa o formulário
+        } else {
+            // Se houver erros, exibe um alerta de erro
+            alert('Por favor, preencha todos os campos obrigatórios (*).');
+        }
+    });
+});

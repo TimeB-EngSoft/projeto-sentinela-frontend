@@ -604,3 +604,146 @@ body .login{
         padding: 40px 20px;
     }
 }
+
+/* CADASTRAR PAGE STYLES */
+.cadastrar {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* CONTÊINER PRINCIPAL */
+.access-container {
+    display: flex;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    max-width: 1100px;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* SEÇÃO DO FORMULÁRIO (ESQUERDA) */
+.form-section {
+    flex-basis: 50%;
+    padding: 40px 50px;
+}
+
+.form-section h1 {
+    color: #d15c38;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.form-section .subtitle {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* GRUPOS DE FORMULÁRIO */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+/* ESTILOS DE INPUT, SELECT E TEXTAREA */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #aaa;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #d15c38;
+    box-shadow: 0 0 0 3px rgba(209, 92, 56, 0.15);
+}
+
+/* CLASSE DE ERRO PARA VALIDAÇÃO */
+.form-group .error {
+    border-color: #e74c3c;
+}
+.form-group .error:focus {
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+/* BOTÃO DE ENVIO */
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #4d2b1f, #8c4d38);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    margin-top: 10px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(77, 43, 31, 0.3);
+}
+
+/* LINK DE VOLTAR */
+.back-link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+}
+
+.back-link a {
+    color: #666;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.back-link a:hover {
+    color: #d15c38;
+}
+
+
+/* SEÇÃO DA ILUSTRAÇÃO (DIREITA) */
+.illustration-section {
+    flex-basis: 50%;
+    background-color: #fffbf9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.illustration-section img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}

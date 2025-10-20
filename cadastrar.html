@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Acesso</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="cadastrar">
+
+    <main class="access-container">
+        <div class="form-section">
+            <h1>Solicitar Acesso</h1>
+            <p class="subtitle">Preencha os dados abaixo para solicitar acesso. Sua solicitação será analisada por um superior.</p>
+
+            <form id="accessForm" novalidate>
+                <div class="form-group">
+                    <label for="accessLevel">Nível de Acesso Solicitado *</label>
+                    <select id="accessLevel" name="accessLevel" required>
+                        <option value="" disabled selected>Selecione seu nível de Acesso</option>
+                        <option value="leitor">Leitor</option>
+                        <option value="editor">Editor</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Nome Completo *</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Nome do Usuário" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" placeholder="usuario@gmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="institution">Instituição</label>
+                    <input type="text" id="institution" name="institution" placeholder="Nome da instituição">
+                </div>
+
+                <div class="form-group">
+                    <label for="department">Departamento / Setor</label>
+                    <input type="text" id="department" name="department" placeholder="Departamento ou setor">
+                </div>
+
+                <div class="form-group">
+                    <label for="justification">Justificativa *</label>
+                    <textarea id="justification" name="justification" rows="4" placeholder="Descreva o motivo da sua solicitação" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Enviar Solicitação</button>
+            </form>
+
+            <p class="back-link">
+                <a href="login.html">&larr; Voltar para página de login</a>
+            </p>    
+        </div>
+
+        <div class="illustration-section">
+            <img src="assets/images/imagem1.png" alt="Ilustração de pessoas trabalhando em computadores com gráficos e dados agrícolas.">
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
