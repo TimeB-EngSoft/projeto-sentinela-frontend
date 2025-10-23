@@ -35,3 +35,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// RECUPERAR SENHA JS
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('recovery-form');
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
+
+    // Função para validar o formato do e-mail
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(String(email).toLowerCase());
+    };
+
+    // Função para mostrar erro
+    const showError = (message) => {
+        emailError.textContent = message;
+        emailInput.classList.add('error');
+    };
+
+    // Função para limpar o erro
+    const clearError = () => {
+        emailError.textContent = '';
+        emailInput.classList.remove('error');
+    };
+
+    // Adiciona o listener para o envio do formulário
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Previne o recarregamento da página
+        clearError();
+
+        const email = emailInput.value.trim();
+
+        // Validação
+        if (email === '') {
+            showError('O campo de email é obrigatório.');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            showError('Por favor, insira um endereço de email válido.');
+            return;
+        }
+
+        // Se a validação passar, simula o envio
+        alert(`Instruções de recuperação enviadas para ${email}! Por favor, verifique sua caixa de entrada.`);
+        form.reset(); // Limpa o formulário
+    });
+
+    // Limpa o erro enquanto o usuário digita
+    emailInput.addEventListener('input', clearError);
+});
