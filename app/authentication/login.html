@@ -4,32 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área Restrita - Login</title>
-    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body class="login">
-    <div class="login-container">
-        <div class="login-form">
+<body class="auth-layout">
+    <div class="auth-container">
+        <div class="auth-form-section">
             <h1>Área Restrita</h1>
             <p class="subtitle">Sistema de Monitoramento de Conflitos Agrários</p>
             
             <form id="form-login">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="email" placeholder="E-mail ou CPF" required>
+                <div class="form-group">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="email" placeholder="E-mail ou CPF" required>
+                    </div>
                 </div>
                 
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Senha" required>
+                <div class="form-group">
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Senha" required>
+                    </div>
                 </div>
                 
                 <a href="recuperar_senha.html" class="forgot-password">Esqueci minha senha</a>
 
-              <button type="submit" class="btn-login">Entrar no Sistema</button>
+              <button type="submit" class="btn btn-primary">Entrar no Sistema</button>
                
             </form>
             
@@ -50,7 +54,7 @@
             </div>
         </div>
         
-        <div class="login-illustration">
+        <div class="auth-illustration-section">
             <img src="../../assets/images/imagem1.png" alt="Ilustração de um sistema de monitoramento com pessoas trabalhando em computadores com gráficos.">
         </div>
     </div>
