@@ -1,4 +1,5 @@
-import { requestAccess } from './services/apiService.js';
+// Importa a nova função correta do nosso serviço
+import { cadastrarParcial } from './services/apiService.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     const accessForm = document.getElementById('accessForm');
@@ -8,12 +9,18 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             const submitButton = accessForm.querySelector('button[type="submit"]');
 
-            // Coleta dos dados do formulário
-            const formData = new FormData(accessForm);
-            const accessData = Object.fromEntries(formData.entries());
+            // Mapeamento dos campos do HTML para o que o back-end espera
+            const partialData = {
+                nome: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                instituicao: document.getElementById('institution').value,
+                // O campo 'cargo' no back-end parece corresponder a 'department' no front-end
+                cargo: document.getElementById('department').value, 
+                justificativa: document.getElementById('justification').value
+            };
 
-            // Validação simples (pode ser melhorada)
-            if (!accessData.accessLevel || !accessData.fullName || !accessData.email || !accessData.justification) {
+            // Validação simples
+            if (!partialData.nome || !partialData.email || !partialData.justificativa) {
                 alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
             }
@@ -22,9 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Enviando...';
 
             try {
-                // Chama a API para solicitar acesso
-                const result = await requestAccess(accessData);
-                alert(result.message || 'Solicitação enviada com sucesso! Você será notificado por e-mail após a análise.');
+                // Chama a nova função da API
+                const result = await cadastrarParcial(partialData);
+                alert(result); // O back-end retorna uma string, então exibimos diretamente
                 accessForm.reset();
             } catch (error) {
                 console.error('Erro ao solicitar acesso:', error);

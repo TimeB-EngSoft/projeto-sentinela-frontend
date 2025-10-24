@@ -1,73 +1,81 @@
 /**
- * URL base da sua API. Mude para o endereço do seu servidor.
- * Se estiver rodando localmente, pode ser 'http://localhost:3000/api'.
+ * URL base do seu servidor. O endpoint específico (ex: /auth) será adicionado em cada função.
  */
-const API_BASE_URL = 'http://localhost:8080/api'; // Exemplo de URL base
+const API_BASE_URL = 'http://localhost:8080';
 
 /**
- * Função para lidar com as respostas da API, tratando sucessos e erros.
+ * Função aprimorada para lidar com respostas da API que podem ser JSON ou texto.
  * @param {Response} response - O objeto de resposta da fetch API.
- * @returns {Promise<any>} - Retorna os dados em JSON se a resposta for bem-sucedida.
- * @throws {Error} - Lança um erro com a mensagem do servidor se houver falha.
  */
 async function handleResponse(response) {
-    // Converte a resposta para JSON
-    const data = await response.json();
-
-    if (response.ok) {
-        // Se a resposta tiver status 2xx (sucesso), retorna os dados
+    // Clona a resposta para poder ler o corpo de duas formas diferentes se necessário
+    const resClone = response.clone();
+    try {
+        // Tenta converter a resposta para JSON
+        const data = await response.json();
+        if (!response.ok) return Promise.reject(data);
         return data;
-    } else {
-        // Se houver erro, rejeita a promise com a mensagem de erro do back-end
-        return Promise.reject(data);
+    } catch (e) {
+        // Se falhar (porque não é JSON), tenta ler como texto
+        const textData = await resClone.text();
+        if (!resClone.ok) return Promise.reject({ message: textData });
+        return textData; // Retorna o texto puro em caso de sucesso (ex: login)
     }
 }
 
 /**
- * Envia uma requisição de login para o back-end.
+ * Envia uma requisição de login para o back-end usando FormData.
+ * Corresponde a: @PostMapping("/login") com @RequestParam
  * @param {string} email - O email ou CPF do usuário.
- * @param {string} password - A senha do usuário.
- * @returns {Promise<any>} - A resposta da API.
+ * @param {string} senha - A senha do usuário.
  */
-export async function loginUser(email, password) {
+export async function loginUser(email, senha) {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('senha', senha);
+
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }), // Envia os dados como JSON
+        body: formData, // Envia como FormData, não JSON
     });
     return handleResponse(response);
 }
 
 /**
- * Envia uma solicitação para solicitar acesso (cadastro).
- * @param {object} accessData - Os dados do formulário de solicitação de acesso.
- * @returns {Promise<any>} - A resposta da API.
+ * Envia uma solicitação de cadastro parcial.
+ * Corresponde a: @PostMapping("/cadastrar-parcial") com @RequestParam
+ * @param {object} partialData - Objeto com nome, email, instituicao, cargo, justificativa.
  */
-export async function requestAccess(accessData) {
-    const response = await fetch(`${API_BASE_URL}/users/request-access`, {
+export async function cadastrarParcial(partialData) {
+    const formData = new FormData();
+    formData.append('nome', partialData.nome);
+    formData.append('email', partialData.email);
+    formData.append('instituicao', partialData.instituicao);
+    formData.append('cargo', partialData.cargo);
+    formData.append('justificativa', partialData.justificativa);
+
+    const response = await fetch(`${API_BASE_URL}/auth/cadastrar-parcial`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(accessData),
+        body: formData,
     });
     return handleResponse(response);
 }
+
 
 /**
  * Envia uma solicitação de recuperação de senha.
+ * Corresponde a: @PostMapping("/recuperar") com @RequestParam
  * @param {string} email - O email para o qual enviar as instruções.
- * @returns {Promise<any>} - A resposta da API.
  */
 export async function recoverPassword(email) {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const formData = new FormData();
+    formData.append('email', email);
+
+    const response = await fetch(`${API_BASE_URL}/auth/recuperar`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+        body: formData,
     });
     return handleResponse(response);
 }
+
+// Nota: A função 'redefinirSenha' também precisaria ser criada aqui quando você fizer essa tela.
