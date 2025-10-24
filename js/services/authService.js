@@ -1,88 +1,81 @@
-// Wait for the entire HTML document to be loaded before running the script
+// Importa as funções do nosso novo serviço de API
+import { loginUser, recoverPassword } from './apiService.js';
+
 document.addEventListener('DOMContentLoaded', function() {
-
-    // Select the form by its ID
+    // --- LÓGICA DE LOGIN ---
     const loginForm = document.getElementById('form-login');
-
-    // Check if the form actually exists on the page
     if (loginForm) {
-        // Add an event listener for the 'submit' event
-        loginForm.addEventListener('submit', function(event) {
-            
-            // Prevent the default form submission behavior (which reloads the page)
+        loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            // Get the values from the email and password input fields
             const emailInput = document.getElementById('email').value;
             const passwordInput = document.getElementById('password').value;
+            const submitButton = loginForm.querySelector('button[type="submit"]');
 
-            // --- Validation Logic ---
-            // .trim() removes any whitespace from the beginning or end of the string
-            if (emailInput.trim() !== '' && passwordInput.trim() !== '') {
-                // If both fields have content, proceed with the redirection.
-                
-                // For demonstration, show a success message
-                alert('Login bem-sucedido! Redirecionando...');
+            if (emailInput.trim() === '' || passwordInput.trim() === '') {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
 
-                // Redirect the user to the desired page.
-                // IMPORTANT: Adjust the path to your target file.
-                window.location.href = '../secretaria/secretaria.html';
+            // Desabilita o botão para evitar múltiplos cliques
+            submitButton.disabled = true;
+            submitButton.textContent = 'Entrando...';
 
-            } else {
-                // If either field is empty, show an error message
-                alert('Por favor, preencha os campos de e-mail e senha.');
+            try {
+                // Chama a função de login da API
+                const result = await loginUser(emailInput, passwordInput);
+
+                // Se o login for bem-sucedido, o back-end geralmente retorna um token
+                // Você deve salvar esse token (por exemplo, no localStorage)
+                if (result.token) {
+                    localStorage.setItem('authToken', result.token);
+                    alert('Login bem-sucedido! Redirecionando...');
+                    // Redireciona para a página principal do sistema
+                    window.location.href = '../secretaria/secretaria.html';
+                } else {
+                     alert('Ocorreu um erro inesperado. Tente novamente.');
+                }
+
+            } catch (error) {
+                // Se a API retornar um erro (ex: senha incorreta), ele será capturado aqui
+                console.error('Erro no login:', error);
+                alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
+            } finally {
+                // Reabilita o botão após a tentativa de login
+                submitButton.disabled = false;
+                submitButton.textContent = 'Entrar no Sistema';
             }
         });
     }
-});
 
-// RECUPERAR SENHA JS
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('recovery-form');
-    const emailInput = document.getElementById('email');
-    const emailError = document.getElementById('email-error');
+    // --- LÓGICA DE RECUPERAÇÃO DE SENHA ---
+    const recoveryForm = document.getElementById('recovery-form');
+    if (recoveryForm) {
+        recoveryForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('email').value;
+            const submitButton = recoveryForm.querySelector('button[type="submit"]');
 
-    // Função para validar o formato do e-mail
-    const validateEmail = (email) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(String(email).toLowerCase());
-    };
+            if (emailInput.trim() === '') {
+                alert('Por favor, digite seu e-mail.');
+                return;
+            }
 
-    // Função para mostrar erro
-    const showError = (message) => {
-        emailError.textContent = message;
-        emailInput.classList.add('error');
-    };
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
 
-    // Função para limpar o erro
-    const clearError = () => {
-        emailError.textContent = '';
-        emailInput.classList.remove('error');
-    };
-
-    // Adiciona o listener para o envio do formulário
-    form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Previne o recarregamento da página
-        clearError();
-
-        const email = emailInput.value.trim();
-
-        // Validação
-        if (email === '') {
-            showError('O campo de email é obrigatório.');
-            return;
-        }
-
-        if (!validateEmail(email)) {
-            showError('Por favor, insira um endereço de email válido.');
-            return;
-        }
-
-        // Se a validação passar, simula o envio
-        alert(`Instruções de recuperação enviadas para ${email}! Por favor, verifique sua caixa de entrada.`);
-        form.reset(); // Limpa o formulário
-    });
-
-    // Limpa o erro enquanto o usuário digita
-    emailInput.addEventListener('input', clearError);
+            try {
+                // Chama a função de recuperação de senha da API
+                const result = await recoverPassword(emailInput);
+                alert(result.message || 'Instruções de recuperação enviadas com sucesso! Verifique seu e-mail.');
+                recoveryForm.reset();
+            } catch (error) {
+                console.error('Erro na recuperação:', error);
+                alert(error.message || 'Não foi possível processar sua solicitação. Verifique o e-mail digitado.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Enviar Instruções';
+            }
+        });
+    }
 });
