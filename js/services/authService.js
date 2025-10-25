@@ -1,5 +1,5 @@
-// Importa as funções do nosso serviço de API atualizado
-import { loginUser, recoverPassword } from './apiService.js';
+// Importa TODAS as funções necessárias do serviço de API
+import { loginUser, recoverPassword, validateToken, resetPassword } from './apiService.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- LÓGICA DE LOGIN ---
@@ -91,14 +91,15 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Verificando...';
 
             try {
-                // Chama a API para validar o token
                 await validateToken(tokenInput);
-                // Se a API não retornar erro, o token é válido.
-                // Redireciona para a redefinição de senha, passando o token na URL.
+                // Em caso de sucesso, o redirecionamento ocorrerá
                 window.location.href = `redefinir_senha.html?token=${tokenInput}`;
             } catch (error) {
                 console.error('Erro na validação do token:', error);
                 alert(error.message || 'Token inválido ou expirado. Por favor, tente novamente.');
+            } finally {
+                // Este bloco executa sempre, garantindo que o botão seja reativado se o usuário
+                // não for redirecionado por algum motivo ou se a requisição falhar.
                 submitButton.disabled = false;
                 submitButton.textContent = 'Verificar Código';
             }

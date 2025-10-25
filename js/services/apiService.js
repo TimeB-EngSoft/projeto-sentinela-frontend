@@ -95,19 +95,22 @@ export async function validateToken(token) {
 }
 
 /**
- * Redefine a senha do usuário usando um token válido.
- * Corresponde a: @PostMapping("/redefinir-senha") com @RequestParam
+ * Envia o token e a nova senha para o backend para finalizar a redefinição.
+ * CORRIGIDO para incluir o API_BASE_URL e usar handleResponse para consistência.
  * @param {string} token - O token de validação.
- * @param {string} novaSenha - A nova senha a ser definida.
+ * @param {string} newPassword - A nova senha digitada pelo usuário.
  */
-export async function resetPassword(token, novaSenha) {
+export async function resetPassword(token, newPassword) {
     const formData = new FormData();
     formData.append('token', token);
-    formData.append('senha', novaSenha);
+    formData.append('novaSenha', newPassword); // O nome 'novaSenha' deve ser idêntico ao do @RequestParam
 
-    const response = await fetch(`${API_BASE_URL}/auth/redefinir-senha`, {
+    // A chamada agora é feita para a URL completa e correta
+    const response = await fetch(`${API_BASE_URL}/auth/redefinir`, {
         method: 'POST',
-        body: formData,
+        body: formData, // Envia como FormData, que é esperado pelo @RequestParam
     });
+    
+    // Utiliza a sua função padrão de tratamento de resposta
     return handleResponse(response);
 }
