@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Mapeamento dos campos do HTML para o que o back-end espera
             const partialData = {
+                cargo: document.getElementById('accessLevel').value,
                 nome: document.getElementById('fullName').value,
                 email: document.getElementById('email').value,
                 instituicao: document.getElementById('institution').value,
-                // O campo 'cargo' no back-end parece corresponder a 'department' no front-end
-                cargo: document.getElementById('department').value, 
+                departamento: document.getElementById('department').value,
                 justificativa: document.getElementById('justification').value
             };
 
