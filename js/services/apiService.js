@@ -78,4 +78,36 @@ export async function recoverPassword(email) {
     return handleResponse(response);
 }
 
-// Nota: A função 'redefinirSenha' também precisaria ser criada aqui quando você fizer essa tela.
+/**
+ * Valida um token de recuperação de senha.
+ * Corresponde a: @PostMapping("/validar-token") com @RequestParam
+ * @param {string} token - O token a ser validado.
+ */
+export async function validateToken(token) {
+    const formData = new FormData();
+    formData.append('token', token);
+
+    const response = await fetch(`${API_BASE_URL}/auth/validar-token`, {
+        method: 'POST',
+        body: formData,
+    });
+    return handleResponse(response);
+}
+
+/**
+ * Redefine a senha do usuário usando um token válido.
+ * Corresponde a: @PostMapping("/redefinir-senha") com @RequestParam
+ * @param {string} token - O token de validação.
+ * @param {string} novaSenha - A nova senha a ser definida.
+ */
+export async function resetPassword(token, novaSenha) {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('senha', novaSenha);
+
+    const response = await fetch(`${API_BASE_URL}/auth/redefinir-senha`, {
+        method: 'POST',
+        body: formData,
+    });
+    return handleResponse(response);
+}

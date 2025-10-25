@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha</title>
+    <link rel="stylesheet" href="../../css/auth.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-layout">
+    <main class="auth-container">
+        <div class="auth-form-section">
+            <h1>Crie sua Nova Senha</h1>
+            <p class="subtitle">Sua nova senha deve ser forte e diferente da anterior.</p>
+
+            <form id="reset-password-form" novalidate>
+                <input type="hidden" id="reset-token" name="token">
+
+                <div class="form-group">
+                    <label for="nova-senha">Nova Senha *</label>
+                    <input type="password" id="nova-senha" name="nova-senha" placeholder="********" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmar-senha">Confirme a Nova Senha *</label>
+                    <input type="password" id="confirmar-senha" name="confirmar-senha" placeholder="********" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
+            </form>
+
+            <div class="footer-links">
+                <a href="login.html" class="back-link">&larr; Voltar para página login</a>
+            </div>
+        </div>
+
+        <div class="auth-illustration-section">
+            <img src="../../assets/images/imagem1.png" alt="Ilustração de pessoas trabalhando em computadores com gráficos e dados agrícolas.">
+        </div>
+    </main>
+
+    <script type="module" src="../../js/services/authService.js"></script>
+
+</body>
+</html>

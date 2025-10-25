@@ -60,16 +60,97 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Enviando...';
 
             try {
-                // Chama a função de recuperação (que agora envia FormData e usa a URL correta)
                 const resultMessage = await recoverPassword(emailInput);
                 alert(resultMessage);
-                recoveryForm.reset();
+                // Após o sucesso, redireciona para a tela de inserir o token
+                window.location.href = 'inserir_token.html';
             } catch (error) {
                 console.error('Erro na recuperação:', error);
                 alert(error.message || 'Não foi possível processar sua solicitação. Verifique o e-mail digitado.');
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enviar Instruções';
+            }
+        });
+    }
+
+    // --- LÓGICA DE VALIDAÇÃO DE TOKEN ---
+    const tokenForm = document.getElementById('token-form');
+    if (tokenForm) {
+        tokenForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const tokenInput = document.getElementById('token').value;
+            const submitButton = tokenForm.querySelector('button[type="submit"]');
+
+            if (tokenInput.trim().length < 6) {
+                alert('Por favor, insira um token válido.');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Verificando...';
+
+            try {
+                await validateToken(tokenInput);
+                // Se o token for válido, redireciona para a redefinição de senha, passando o token na URL
+                window.location.href = `redefinir_senha.html?token=${tokenInput}`;
+            } catch (error) {
+                console.error('Erro na validação do token:', error);
+                alert(error.message || 'Token inválido ou expirado. Tente novamente.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Verificar Código';
+            }
+        });
+    }
+
+    // --- LÓGICA DE REDEFINIÇÃO DE SENHA ---
+    const resetPasswordForm = document.getElementById('reset-password-form');
+    if (resetPasswordForm) {
+        // Pega o token da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Se não houver token, impede o prosseguimento e redireciona
+        if (!token) {
+            alert('Token de redefinição não encontrado. Por favor, inicie o processo novamente.');
+            window.location.href = 'recuperar_senha.html';
+            return;
+        }
+
+        // Armazena o token no campo hidden do formulário
+        document.getElementById('reset-token').value = token;
+
+        resetPasswordForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const newPassword = document.getElementById('nova-senha').value;
+            const confirmPassword = document.getElementById('confirmar-senha').value;
+            const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
+
+            if (newPassword.trim() === '' || confirmPassword.trim() === '') {
+                alert('Por favor, preencha os dois campos de senha.');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('As senhas não coincidem.');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
+
+            try {
+                const resultMessage = await resetPassword(token, newPassword);
+                alert(resultMessage);
+                // Redireciona para o login após o sucesso
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao redefinir a senha:', error);
+                alert(error.message || 'Não foi possível redefinir sua senha. O token pode ter expirado.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Nova Senha';
             }
         });
     }
