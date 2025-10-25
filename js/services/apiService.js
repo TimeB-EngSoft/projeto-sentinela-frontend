@@ -114,3 +114,14 @@ export async function resetPassword(token, newPassword) {
     // Utiliza a sua função padrão de tratamento de resposta
     return handleResponse(response);
 }
+
+/**
+ * Envia uma requisição de logout para o back-end.
+ * Corresponde a: @PostMapping("/logout")
+ */
+export async function logoutUser() {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+    });
+    return handleResponse(response);
+}

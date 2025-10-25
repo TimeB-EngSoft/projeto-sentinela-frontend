@@ -1,5 +1,8 @@
-document.addEventListener('DOMContentLoaded', function() {
+import { logoutUser } from '../services/apiService.js';
 
+document.addEventListener('DOMContentLoaded', function() {
+    
+    
     // Lógica para o menu hambúrguer em telas móveis
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.querySelector('.sidebar');

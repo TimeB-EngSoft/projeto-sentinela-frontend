@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Saída - Sentinela</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="../../css/logout.css">
+</head>
+<body class="auth-layout">
+
+    <div class="auth-container">
+        <div class="auth-form-section">
+            <h1><i class="fas fa-sign-out-alt"></i> Encerrar Sessão</h1>
+            <p class="subtitle">Você tem certeza que deseja sair do sistema?</p>
+            
+            <div class="action-buttons">
+                <button id="cancel-logout-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="confirm-logout-btn" class="btn btn-danger">Sim, Sair</button>
+            </div>
+        </div>
+
+        <div class="auth-illustration-section">
+            <img src="../../assets/images/bye.png" alt="Ilustração de uma pessoa saindo por uma porta">
+        </div>
+    </div>
+
+    <script type="module" src="../../js/pages/logout.js"></script>
+</body>
+</html>
