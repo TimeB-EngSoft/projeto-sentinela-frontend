@@ -1,7 +1,7 @@
 /**
  * URL base do seu servidor. O endpoint específico (ex: /auth) será adicionado em cada função.
  */
-const API_BASE_URL = 'http://54.87.40.120:8080';
+const API_BASE_URL = 'https://sentinelasjdh.site';
 
 /**
  * Função aprimorada para lidar com respostas da API que podem ser JSON ou texto.
