@@ -1,7 +1,7 @@
 /**
  * URL base do seu servidor. O endpoint específico (ex: /auth) será adicionado em cada função.
  */
-const API_BASE_URL = 'https://sentinelasjdh.site';
+const API_BASE_URL = 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com/';
 
 /**
  * Função aprimorada para lidar com respostas da API que podem ser JSON ou texto.
@@ -34,7 +34,7 @@ export async function loginUser(email, senha) {
     formData.append('email', email);
     formData.append('senha', senha);
 
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}auth/login`, {
         method: 'POST',
         body: formData, // Envia como FormData, não JSON
     });
@@ -54,7 +54,7 @@ export async function cadastrarParcial(partialData) {
     formData.append('cargo', partialData.cargo);
     formData.append('justificativa', partialData.justificativa);
 
-    const response = await fetch(`${API_BASE_URL}/auth/cadastrar-parcial`, {
+    const response = await fetch(`${API_BASE_URL}auth/cadastrar-parcial`, {
         method: 'POST',
         body: formData,
     });
@@ -71,7 +71,7 @@ export async function recoverPassword(email) {
     const formData = new FormData();
     formData.append('email', email);
 
-    const response = await fetch(`${API_BASE_URL}/auth/recuperar`, {
+    const response = await fetch(`${API_BASE_URL}auth/recuperar`, {
         method: 'POST',
         body: formData,
     });
@@ -87,7 +87,7 @@ export async function validateToken(token) {
     const formData = new FormData();
     formData.append('token', token);
 
-    const response = await fetch(`${API_BASE_URL}/auth/validar-token`, {
+    const response = await fetch(`${API_BASE_URL}auth/validar-token`, {
         method: 'POST',
         body: formData,
     });
@@ -106,7 +106,7 @@ export async function resetPassword(token, newPassword) {
     formData.append('novaSenha', newPassword); // O nome 'novaSenha' deve ser idêntico ao do @RequestParam
 
     // A chamada agora é feita para a URL completa e correta
-    const response = await fetch(`${API_BASE_URL}/auth/redefinir`, {
+    const response = await fetch(`${API_BASE_URL}auth/redefinir`, {
         method: 'POST',
         body: formData, // Envia como FormData, que é esperado pelo @RequestParam
     });
@@ -120,7 +120,7 @@ export async function resetPassword(token, newPassword) {
  * Corresponde a: @PostMapping("/logout")
  */
 export async function logoutUser() {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    const response = await fetch(`${API_BASE_URL}auth/logout`, {
         method: 'POST',
     });
     return handleResponse(response);
