@@ -216,6 +216,45 @@ header nav a:hover {
     line-height: 1.6;
 }
 
+/* PARTNERS SECTION */
+#partners {
+    padding: 80px 0;
+    text-align: center;
+}
+
+#partners h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+#partners > .container > p {
+    max-width: 700px;
+    margin: 0 auto 50px;
+    color: var(--dark-text);
+}
+
+.partners-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    flex-wrap: wrap;
+}
+
+.partner-logo img {
+    max-height: 150px; /* Tamanho da logo aumentado */
+    max-width: 100%;
+    filter: grayscale(100%);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.partner-logo:hover img {
+    filter: grayscale(0);
+    opacity: 1;
+    transform: scale(1.05);
+}
+
 /* REPORT FORM SECTION */
 #report-form {
     padding: 80px 0;
