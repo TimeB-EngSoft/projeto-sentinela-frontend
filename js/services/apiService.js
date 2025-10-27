@@ -1,7 +1,7 @@
 /**
  * URL base do seu servidor. O endpoint específico (ex: /auth) será adicionado em cada função.
  */
-const API_BASE_URL = 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com/';
+const API_BASE_URL = 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com';
 
 /**
  * Função aprimorada para lidar com respostas da API que podem ser JSON ou texto.
