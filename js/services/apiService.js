@@ -1,5 +1,5 @@
-// const API_BASE_URL = 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com';
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com';
+//const API_BASE_URL = 'http://localhost:5000';
 
 async function handleResponse(response) {
     const resClone = response.clone();
