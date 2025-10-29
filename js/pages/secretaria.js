@@ -1,7 +1,32 @@
 import { logoutUser } from '../services/apiService.js';
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+    // Função para carregar dados do usuário no cabeçalho
+    function loadHeaderUserData() {
+        const userName = localStorage.getItem('userName');
+        const userCargo = localStorage.getItem('userCargo');
+
+        if (userName) {
+            document.getElementById('headerUserName').textContent = userName;
+        } else {
+            document.getElementById('headerUserName').textContent = 'Usuário';
+        }
+
+        if (userCargo) {
+            document.getElementById('headerUserRole').textContent = userCargo;
+        }
+
+        // Simples inicial para o avatar
+        const avatar = document.getElementById('headerUserAvatar');
+        if (userName && avatar) {
+            const inicial = userName.charAt(0).toUpperCase();
+            avatar.innerHTML = `<span>${inicial}</span>`;
+            avatar.classList.remove('avatar-placeholder');
+        }
+    }
+
+    // Chama a função ao carregar a página
+    loadHeaderUserData();
     
     // Lógica para o menu hambúrguer em telas móveis
     const menuToggle = document.getElementById('menu-toggle');

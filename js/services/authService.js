@@ -22,22 +22,25 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Entrando...';
 
             try {
-                const response = await loginUser(email, senha);
+                // A função loginUser agora retorna o objeto do usuário diretamente
+                const usuario = await loginUser(email, senha);
 
                 // Salva os dados do usuário logado no localStorage
-                if (response.user) {
-                    localStorage.setItem('userId', response.user.id);
-                    localStorage.setItem('userName', response.user.nome);
-                    localStorage.setItem('userEmail', response.user.email);
-                    localStorage.setItem('userCargo', response.user.cargo);
-                    localStorage.setItem('userInstituicao', response.user.instituicao);
-                }
+                // CORREÇÃO: Acessamos as propriedades diretamente do objeto 'usuario'
+                localStorage.setItem('userId', usuario.id);
+                localStorage.setItem('userName', usuario.nome);
+                localStorage.setItem('userEmail', usuario.email);
+                localStorage.setItem('userCargo', usuario.cargo);
+                // Acessa o nome da instituição de forma segura
+                localStorage.setItem('userInstituicao', usuario.instituicao?.nome || '');
 
-                alert(response.message || 'Login efetuado com sucesso!');
+                alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
+                
                 // Redireciona para a página principal do sistema
                 window.location.href = '../secretaria/secretaria.html';
 
             } catch (error) {
+                // A mensagem de erro agora vem da propriedade 'message' do JSON
                 alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
             } finally {
                 submitButton.disabled = false;

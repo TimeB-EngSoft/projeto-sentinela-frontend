@@ -16,7 +16,7 @@
                 <img src="../../assets/images/logo.png" alt="Logo Sentinela" class="sidebar__logo">
                 <div class="sidebar__title">
                     <h1>SENTINELA</h1>
-                    <p>Meu Perfil</p>
+                    <p>Painel Secretaria</p>
                 </div>
             </div>
             <nav class="sidebar__nav">
@@ -52,7 +52,13 @@
                 </div>
                 <div class="header-user">
                     <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">2</span></button>
-                    <div class="user-avatar avatar-placeholder"><i class="fas fa-user"></i></div>
+                    
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                    </div>
                     <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
                 </div>
             </header>
@@ -66,28 +72,28 @@
                         <input type="file" id="uploadAvatar" accept="image/*">
                     </div>
                     <div class="profile-info">
-                        <h3 id="userName">Maria Souza</h3>
-                        <p id="userRole">Secretária de Direitos Humanos</p>
-                        <p id="userInstitution">SJDH - Governo de Pernambuco</p>
+                        <h3 id="profileName">Carregando...</h3>
+                        <p id="profileRole">Carregando...</p>
+                        <p id="profileInstitution">Carregando...</p>
                     </div>
                 </div>
 
                 <form class="profile-form">
                     <div class="form-group">
                         <label for="nome">Nome Completo</label>
-                        <input type="text" id="nome" value="Maria Souza">
+                        <input type="text" id="nome" placeholder="Digite seu nome completo">
                     </div>
                     <div class="form-group">
                         <label for="email">E-mail Institucional</label>
-                        <input type="email" id="email" value="maria.souza@sjdh.pe.gov.br">
+                        <input type="email" id="email" placeholder="Digite seu e-mail institucional">
                     </div>
                     <div class="form-group">
                         <label for="cargo">Cargo</label>
-                        <input type="text" id="cargo" value="Secretária de Direitos Humanos">
+                        <input type="text" id="cargo" placeholder="Digite seu cargo">
                     </div>
                     <div class="form-group">
                         <label for="instituicao">Instituição</label>
-                        <input type="text" id="instituicao" value="Secretaria de Justiça e Direitos Humanos - PE">
+                        <input type="text" id="instituicao" placeholder="Digite sua instituição">
                     </div>
 
                     <div class="form-actions">
