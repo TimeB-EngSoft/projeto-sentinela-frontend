@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Sentinela</title>
+    <link rel="stylesheet" href="../../css/usuarios-sistema.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <img src="../../assets/images/logo.png" alt="Logo Sentinela" class="sidebar__logo">
+                <div class="sidebar__title">
+                    <h1>SENTINELA</h1>
+                    <p>Painel Secretaria</p>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <ul>
+                    <li class="nav-section-title">GESTÃO</li>
+                    <li><a href="secretaria.html"><i class="fas fa-home"></i> Visão Geral</a></li>
+                    <li><a href="gerenciar-gestores.html"><i class="fas fa-users-cog"></i> Gerenciar Gestores</a></li>
+                    <li><a href="gerenciar-instituicoes.html"><i class="fas fa-building"></i> Gerenciar Instituições</a></li>
+                    <li><a href="minha-equipe.html"><i class="fas fa-users"></i> Minha Equipe</a></li>
+                    <li class="active"><a href="#"><i class="fas fa-user-shield"></i> Usuários do Sistema</a></li>
+
+                    <li class="nav-section-title">MONITORAMENTO</li>
+                    <li><a href="#"><i class="fas fa-file-alt"></i> Gerenciar Denúncias</a></li>
+                    <li><a href="#"><i class="fas fa-exclamation-triangle"></i> Gerenciar Conflitos</a></li>
+                    <li><a href="#"><i class="fas fa-map-marked-alt"></i> Mapa Interativo</a></li>
+                    <li><a href="#"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+                    <li><a href="#"><i class="fas fa-shield-alt"></i> Auditoria</a></li>
+
+                    <li class="nav-section-title">SISTEMA</li>
+                    <li><a href="perfil.html"><i class="fas fa-user-circle"></i> Meu Perfil</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="../authentication/logout.html"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Usuários do Sistema</h2>
+                    <p>Gerencie usuários, aprovações e permissões</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3</span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                         <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                        <!-- <span id="headerUserRole" class="user-role"></span> -->
+                    </div>
+                    
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <div class="page-actions-bar-left">
+                <button class="btn btn-primary" id="inviteUserButton"><i class="fas fa-user-plus"></i> Convidar Usuário</button>
+            </div>
+
+            <section class="institution-search-bar">
+                <input type="text" placeholder="Buscar por nome, email ou instituição...">
+                <button class="btn btn-secondary"><i class="fas fa-search"></i> Buscar</button>
+            </section>
+
+            <section class="user-approvals-list">
+                <div class="section-header">
+                    <h3>Aprovações Pendentes</h3>
+                    <span class="badge">3 Pendentes</span>
+                </div>
+                
+                <div class="approval-card-list">
+                    <div class="approval-card card">
+                        <div class="avatar-initials" style="background-color: #fef8e5; color: #f0ad4e;">CE</div>
+                        <div class="user-card-info">
+                            <p>Carlos Eduardo Silva</p>
+                            <small>carlos.silva@incra.br</small>
+                            <small>INCRA</small>
+                            <small>Usuário Instituição</small>
+                        </div>
+                        <span class="user-card-time">Hoje - 14:30</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-secondary">Rejeitar</button>
+                            <button class="btn btn-primary">Aprovar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="approval-card card">
+                        <div class="avatar-initials" style="background-color: #fceeee; color: #d9534f;">AP</div>
+                        <div class="user-card-info">
+                            <p>Ana Paula Costa</p>
+                            <small>ana.costa@funai.br</small>
+                            <small>FUNAI</small>
+                            <small>Gestor Instituição</small>
+                        </div>
+                        <span class="user-card-time">Hoje - 10:15</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-secondary">Rejeitar</button>
+                            <button class="btn btn-primary">Aprovar</button>
+                        </div>
+                    </div>
+
+                    <div class="approval-card card">
+                        <div class="avatar-initials" style="background-color: #fceeee; color: #d9534f;">RA</div>
+                        <div class="user-card-info">
+                            <p>Roberto Almeida</p>
+                            <small>roberto@governo.br</small>
+                            <small>Gestor Secretaria</small>
+                        </div>
+                        <span class="user-card-time">Ontem - 16:45</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-secondary">Rejeitar</button>
+                            <button class="btn btn-primary">Aprovar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="user-active-list">
+                <div class="section-header">
+                    <h3>Usuários Ativos</h3>
+                    <span class="badge badge-neutral">24 Usuários</span>
+                </div>
+
+                <div class="active-user-list">
+                    <div class="active-user-card card">
+                        <div class="avatar-initials" style="background-color: #e6f7ec; color: #0d8a4f;">MS</div>
+                        <div class="user-card-info">
+                            <p>Maria Santos</p>
+                            <small>maria.santos@incra.br</small>
+                            <small>INCRA • Há 2 horas</small>
+                        </div>
+                        <div class="user-card-tags">
+                            <span class="tag tag-instituicao">Instituição</span>
+                        </div>
+                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+                    </div>
+
+                    <div class="active-user-card card">
+                        <div class="avatar-initials" style="background-color: #e6f7ec; color: #0d8a4f;">JS</div>
+                        <div class="user-card-info">
+                            <p>João Silva</p>
+                            <small>joao.silva@incra.br</small>
+                            <small>INCRA • Há 1 dia</small>
+                        </div>
+                        <div class="user-card-tags">
+                            <span class="tag tag-gestor-instituicao">Gestor Instituição</span>
+                        </div>
+                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+                    </div>
+
+                    <div class="active-user-card card">
+                        <div class="avatar-initials" style="background-color: #fceeee; color: #d9534f;">PL</div>
+                        <div class="user-card-info">
+                            <p>Patricia Lima</p>
+                            <small>patricia@secretaria.br</small>
+                            <small>Secretaria de Estado • Há 3 horas</small>
+                        </div>
+                        <div class="user-card-tags">
+                            <span class="tag tag-gestor-secretaria">Gestor Secretaria</span>
+                        </div>
+                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+                    </div>
+
+                    <div class="active-user-card card">
+                        <div class="avatar-initials" style="background-color: #fef8e5; color: #f0ad4e;">FC</div>
+                        <div class="user-card-info">
+                            <p>Fernando Costa</p>
+                            <small>fernando@governo.br</small>
+                            <small>Secretaria de Estado • Online</small>
+                        </div>
+                        <div class="user-card-tags">
+                            <span class="tag tag-secretaria">Secretaria</span>
+                        </div>
+                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
+                    </div>
+                </div>
+            </section>
+            
+            
+            
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="../../js/pages/secretaria.js"></script>
+
+</body>
+</html>

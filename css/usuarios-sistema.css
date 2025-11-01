@@ -1,0 +1,215 @@
+@import url('../../css/secretaria.css');
+
+/* ====================================================== */
+/* ===== NOVOS ESTILOS PARA USUÁRIOS DO SISTEMA (TELA 5) ===== */
+/* ====================================================== */
+
+/* Container para ações do header (NÃO usado nesta tela) */
+/* .header-actions { ... } */
+
+/* Barra de Ação (Abaixo do Header) - Alinhada à esquerda */
+.page-actions-bar-left {
+    display: flex;
+    justify-content: flex-start; /* Alinha à esquerda */
+    margin-bottom: 20px; /* Espaço antes da busca */
+    gap: 10px;
+}
+.page-actions-bar-left .btn {
+    width: auto; /* Corrige bug do mobile */
+}
+
+/* Barra de Busca (Estilo de "Gerenciar Instituições") */
+.institution-search-bar {
+    display: flex;
+    margin-bottom: 30px;
+    gap: 10px;
+}
+.institution-search-bar input {
+    flex-grow: 1;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background-color: var(--color-white);
+    font-family: 'Poppins', sans-serif;
+}
+.institution-search-bar .btn {
+    padding: 12px 20px;
+    flex-shrink: 0;
+    width: auto; /* Correção para o .btn { width: 50% } */
+}
+
+/* Tags */
+.tag {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-white);
+    white-space: nowrap;
+}
+.tag.tag-secretaria {
+    background-color: var(--color-tag-gestor-sec-bg);
+    color: var(--color-tag-gestor-sec-text);
+}
+.tag.tag-instituicao {
+    background-color: var(--color-tag-instituicao-bg);
+    color: var(--color-tag-instituicao-text);
+}
+.tag.tag-gestor-instituicao {
+    background-color: var(--color-tag-gestor-inst-bg);
+    color: var(--color-tag-gestor-inst-text);
+}
+.tag.tag-gestor-secretaria {
+    background-color: var(--color-tag-gestor-sec-bg);
+    color: var(--color-tag-gestor-sec-text);
+}
+
+/* Botões nos cards de usuário */
+.user-card-actions .btn {
+    width: auto; /* Correção para o .btn { width: 50% } */
+    padding: 8px 12px; /* Botões menores */
+    font-size: 0.85rem;
+}
+
+/* Cabeçalho das Seções (Aprovações, Ativos) */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    margin-top: 30px; /* Espaço entre seções */
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+}
+.section-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+}
+.badge.badge-neutral {
+    background-color: var(--color-border);
+    color: var(--color-text-light);
+}
+
+/* Listas de Cards */
+.approval-card-list,
+.active-user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Estilo unificado para os cards de usuário */
+.approval-card,
+.active-user-card {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
+    gap: 15px 20px; /* 15px vertical, 20px horizontal */
+}
+
+.avatar-initials {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.user-card-info {
+    flex-grow: 1;
+    min-width: 200px; /* Ajuda na quebra de linha */
+}
+.user-card-info p {
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+}
+.user-card-info small {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: block; /* Faz email e org/status ficarem em linhas separadas */
+}
+
+/* CORREÇÃO DE ALINHAMENTO DAS TAGS */
+.user-card-tags {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+    flex-wrap: wrap; 
+    min-width: 160px; /* Define largura mínima para alinhar */
+    justify-content: flex-start; /* Alinha a tag à esquerda */
+}
+
+.user-card-time {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.user-card-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 20px;
+    flex-shrink: 0;
+}
+
+/* Card de Usuário Ativo (apenas a diferença) */
+.active-user-card .icon-button {
+    margin-left: auto; /* Joga o "..." para o final */
+    width: auto; /* Correção para o .btn { width: 50% } */
+}
+
+/* Responsividade para os novos elementos */
+@media (max-width: 992px) {
+    /* Remove o alinhamento das tags em telas menores */
+    .user-card-tags {
+        min-width: auto; 
+    }
+}
+
+@media (max-width: 768px) {
+    .approval-card,
+    .active-user-card {
+        padding: 15px;
+        gap: 10px 15px;
+    }
+    .user-card-info {
+        min-width: 150px;
+    }
+    .user-card-time {
+        margin-left: 0; 
+        width: 100%;
+        order: 3; 
+        padding-left: 60px; /* (45px avatar + 15px gap) */
+        font-size: 0.85rem;
+    }
+    .user-card-actions {
+        margin-left: 0; 
+        width: 100%;
+        order: 4; 
+        padding-left: 60px;
+    }
+    .active-user-card .icon-button {
+        margin-left: auto;
+        order: 2; /* Coloca o "..." ao lado das tags */
+    }
+}
+
+@media (max-width: 576px) {
+    /* Garante que os botões de aprovação de usuário cresçam */
+    .user-card-actions .btn {
+        flex-grow: 1;
+        justify-content: center;
+    }
+}
