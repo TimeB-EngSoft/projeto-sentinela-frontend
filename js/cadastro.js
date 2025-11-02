@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             // Validação simples
-            if (!partialData.nome || !partialData.email || !partialData.justificativa) {
+            if (!partialData.nome || !partialData.email || !partialData.justificativa || !partialData.cargo) {
                 alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
             }

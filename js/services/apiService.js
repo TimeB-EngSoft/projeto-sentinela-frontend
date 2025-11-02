@@ -14,6 +14,32 @@ async function handleResponse(response) {
     }
 }
 
+/**
+ * Envia uma solicitação de cadastro parcial (solicitação de acesso).
+ * @param {object} partialData - Objeto contendo os dados do formulário.
+ */
+export async function cadastrarParcial(partialData) {
+    // O backend espera FormData porque usa @RequestParam
+    const formData = new FormData();
+    
+    // Mapeia os dados do objeto para o FormData
+    // Os nomes aqui (ex: 'cargo') devem ser idênticos aos @RequestParam no Java
+    formData.append('nome', partialData.nome);
+    formData.append('email', partialData.email);
+    formData.append('instituicao', partialData.instituicao);
+    formData.append('cargo', partialData.cargo); // 'cargo' é o nome esperado pelo backend
+    formData.append('justificativa', partialData.justificativa);
+    // Nota: 'departamento' não é enviado pois não é esperado pelo seu ControladorUser.java
+
+    const response = await fetch(`${API_BASE_URL}/user/cadastrar-parcial`, {
+        method: 'POST',
+        body: formData,
+    });
+    
+    // Reutiliza o handleResponse que já trata respostas de texto
+    return handleResponse(response);
+}
+
 export async function loginUser(email, senha) {
     const formData = new FormData();
     formData.append('email', email);
@@ -92,5 +118,47 @@ export async function getUserData(userId) {
     const response = await fetch(`${API_BASE_URL}/user/${userId}/informacoes`, {
         method: 'GET',
     });
+    return handleResponse(response);
+}
+
+/**
+ * Busca usuários com base em um status (ex: PENDENTE, ATIVO).
+ */
+export async function listUsersByStatus(status) {
+    const response = await fetch(`${API_BASE_URL}/user/listByStatus?status=${status}`, {
+        method: 'GET',
+    });
+    return handleResponse(response);
+}
+
+/**
+ * Aprova ou rejeita o cadastro de um usuário.
+ * @param {number} userId - O ID do usuário.
+ * @param {boolean} isApproved - true para aprovar, false para rejeitar.
+ */
+export async function approveOrRejectUser(userId, isApproved) {
+    const response = await fetch(`${API_BASE_URL}/user/${userId}/aprovar?aprovado=${isApproved}`, {
+        method: 'PATCH',
+    });
+    // O backend retorna uma string de sucesso, então handleResponse deve tratar isso
+    return handleResponse(response); 
+}
+
+/**
+ * Finaliza o cadastro de um usuário usando o token.
+ */
+export async function cadastrarCompleto(token, senha, telefone, dataNascimento, cpf) {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('senha', senha);
+    formData.append('telefone', telefone);
+    formData.append('dataNascimento', dataNascimento);
+    formData.append('cpf', cpf);
+
+    const response = await fetch(`${API_BASE_URL}/user/cadastrar-completo`, {
+        method: 'POST',
+        body: formData,
+    });
+    
     return handleResponse(response);
 }
