@@ -1,0 +1,200 @@
+/* Importação do CSS base (secretaria.css) */
+/* CAMINHO CORRIGIDO: Agora sobe apenas um nível (..) para a raiz e acessa a pasta css */
+@import url("secretaria.css");
+@import url("style.css");
+
+/* ======================================= */
+/* ESTILOS ESPECÍFICOS DE CONFIGURAÇÕES    */
+/* ======================================= */
+
+.config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 20px 0;
+}
+
+.config-card {
+    background-color: var(--color-white);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+}
+
+.config-card h3 {
+    color: var(--color-dark-brown);
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* --- Card de Perfil --- */
+
+.profile-card {
+    padding: 30px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+.profile-info h3 {
+    margin: 0 0 5px 0;
+    color: var(--color-primary);
+}
+
+.profile-info p {
+    margin: 0 0 5px 0;
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+}
+
+.btn-edit-profile {
+    margin-top: 15px;
+}
+
+/* --- Itens de Configuração --- */
+
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.config-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.config-item p {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 400;
+}
+
+/* --- Botão de Mudar Senha --- */
+
+.btn-change-password {
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+    border: none;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+.btn-change-password:hover {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* --- Estilo do Switch (Toggle) --- */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 25px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 17px;
+    width: 17px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: var(--color-primary);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--color-primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+/* Arredondamento do slider */
+.slider.round {
+    border-radius: 25px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* ======================================= */
+/* MEDIA QUERIES - Ajustes de Responsividade */
+/* ======================================= */
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .profile-info {
+        width: 100%;
+    }
+
+    .config-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .config-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .config-item p {
+        width: 100%;
+    }
+
+    .btn-change-password {
+        width: 100%;
+    }
+}

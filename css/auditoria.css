@@ -1,0 +1,265 @@
+/* Importação do CSS base (secretaria.css) */
+/* CAMINHO CORRIGIDO: Sobe um nível e acessa a pasta css */
+@import url("secretaria.css");
+@import url("style.css");
+
+/* ======================================= */
+/* ESTILOS ESPECÍFICOS DE AUDITORIA        */
+/* ======================================= */
+
+/* 1. Stats de Auditoria (Ajuste do Card) */
+.audit-card .stat-card__info span {
+    font-size: 2.2rem;
+    /* Levemente menor que o original */
+}
+
+.audit-card .stat-card__icon {
+    font-size: 2.5rem;
+    /* Ícones maiores */
+}
+
+/* Cores específicas para os ícones no stat card, mantendo o estilo */
+.stat-card:nth-child(1) .stat-card__icon {
+    color: var(--color-light-beige);
+}
+
+.stat-card:nth-child(2) .stat-card__icon {
+    color: var(--color-primary);
+    opacity: 0.7;
+}
+
+.stat-card:nth-child(3) .stat-card__icon {
+    color: #f0ad4e;
+}
+
+/* Aviso: Medium Priority */
+.stat-card:nth-child(4) .stat-card__icon {
+    color: #d9534f;
+}
+
+/* Erro: High Priority */
+
+
+/* 2. Logs de Auditoria - Card e Toolbar */
+.logs-section {
+    margin-bottom: 30px;
+}
+
+.logs-section .card-header {
+    margin-bottom: 15px;
+    /* Reduz espaço para caber o toolbar logo abaixo */
+}
+
+.logs-toolbar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    /* Para responsividade */
+}
+
+.search-box {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    max-width: 400px;
+    /* Limita a largura da busca */
+}
+
+.search-box i {
+    color: var(--color-text-light);
+    margin-right: 10px;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.filter-dropdown {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background-color: var(--color-white);
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-btn,
+.export-btn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+
+/* 3. Tabela de Logs */
+.logs-table-container {
+    overflow-x: auto;
+    /* Permite scroll horizontal em telas pequenas */
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 800px;
+    /* Garante que a tabela não fique muito estreita */
+}
+
+.logs-table thead th {
+    background-color: var(--color-off-white);
+    color: var(--color-text);
+    text-align: left;
+    padding: 12px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.logs-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+/* Estilo para as tags/badges na tabela (Módulo e Nível) */
+.module-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+}
+
+.level-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-white);
+    text-align: center;
+}
+
+/* Variações de cor para as tags de Nível */
+.level-tag.info {
+    background-color: #D14415;
+    /* low priority */
+}
+
+.level-tag.aviso {
+    background-color: #2E2115;
+    /* medium priority */
+}
+
+.level-tag.erro {
+    background-color: #DC2828;
+    /* high priority */
+}
+
+/* 4. Widgets Inferiores */
+.bottom-widgets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.frequency-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.frequency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.frequency-item:last-child {
+    border-bottom: none;
+}
+
+.frequency-item p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.frequency-badge {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 45px;
+    text-align: center;
+}
+
+/* Cores específicas dos badges de frequência */
+.frequency-list .frequency-item:nth-child(1) .frequency-badge {
+    background-color: var(--color-very-dark-brown);
+}
+
+.frequency-list .frequency-item:nth-child(2) .frequency-badge {
+    background-color: var(--color-dark-brown);
+}
+
+.frequency-list .frequency-item:nth-child(3) .frequency-badge {
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+}
+
+.frequency-list .frequency-item:nth-child(4) .frequency-badge {
+    background-color: #e0e0e0;
+    color: var(--color-text-light);
+}
+
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 992px) {
+    .logs-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        max-width: none;
+    }
+
+    .filter-dropdown {
+        width: 100%;
+    }
+
+    .bottom-widgets {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filter-btn,
+    .export-btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interativo - Painel Sentinela</title>
+    <link rel="stylesheet" href="../../css/mapa_interativo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar__header">
+                <img src="../../assets/images/logo.png" alt="Logo Sentinela" class="sidebar__logo">
+                <div class="sidebar__title">
+                    <h1>SENTINELA</h1>
+                    <p>Mapa Interativo</p>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <ul>
+                    <li class="nav-section-title">GESTÃO</li>
+                    <li><a href="#"><i class="fas fa-home"></i> Visão Geral</a></li>
+                    <li><a href="#"><i class="fas fa-users-cog"></i> Gerenciar Gestores <span class="notification-badge">1</span></a></li>
+                    <li><a href="#"><i class="fas fa-building"></i> Gerenciar Instituições</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Minha Equipe</a></li>
+                    <li><a href="#"><i class="fas fa-user-shield"></i> Usuários do Sistema</a></li>
+
+                    <li class="nav-section-title">MONITORAMENTO</li>
+                    <li><a href="#"><i class="fas fa-file-alt"></i> Gerenciar Denúncias</a></li>
+                    <li><a href="#"><i class="fas fa-exclamation-triangle"></i> Gerenciar Conflitos</a></li>
+                    <li class="active"><a href="#"><i class="fas fa-map-marked-alt"></i> Mapa Interativo</a></li>
+                    <li><a href="#"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+                    <li><a href="#"><i class="fas fa-shield-alt"></i> Auditoria</a></li>
+
+                    <li class="nav-section-title">SISTEMA</li>
+                    <li><a href="perfil.html"><i class="fas fa-user-circle"></i> Meu Perfil</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="../authentication/logout.html"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <button id="menu-toggle" class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="header-title">
+                    <h2>Mapa Interativo</h2>
+                    <p>Visualização geográfica dos conflitos e das instituições</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3</span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                         <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                        <!-- <span id="headerUserRole" class="user-role"></span> -->
+                    </div>
+                    
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <div class="map-layout-grid">
+                <section class="map-section card">
+                    <div class="map-toolbar">
+                        <h3 class="card-title"><i class="fas fa-map-marked-alt"></i> Visualização Geográfica</h3>
+                        <button class="icon-button filter-icon"><i class="fas fa-filter"></i></button>
+                        <select class="map-filter-select">
+                            <option>Todos os Tipos</option>
+                            <option>Terras Indígenas</option>
+                            <option>Posse Rural</option>
+                        </select>
+                        <button class="icon-button filter-icon"><i class="fas fa-filter"></i></button>
+                        <select class="map-filter-select">
+                            <option>Todas</option>
+                            <option>Ativa</option>
+                            <option>Encerrada</option>
+                        </select>
+                    </div>
+
+                    <div class="map-container-placeholder">
+                        <i class="fas fa-map-marked-alt map-icon-large"></i>
+                        <p>Mapa Interativo</p>
+                        <small>Visualização geográfica dos conflitos e instituições</small>
+                        <div class="map-legend-bottom">
+                            <ul>
+                                <li><span class="legend-dot low"></span> Baixa</li>
+                                <li><span class="legend-dot medium"></span> Média</li>
+                                <li><span class="legend-dot high"></span> Alta</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="info-sidebar">
+                    <div class="institutions-panel card">
+                        <h3 class="card-title">Instituições</h3>
+                        <div class="institution-list" id="institutionList">
+                        </div>
+                    </div>
+
+                    <div class="stats-panel card">
+                        <h3 class="card-title">Estatísticas</h3>
+                        <div class="stats-list">
+                            <div class="stat-item">
+                                <p>Total de Instituições</p>
+                                <span id="totalInstitutions">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <p>Total de Conflitos</p>
+                                <span id="totalConflicts">43</span>
+                            </div>
+                            <div class="stat-item">
+                                <p>Gravidade Alta</p>
+                                <span class="badge-high" id="highGravity">1</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary export-btn"><i class="fas fa-download"></i> Exportar
+                            Dados</button>
+                    </div>
+                </aside>
+            </div>
+
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="../../js/pages/mapa_interativo.js"></script>
+
+</body>
+
+</html>

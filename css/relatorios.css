@@ -1,0 +1,242 @@
+/* Importação do CSS base (secretaria.css) */
+/* CAMINHO CORRIGIDO: Sobe um nível e acessa a pasta css */
+@import url("secretaria.css");
+
+/* ======================================= */
+/* ESTILOS ESPECÍFICOS DE RELATÓRIOS       */
+/* ======================================= */
+
+/* 1. Filtros de Geração */
+.filter-section {
+    margin-bottom: 30px;
+}
+
+.filter-title {
+    margin-bottom: 25px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-light);
+    margin-bottom: 5px;
+}
+
+/* Estilo para Inputs e Selects */
+.custom-select,
+.custom-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background-color: var(--color-off-white);
+    font-size: 0.95rem;
+    color: var(--color-text);
+    appearance: none;
+    /* Remove estilo padrão do select */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+/* Estilo específico para input[type="date"] para parecer um select */
+input[type="date"].custom-input {
+    background-color: var(--color-white);
+    padding-right: 10px;
+    /* Espaço para o ícone de calendário */
+    /* Adiciona um ícone de calendário simples, embora o navegador renderize o nativo */
+    background-image: none;
+}
+
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Ajuste no botão de gerar */
+#generateReportBtn {
+    padding: 10px 20px;
+}
+
+
+/* 2. Cartões de Relatórios Pré-Definidos */
+.report-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.report-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 25px;
+    min-height: 180px;
+    /* Altura mínima para alinhamento */
+}
+
+.report-card__header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.report-card__header i {
+    font-size: 1.8rem;
+    color: var(--color-primary);
+}
+
+.report-card__header h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.report-card__description {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    flex-grow: 1;
+    /* Empurra o botão para baixo */
+}
+
+.btn-generate-quick {
+    width: 100%;
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+}
+
+.btn-generate-quick:hover {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    opacity: 1;
+}
+
+
+/* 3. Relatórios Gerados Recentemente */
+.recent-reports-section {
+    margin-bottom: 30px;
+}
+
+.recent-reports-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.report-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.report-item:last-child {
+    border-bottom: none;
+}
+
+.report-icon {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-right: 15px;
+}
+
+.file-details {
+    flex-grow: 1;
+}
+
+.file-details p {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.file-details small {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+}
+
+.report-status {
+    color: var(--color-priority-low);
+    /* Cor verde para Concluído */
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-right: 20px;
+    text-align: right;
+    min-width: 80px;
+}
+
+.report-date {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    margin-right: 20px;
+    min-width: 80px;
+    text-align: right;
+}
+
+.report-download-btn {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.report-download-btn:hover {
+    opacity: 0.8;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-types-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-item {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .file-details {
+        min-width: 100%;
+        order: 1;
+        margin-bottom: 10px;
+    }
+
+    .report-date {
+        order: 2;
+        text-align: left;
+        margin-right: 15px;
+    }
+
+    .report-status {
+        order: 3;
+        margin-right: 10px;
+        text-align: left;
+    }
+
+    .report-download-btn {
+        order: 4;
+        margin-left: auto;
+    }
+}
