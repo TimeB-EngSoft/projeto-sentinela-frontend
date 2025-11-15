@@ -25,7 +25,7 @@
             items: [
                 { key: 'profile', label: 'Meu Perfil', icon: 'fas fa-user-circle', href: 'perfil.html' },
                 { key: 'settings', label: 'Configurações', icon: 'fas fa-cog', href: 'configuracoes.html' },
-                { key: 'logout', label: 'Sair', icon: 'fas fa-sign-out-alt', href: '../authentication/logout.html', skipBase: true }
+                { key: 'logout', label: 'Sair', icon: 'fas fa-sign-out-alt', href: '../../authentication/logout.html', skipBase: true }
             ]
         }
     ];
