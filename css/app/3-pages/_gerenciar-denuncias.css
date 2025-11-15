@@ -1,0 +1,48 @@
+/* ======================================== */
+/* PÁGINA: GERENCIAR DENÚNCIAS             */
+/* ======================================== */
+.filters-card {
+    margin-bottom: 30px;
+}
+
+.filters-card .card-title {
+    margin-bottom: 20px;
+}
+
+.filters-card .search-bar {
+    flex-grow: 1;
+}
+
+.denuncias-list-card .card-title {
+    margin-bottom: 20px;
+}
+
+.denuncias-table td:first-child {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.tag.tag-prioridade-alta { background-color: var(--color-priority-high); }
+.tag.tag-prioridade-media { background-color: var(--color-priority-medium); }
+.tag.tag-prioridade-baixa { background-color: #0275d8; }
+
+.tag.tag-status-pendente { background-color: var(--color-priority-medium); }
+.tag.tag-status-aprovada { background-color: var(--color-priority-low); }
+.tag.tag-status-rejeitada { background-color: var(--color-priority-high); }
+
+.tag.tag-tipo-terra { background-color: #8B4513; }
+.tag.tag-tipo-recursos { background-color: #1E90FF; }
+.tag.tag-tipo-desmatamento { background-color: var(--color-priority-low); }
+.tag.tag-tipo-territorio { background-color: #FF8C00; }
+.tag.tag-tipo-disputa { background-color: var(--color-text-light); }
+
+@media (max-width: 768px) {
+    .denuncias-table {
+        font-size: 0.8rem;
+    }
+
+    .denuncias-table th,
+    .denuncias-table td {
+        padding: 10px 8px;
+    }
+}

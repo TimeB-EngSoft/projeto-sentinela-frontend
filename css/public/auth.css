@@ -218,6 +218,39 @@
     color: var(--primary-color);
 }
 
+/* Layout de confirmação de logout e ações compartilhadas */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.action-buttons .btn {
+    flex: 1;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-light);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--page-bg);
+    color: var(--text-color);
+    border-color: #ccc;
+}
+
+.btn-danger {
+    background-color: #c9302c;
+    color: var(--white);
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #a92824;
+}
+
 .demo-info .small-text {
     font-size: 11px;
     color: #888;

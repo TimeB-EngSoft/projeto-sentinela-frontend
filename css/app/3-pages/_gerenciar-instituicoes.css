@@ -1,48 +1,20 @@
-@import url('../../css/secretaria.css');
-/* ====================================================== */
-/* ===== NOVOS ESTILOS PARA GERENCIAR INSTITUIÇÕES ===== */
-/* ====================================================== */
-
-/* Barra de Ação (Abaixo do Header) */
-.page-actions-bar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px; /* Espaçamento antes da busca */
-    gap: 10px;
-}
-
-.institution-search-bar {
-    display: flex;
-    margin-bottom: 30px;
-    gap: 10px;
-}
-.institution-search-bar input {
-    flex-grow: 1;
-    padding: 12px 20px;
-    font-size: 0.95rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    background-color: var(--color-white);
-    font-family: 'Poppins', sans-serif;
-}
-.institution-search-bar .btn {
-    padding: 12px 20px;
-    flex-shrink: 0;
-}
-
+/* ======================================== */
+/* PÁGINA: GERENCIAR INSTITUIÇÕES          */
+/* ======================================== */
 .institution-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 25px;
 }
+
 @media (max-width: 500px) {
     .institution-grid {
-        grid-template-columns: 1fr; /* Força 1 coluna */
+        grid-template-columns: 1fr;
     }
 }
 
 .institution-card {
-    padding: 0; /* Remove o padding padrão do .card */
+    padding: 0;
     display: flex;
     flex-direction: column;
 }
@@ -64,7 +36,7 @@
     width: 45px;
     height: 45px;
     border-radius: var(--border-radius);
-    background-color: #fdeeee; /* Fundo vermelho-claro */
+    background-color: #fdeeee;
     color: var(--color-primary);
     display: flex;
     align-items: center;
@@ -85,36 +57,28 @@
     gap: 5px;
     margin-top: 5px;
 }
-.tag.tag-federal {
-    background-color: var(--color-tag-federal-bg);
-    color: var(--color-tag-federal-text);
-}
-.tag.tag-estadual {
-    background-color: var(--color-tag-estadual-bg);
-    color: var(--color-tag-estadual-text);
-}
 
-.inst-card-fullname {
+.inst-card-fullname,
+.inst-card-location {
     font-size: 0.9rem;
     color: var(--color-text-light);
     padding: 0 20px 15px 20px;
 }
 
 .inst-card-location {
-    font-size: 0.9rem;
-    color: var(--color-text-light);
-    padding: 0 20px 20px 20px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--color-border);
 }
+
 .inst-card-location i {
     margin-right: 8px;
-    width: 12px; 
+    width: 12px;
 }
 
 .inst-card-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 25px; 
+    gap: 25px;
     padding: 20px;
 }
 
@@ -122,18 +86,20 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    
 }
+
 .stat-item span {
     font-size: 1.5rem;
     font-weight: 600;
     line-height: 1;
 }
+
 .stat-item p {
     font-size: 0.9rem;
     color: var(--color-text-light);
     margin: 0;
 }
+
 .stat-item i {
     font-size: 1.1rem;
     color: var(--color-text-light);
@@ -142,19 +108,26 @@
 }
 
 .inst-card-footer {
-    background-color: #fcfcf9; 
+    background-color: #fcfcf9;
     padding: 15px 20px;
     border-top: 1px solid var(--color-border);
-    margin-top: auto; /* Empurra o footer para o final */
+    margin-top: auto;
     border-bottom-left-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
 }
+
 .inst-card-footer small {
     display: block;
     font-size: 0.8rem;
     color: var(--color-text-light);
 }
+
 .inst-card-footer p {
     font-weight: 500;
     margin: 0;
+}
+
+.institution-search-bar .btn {
+    padding: 12px 20px;
+    flex-shrink: 0;
 }

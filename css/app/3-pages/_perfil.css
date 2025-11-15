@@ -1,6 +1,6 @@
-@import url('../../css/secretaria.css');
-
-/* ===== ESTILOS EXCLUSIVOS DO PERFIL ===== */
+/* ======================================== */
+/* PÁGINA: PERFIL                          */
+/* ======================================== */
 .profile-section {
     display: flex;
     flex-direction: column;
@@ -26,18 +26,6 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--color-primary);
-}
-
-.upload-btn {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    width: 34px;
-    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -63,24 +51,28 @@
     color: var(--color-text-light);
 }
 
-.profile-form, .password-form {
+.profile-form,
+.password-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
 }
 
-.form-group {
+.profile-form .form-group,
+.password-form .form-group {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
-label {
+.profile-form label,
+.password-form label {
     font-weight: 500;
     font-size: 0.9rem;
 }
 
-input {
+.profile-form input,
+.password-form input {
     padding: 10px;
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
@@ -89,7 +81,8 @@ input {
     outline: none;
 }
 
-input:focus {
+.profile-form input:focus,
+.password-form input:focus {
     border-color: var(--color-primary);
     background-color: var(--color-white);
 }
@@ -108,17 +101,18 @@ input:focus {
     gap: 20px;
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
     .profile-header {
         flex-direction: column;
         align-items: flex-start;
     }
+
     .form-actions {
         flex-direction: column;
         align-items: stretch;
     }
-    .btn {
+
+    .form-actions .btn {
         width: 100%;
     }
 }

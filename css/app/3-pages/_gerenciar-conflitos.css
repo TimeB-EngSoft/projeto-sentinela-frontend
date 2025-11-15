@@ -1,0 +1,113 @@
+/* ======================================== */
+/* PÁGINA: GERENCIAR CONFLITOS             */
+/* ======================================== */
+.card + .card {
+    margin-top: 30px;
+}
+
+.stat-card {
+    align-items: center;
+}
+
+.stat-card__info span {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.stat-card__icon-bg {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.stat-card__icon-bg.icon-bg-danger {
+    background-color: #fdeeee;
+    color: var(--color-priority-high);
+}
+
+.stat-card__icon-bg.icon-bg-success {
+    background-color: #eef7ee;
+    color: var(--color-priority-low);
+}
+
+.conflitos-list-card .card-header {
+    margin-bottom: 25px;
+}
+
+.conflitos-list-card .card-title {
+    margin-bottom: 0;
+}
+
+.conflitos-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.conflitos-filter-bar .search-bar {
+    min-width: 300px;
+}
+
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.status-tag i {
+    font-size: 0.9rem;
+}
+
+.status-tag.status-pendente,
+.status-tag.status-analise {
+    color: var(--color-priority-medium);
+}
+
+.status-tag.status-resolvido {
+    color: var(--color-priority-low);
+}
+
+.envolvidos-cell div {
+    display: block;
+    line-height: 1.4;
+}
+
+.envolvidos-cell div:first-child {
+    font-weight: 500;
+}
+
+.table-actions {
+    gap: 20px;
+}
+
+.table-actions a {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+    transition: color 0.2s ease;
+}
+
+.table-actions a:hover {
+    color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+    .conflitos-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .conflitos-filter-bar .search-bar {
+        min-width: 100%;
+    }
+
+    .conflitos-filter-bar .btn-filter {
+        justify-content: space-between;
+    }
+}

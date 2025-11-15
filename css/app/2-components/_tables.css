@@ -1,0 +1,73 @@
+/* ======================================== */
+/* TABELAS                                 */
+/* ======================================== */
+.table-responsive,
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table-responsive table,
+.table-responsive-wrapper table,
+.denuncias-table,
+.managers-table,
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.denuncias-table th,
+.denuncias-table td,
+.managers-table th,
+.managers-table td,
+.logs-table th,
+.logs-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 0.85rem;
+}
+
+.denuncias-table th,
+.managers-table th,
+.logs-table th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--color-text-light);
+    background-color: var(--color-background);
+}
+
+.denuncias-table tbody tr:hover,
+.managers-table tbody tr:hover,
+.logs-table tbody tr:hover {
+    background-color: #fdfdfa;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-actions a {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.table-actions a:hover {
+    text-decoration: underline;
+}
+
+.action-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.action-link:hover {
+    text-decoration: underline;
+}

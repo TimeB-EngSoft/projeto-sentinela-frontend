@@ -1,0 +1,91 @@
+/* ======================================== */
+/* TAGS E BADGES                           */
+/* ======================================== */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-white);
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.tag.tag-secretaria {
+    background-color: var(--color-tag-gestor-sec-bg);
+    color: var(--color-tag-gestor-sec-text);
+}
+
+.tag.tag-instituicao {
+    background-color: var(--color-tag-instituicao-bg);
+    color: var(--color-tag-instituicao-text);
+}
+
+.tag.tag-gestor-instituicao {
+    background-color: var(--color-tag-gestor-inst-bg);
+    color: var(--color-tag-gestor-inst-text);
+}
+
+.tag.tag-gestor-secretaria {
+    background-color: var(--color-tag-gestor-sec-bg);
+    color: var(--color-tag-gestor-sec-text);
+}
+
+.tag.tag-federal {
+    background-color: var(--color-tag-federal-bg);
+    color: var(--color-tag-federal-text);
+}
+
+.tag.tag-estadual {
+    background-color: var(--color-tag-estadual-bg);
+    color: var(--color-tag-estadual-text);
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.status-badge.status-ativo {
+    background-color: var(--color-status-ativo-bg);
+    color: var(--color-status-ativo-text);
+}
+
+.status-badge.status-pendente {
+    background-color: var(--color-status-pendente-bg);
+    color: var(--color-status-pendente-text);
+}
+
+.status-badge.status-inativo {
+    background-color: var(--color-status-inativo-bg);
+    color: var(--color-status-inativo-text);
+}
+
+.badge.badge-neutral {
+    background-color: var(--color-border);
+    color: var(--color-text-light);
+}
+
+.tag.tag-prioridade-alta { background-color: var(--color-priority-high); }
+.tag.tag-prioridade-media { background-color: var(--color-priority-medium); }
+.tag.tag-prioridade-baixa { background-color: #0275d8; }
+
+.tag.tag-status-pendente { background-color: var(--color-priority-medium); }
+.tag.tag-status-aprovada { background-color: var(--color-priority-low); }
+.tag.tag-status-rejeitada { background-color: var(--color-priority-high); }
+
+.tag.tag-tipo-terra { background-color: #8B4513; }
+.tag.tag-tipo-recursos { background-color: #1E90FF; }
+.tag.tag-tipo-desmatamento { background-color: var(--color-priority-low); }
+.tag.tag-tipo-territorio { background-color: #FF8C00; }
+.tag.tag-tipo-disputa { background-color: var(--color-text-light); }

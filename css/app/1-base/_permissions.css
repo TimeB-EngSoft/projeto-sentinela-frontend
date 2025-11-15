@@ -1,0 +1,21 @@
+/* ======================================== */
+/* UTILITÁRIOS RELACIONADOS A PERMISSÕES   */
+/* (Reservado para estilos específicos)    */
+/* ======================================== */
+.permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.permission-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: var(--border-radius);
+    background-color: var(--color-light-beige);
+    color: var(--color-dark-brown);
+    font-weight: 600;
+    font-size: 0.85rem;
+}

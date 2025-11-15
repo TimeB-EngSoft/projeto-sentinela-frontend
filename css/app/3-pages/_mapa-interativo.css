@@ -1,25 +1,17 @@
-/* Importação do CSS base (secretaria.css) */
-@import url("secretaria.css");
-
-/* ======================================= */
-/* ESTILOS ESPECÍFICOS DE MAPA INTERATIVO  */
-/* ======================================= */
-
+/* ======================================== */
+/* PÁGINA: MAPA INTERATIVO                 */
+/* ======================================== */
 .breadcrumb {
     font-size: 0.85rem;
-    color: var(--color-text-light);
     margin-bottom: 5px;
 }
 
 .map-layout-grid {
     display: grid;
     grid-template-columns: 3fr 1fr;
-    /* Central e Lateral */
     gap: 30px;
     margin-bottom: 30px;
 }
-
-/* --- Seção Central (Mapa) --- */
 
 .map-section {
     padding: 25px;
@@ -38,7 +30,6 @@
 .map-toolbar .card-title {
     margin: 0;
     margin-right: auto;
-    /* Empurra os filtros para a direita */
 }
 
 .map-filter-select {
@@ -59,11 +50,9 @@
     padding: 5px;
 }
 
-/* Placeholder do Mapa (Cor do layout) */
 .map-container-placeholder {
     flex-grow: 1;
     background-color: var(--color-light-beige);
-    /* Cor do placeholder do mapa */
     border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
@@ -87,7 +76,6 @@
 
 .map-container-placeholder small {
     color: rgba(52, 32, 16, 0.7);
-    /* Marrom escuro com opacidade */
     font-size: 0.9rem;
 }
 
@@ -112,29 +100,12 @@
     font-weight: 500;
 }
 
-/* Reutilizando estilos de legenda do secretaria.css */
-.legend-dot.low {
-    background-color: var(--color-priority-low);
-}
-
-.legend-dot.medium {
-    background-color: var(--color-priority-medium);
-}
-
-.legend-dot.high {
-    background-color: var(--color-priority-high);
-}
-
-
-/* --- Seção Lateral (Instituições e Estatísticas) --- */
-
 .info-sidebar {
     display: flex;
     flex-direction: column;
     gap: 30px;
 }
 
-/* Painel de Instituições */
 .institution-list {
     display: flex;
     flex-direction: column;
@@ -182,24 +153,10 @@
     margin-top: 5px;
 }
 
-.status-dot-low {
-    background-color: var(--color-priority-low);
-}
+.status-dot-low { background-color: var(--color-priority-low); }
+.status-dot-medium { background-color: var(--color-priority-medium); }
+.status-dot-high { background-color: var(--color-priority-high); }
 
-/* Verde */
-.status-dot-medium {
-    background-color: var(--color-priority-medium);
-}
-
-/* Amarelo */
-.status-dot-high {
-    background-color: var(--color-priority-high);
-}
-
-/* Vermelho */
-
-
-/* Painel de Estatísticas */
 .stats-list {
     display: flex;
     flex-direction: column;
@@ -207,7 +164,7 @@
     margin-bottom: 20px;
 }
 
-.stat-item {
+.stats-list .stat-item {
     display: flex;
     justify-content: space-between;
     font-size: 1rem;
@@ -215,15 +172,15 @@
     border-bottom: 1px dashed var(--color-border);
 }
 
-.stat-item:last-child {
+.stats-list .stat-item:last-child {
     border-bottom: none;
 }
 
-.stat-item p {
+.stats-list .stat-item p {
     font-weight: 500;
 }
 
-.stat-item span {
+.stats-list .stat-item span {
     font-weight: 600;
     color: var(--color-dark-brown);
 }
@@ -242,17 +199,13 @@
     padding: 10px;
 }
 
-/* ===== RESPONSIVIDADE ===== */
-
 @media (max-width: 1200px) {
     .map-layout-grid {
         grid-template-columns: 1fr;
-        /* Colunas empilhadas */
     }
 
     .map-section {
         min-height: 400px;
-        /* Reduz altura em telas menores */
     }
 
     .map-toolbar {
@@ -271,13 +224,11 @@
 
     .info-sidebar {
         flex-direction: row;
-        /* Coloca os painéis laterais lado a lado em telas médias */
     }
 }
 
 @media (max-width: 768px) {
     .info-sidebar {
         flex-direction: column;
-        /* Colunas empilhadas em telas pequenas */
     }
 }

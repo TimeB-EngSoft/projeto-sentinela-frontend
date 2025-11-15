@@ -1,0 +1,32 @@
+/* ======================================== */
+/* ARQUIVO MESTRE DO APP                   */
+/* ======================================== */
+
+/* 1. FUNDAÇÃO (Base) */
+@import url('1-base/_variables.css');
+@import url('1-base/_reset.css');
+@import url('1-base/_layout.css');
+@import url('1-base/_permissions.css');
+
+/* 2. COMPONENTES REUTILIZÁVEIS */
+@import url('2-components/_buttons.css');
+@import url('2-components/_cards.css');
+@import url('2-components/_tables.css');
+@import url('2-components/_forms.css');
+@import url('2-components/_tags.css');
+@import url('2-components/_modals.css');
+@import url('2-components/_breadcrumbs.css');
+
+/* 3. ESTILOS ESPECÍFICOS DAS PÁGINAS */
+@import url('3-pages/_auditoria.css');
+@import url('3-pages/_configuracoes.css');
+@import url('3-pages/_gerenciar-conflitos.css');
+@import url('3-pages/_gerenciar-denuncias.css');
+@import url('3-pages/_gerenciar-gestores.css');
+@import url('3-pages/_gerenciar-instituicoes.css');
+@import url('3-pages/_mapa_interativo.css');
+@import url('3-pages/_minha-equipe.css');
+@import url('3-pages/_perfil.css');
+@import url('3-pages/_relatorios.css');
+@import url('3-pages/_secretaria.css');
+@import url('3-pages/_usuarios-sistema.css');

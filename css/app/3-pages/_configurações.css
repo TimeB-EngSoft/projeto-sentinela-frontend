@@ -1,12 +1,6 @@
-/* Importação do CSS base (secretaria.css) */
-/* CAMINHO CORRIGIDO: Agora sobe apenas um nível (..) para a raiz e acessa a pasta css */
-@import url("secretaria.css");
-@import url("style.css");
-
-/* ======================================= */
-/* ESTILOS ESPECÍFICOS DE CONFIGURAÇÕES    */
-/* ======================================= */
-
+/* ======================================== */
+/* PÁGINA: CONFIGURAÇÕES                   */
+/* ======================================== */
 .config-section {
     display: flex;
     flex-direction: column;
@@ -15,10 +9,7 @@
 }
 
 .config-card {
-    background-color: var(--color-white);
     padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
 }
 
 .config-card h3 {
@@ -29,8 +20,6 @@
     align-items: center;
     gap: 10px;
 }
-
-/* --- Card de Perfil --- */
 
 .profile-card {
     padding: 30px;
@@ -69,8 +58,6 @@
     margin-top: 15px;
 }
 
-/* --- Itens de Configuração --- */
-
 .config-item {
     display: flex;
     justify-content: space-between;
@@ -90,8 +77,6 @@
     font-weight: 400;
 }
 
-/* --- Botão de Mudar Senha --- */
-
 .btn-change-password {
     background-color: var(--color-light-beige);
     color: var(--color-dark-brown);
@@ -104,8 +89,6 @@
     background-color: var(--color-primary);
     color: var(--color-white);
 }
-
-/* --- Estilo do Switch (Toggle) --- */
 
 .switch {
     position: relative;
@@ -138,23 +121,22 @@
     width: 17px;
     left: 4px;
     bottom: 4px;
-    background-color: white;
+    background-color: #fff;
     transition: .4s;
 }
 
-input:checked+.slider {
+input:checked + .slider {
     background-color: var(--color-primary);
 }
 
-input:focus+.slider {
+input:focus + .slider {
     box-shadow: 0 0 1px var(--color-primary);
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* Arredondamento do slider */
 .slider.round {
     border-radius: 25px;
 }
@@ -162,10 +144,6 @@ input:checked+.slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
-
-/* ======================================= */
-/* MEDIA QUERIES - Ajustes de Responsividade */
-/* ======================================= */
 
 @media (max-width: 768px) {
     .profile-header {

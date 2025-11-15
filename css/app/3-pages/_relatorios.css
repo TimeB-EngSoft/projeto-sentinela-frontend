@@ -1,12 +1,6 @@
-/* Importação do CSS base (secretaria.css) */
-/* CAMINHO CORRIGIDO: Sobe um nível e acessa a pasta css */
-@import url("secretaria.css");
-
-/* ======================================= */
-/* ESTILOS ESPECÍFICOS DE RELATÓRIOS       */
-/* ======================================= */
-
-/* 1. Filtros de Geração */
+/* ======================================== */
+/* PÁGINA: RELATÓRIOS                      */
+/* ======================================== */
 .filter-section {
     margin-bottom: 30px;
 }
@@ -34,7 +28,6 @@
     margin-bottom: 5px;
 }
 
-/* Estilo para Inputs e Selects */
 .custom-select,
 .custom-input {
     width: 100%;
@@ -45,34 +38,25 @@
     font-size: 0.95rem;
     color: var(--color-text);
     appearance: none;
-    /* Remove estilo padrão do select */
     -webkit-appearance: none;
     -moz-appearance: none;
     cursor: pointer;
 }
 
-/* Estilo específico para input[type="date"] para parecer um select */
 input[type="date"].custom-input {
     background-color: var(--color-white);
     padding-right: 10px;
-    /* Espaço para o ícone de calendário */
-    /* Adiciona um ícone de calendário simples, embora o navegador renderize o nativo */
-    background-image: none;
 }
-
 
 .filter-actions {
     display: flex;
     justify-content: flex-end;
 }
 
-/* Ajuste no botão de gerar */
 #generateReportBtn {
     padding: 10px 20px;
 }
 
-
-/* 2. Cartões de Relatórios Pré-Definidos */
 .report-types-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -87,7 +71,6 @@ input[type="date"].custom-input {
     align-items: flex-start;
     padding: 25px;
     min-height: 180px;
-    /* Altura mínima para alinhamento */
 }
 
 .report-card__header {
@@ -113,7 +96,6 @@ input[type="date"].custom-input {
     font-size: 0.9rem;
     margin-bottom: 20px;
     flex-grow: 1;
-    /* Empurra o botão para baixo */
 }
 
 .btn-generate-quick {
@@ -128,8 +110,6 @@ input[type="date"].custom-input {
     opacity: 1;
 }
 
-
-/* 3. Relatórios Gerados Recentemente */
 .recent-reports-section {
     margin-bottom: 30px;
 }
@@ -172,7 +152,6 @@ input[type="date"].custom-input {
 
 .report-status {
     color: var(--color-priority-low);
-    /* Cor verde para Concluído */
     font-weight: 600;
     font-size: 0.9rem;
     margin-right: 20px;
@@ -200,8 +179,6 @@ input[type="date"].custom-input {
 .report-download-btn:hover {
     opacity: 0.8;
 }
-
-/* ===== RESPONSIVIDADE ===== */
 
 @media (max-width: 768px) {
     .filter-grid {

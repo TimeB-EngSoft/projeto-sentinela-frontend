@@ -1,0 +1,45 @@
+/* ======================================== */
+/* VARIÁVEIS GLOBAIS DO APLICATIVO         */
+/* ======================================== */
+:root {
+    --color-primary: #D44716;
+    --color-dark-brown: #342010;
+    --color-very-dark-brown: #201305;
+    --color-light-beige: #C8BFAD;
+    --color-off-white: #F8F8F3;
+
+    --color-text: #333;
+    --color-text-light: #666;
+    --color-background: #F8F8F3;
+    --color-sidebar-bg: var(--color-dark-brown);
+    --color-sidebar-text: var(--color-off-white);
+    --color-sidebar-active: var(--color-primary);
+    --color-white: #FFFFFF;
+    --color-border: #E0E0E0;
+
+    --color-priority-low: #5cb85c;
+    --color-priority-medium: #f0ad4e;
+    --color-priority-high: #d9534f;
+    --color-priority-critical: var(--color-primary);
+
+    --color-status-ativo-bg: #E6F4EA;
+    --color-status-ativo-text: #1B5E20;
+    --color-status-pendente-bg: #FFF4E5;
+    --color-status-pendente-text: #C96B00;
+    --color-status-inativo-bg: #FDECEA;
+    --color-status-inativo-text: #B71C1C;
+
+    --color-tag-gestor-sec-bg: var(--color-primary);
+    --color-tag-gestor-sec-text: var(--color-white);
+    --color-tag-gestor-inst-bg: var(--color-dark-brown);
+    --color-tag-gestor-inst-text: var(--color-white);
+    --color-tag-instituicao-bg: var(--color-light-beige);
+    --color-tag-instituicao-text: var(--color-dark-brown);
+    --color-tag-federal-bg: var(--color-primary);
+    --color-tag-federal-text: var(--color-white);
+    --color-tag-estadual-bg: var(--color-dark-brown);
+    --color-tag-estadual-text: var(--color-white);
+
+    --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --border-radius: 8px;
+}
