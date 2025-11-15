@@ -1,24 +1,19 @@
-/* ROOT & GENERAL AUTH STYLES */
+@import url('./base.css');
+
+/* =====================================================
+   FLUXOS DE AUTENTICAÇÃO
+   -----------------------------------------------------
+   Estilos compartilhados entre login, cadastro, reset
+   e demais telas do domínio de autenticação.
+   ===================================================== */
+
 :root {
-    --primary-color: #c05a38;
-    --primary-color-dark: #a04a2d;
     --page-bg: #f0f2f5;
-    --form-bg: #fff;
+    --form-bg: #ffffff;
     --illustration-bg: #fdf5f3;
-    --text-color: #333;
-    --text-light: #666;
-    --border-color: #ddd;
-    --white: #fff;
+    --text-light: #666666;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
-
-/* AUTH LAYOUT - Classe reutilizável para o body */
 .auth-layout {
     background-color: var(--page-bg);
     color: var(--text-color);
@@ -29,18 +24,16 @@
     padding: 20px;
 }
 
-/* AUTH CONTAINER - Estrutura principal reutilizável */
 .auth-container {
     display: flex;
     width: 100%;
     max-width: 1000px;
     background: var(--form-bg);
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
 }
 
-/* AUTH FORM SECTION (Esquerda) */
 .auth-form-section {
     flex: 1;
     padding: 50px 40px;
@@ -60,7 +53,6 @@
     margin-bottom: 30px;
 }
 
-/* AUTH ILLUSTRATION SECTION (Direita) */
 .auth-illustration-section {
     flex: 1;
     display: flex;
@@ -75,40 +67,6 @@
     height: auto;
 }
 
-/* FORM GROUP & INPUTS */
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: #444;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 15px;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(192, 90, 56, 0.15);
-}
-
-/* INPUT GROUP COM ÍCONE (Login) */
 .input-group {
     position: relative;
 }
@@ -118,38 +76,13 @@
     left: 15px;
     top: 50%;
     transform: translateY(-50%);
-    color: #aaa;
+    color: #aaaaaa;
 }
 
 .input-group input {
-    padding-left: 40px;
+    padding-left: 45px;
 }
 
-/* BUTTONS */
-.btn {
-    width: 100%;
-    padding: 15px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-block;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    text-align: center;
-}
-
-.btn-primary {
-    background-image: linear-gradient(to right, #e06846, #c74844);
-    color: var(--white);
-}
-
-.btn-primary:hover {
-    opacity: 0.9;
-}
-
-/* LINKS */
 .forgot-password {
     display: block;
     text-align: right;
@@ -160,13 +93,54 @@
     margin-bottom: 25px;
 }
 
+.forgot-password:hover {
+    color: var(--primary-color);
+}
+
+.auth-form-section .btn {
+    width: 100%;
+}
+
+.btn-primary {
+    background-image: linear-gradient(to right, #e06846, #c74844);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 25px 0;
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: var(--border-color);
+}
+
+.social-login {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.social-login .btn {
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background-color: var(--white);
+    color: var(--text-color);
+}
+
 .back-link {
     display: block;
     margin-top: 10px;
     color: var(--text-light);
-    text-decoration: none;
     font-weight: 400;
-    transition: color 0.3s;
+    transition: color var(--transition-base);
 }
 
 .back-link:hover {
@@ -182,28 +156,21 @@
 
 .footer-links a {
     color: var(--primary-color);
-    text-decoration: none;
     font-weight: 500;
 }
 
-/* COMPONENTES ESPECÍFICOS */
 .demo-info {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 15px;
     margin-top: 30px;
     font-size: 12px;
 }
 
-.demo-info p {
-    margin-bottom: 10px;
-}
-
 .demo-info ul {
-    list-style: none;
     padding-left: 15px;
-    color: #555;
+    color: #555555;
 }
 
 .demo-info ul li {
@@ -220,17 +187,17 @@
 
 .demo-info .small-text {
     font-size: 11px;
-    color: #888;
+    color: #888888;
     margin-top: 10px;
     margin-bottom: 0;
 }
 
-/* RESPONSIVIDADE */
 @media (max-width: 768px) {
     .auth-layout {
         padding: 0;
         align-items: flex-start;
     }
+
     .auth-container {
         flex-direction: column;
         width: 100%;
@@ -238,9 +205,11 @@
         border-radius: 0;
         box-shadow: none;
     }
+
     .auth-illustration-section {
         display: none;
     }
+
     .auth-form-section {
         padding: 40px 25px;
         flex-basis: auto;

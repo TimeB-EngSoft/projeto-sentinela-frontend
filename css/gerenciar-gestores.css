@@ -49,88 +49,18 @@
     justify-content: flex-end; /* Alinha os itens à direita quando quebram a linha */
 }
 
-/* Controles de Filtro e Busca */
-.filter-controls {
-    display: flex;
-    gap: 10px;
-    /* margin-left: auto;  <-- ESTA LINHA FOI REMOVIDA */
-    flex-wrap: wrap; 
-    align-items: center; 
-}
-
-/* ... (Estilos da tabela, tags, etc. permanecem os mesmos) ... */
-.search-bar {
-    position: relative;
-}
-.search-bar i {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-light);
-    font-size: 0.9rem;
-}
-.search-bar input {
-    padding: 10px 15px 10px 40px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    min-width: 250px;
-    font-family: 'Poppins', sans-serif;
-}
-.search-bar input::placeholder {
-    color: var(--color-text-light);
-}
-
-.btn-filter {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    padding: 10px 16px; /* Ajuste para mesma altura do input */
-}
-
 /* Tabela de Gestores */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
-    margin-top: 20px;
-}
 .managers-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.managers-table th,
-.managers-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
     font-size: 0.9rem;
-    vertical-align: middle;
-    white-space: nowrap; /* Impede que o texto quebre */
 }
 .managers-table th {
-    color: var(--color-text-light);
-    font-weight: 600;
     font-size: 0.8rem;
-    text-transform: uppercase;
-}
-.managers-table tr:last-child td {
-    border-bottom: none;
 }
 .managers-table tr:hover {
-    background-color: #fcfcf9; 
+    background-color: #fcfcf9;
 }
 
 /* Tags de Tipo (Gestor) */
-.tag {
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-white);
-    white-space: nowrap;
-}
 .tag-secretaria {
     background-color: var(--color-primary); /* Laranja/Vermelho */
 }

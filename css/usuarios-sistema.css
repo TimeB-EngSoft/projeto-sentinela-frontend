@@ -41,11 +41,7 @@
 
 /* Tags */
 .tag {
-    padding: 4px 10px;
-    border-radius: 15px;
     font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-white);
     white-space: nowrap;
 }
 .tag.tag-secretaria {
@@ -87,11 +83,6 @@
     font-weight: 600;
     margin: 0;
 }
-.badge.badge-neutral {
-    background-color: var(--color-border);
-    color: var(--color-text-light);
-}
-
 /* Listas de Cards */
 .approval-card-list,
 .active-user-list {

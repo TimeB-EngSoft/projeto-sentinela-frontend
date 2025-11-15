@@ -3,12 +3,8 @@
 
 /* Ações do Cabeçalho do Card (Gestores e Equipe) */
 .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 15px; 
+    gap: 15px;
 }
 .card-header-actions {
     display: flex;
@@ -18,32 +14,15 @@
     margin-left: auto; 
     justify-content: flex-end;
 }
-.filter-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.search-bar { position: relative; }
-.search-bar i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--color-text-light); font-size: 0.9rem; }
-.search-bar input {
-    padding: 10px 15px 10px 40px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    min-width: 250px;
-    font-family: 'Poppins', sans-serif;
-}
-.search-bar input::placeholder { color: var(--color-text-light); }
+.filter-controls { gap: 10px; }
 
-/* Tabela (Gestores e Equipe) */
-.table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; }
-.managers-table { width: 100%; border-collapse: collapse; }
-.managers-table th,
-.managers-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--color-border); font-size: 0.9rem; vertical-align: middle; white-space: nowrap; }
-.managers-table th { color: var(--color-text-light); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
-.managers-table tr:last-child td { border-bottom: none; }
+.managers-table { font-size: 0.9rem; }
+.managers-table th { font-size: 0.8rem; }
 .managers-table tr:hover { background-color: #fcfcf9; }
 .action-link { color: var(--color-primary); font-weight: 600; font-size: 0.9rem; }
 .action-link:hover { text-decoration: underline; }
 
 /* Tags e Badges (Genéricos) */
-.tag { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; color: var(--color-white); white-space: nowrap; }
 .tag-secretaria { background-color: var(--color-primary); }
 .tag-instituicao { background-color: var(--color-dark-brown); }
 

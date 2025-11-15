@@ -1,145 +1,42 @@
-/*
-=================================================
-|               LOGOUT PAGE STYLES              |
-=================================================
-*/
+@import url('./auth.css');
 
-/* --- Layout Principal da Página --- */
-.auth-layout {
-    background-color: var(--page-bg, #f0f2f5);
-    color: var(--text-color, #333);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-}
+/* =====================================================
+   FLUXO DE CONFIRMAÇÃO DE LOGOUT
+   -----------------------------------------------------
+   Especializa os componentes de auth.css para a tela
+   dedicada à confirmação de saída do sistema.
+   ===================================================== */
 
-/* --- Contêiner Central --- */
-.auth-container {
-    display: flex;
-    width: 100%;
-    max-width: 1000px;
-    background: var(--form-bg, #fff);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-/* --- Seção de Conteúdo (Esquerda) --- */
 .auth-form-section {
-    flex: 1;
-    padding: 50px 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Alinha o conteúdo verticalmente */
+    justify-content: center;
+    gap: 20px;
 }
 
 .auth-form-section h1 {
-    font-size: 28px;
-    color: var(--primary-color, #c05a38);
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 15px; /* Espaçamento entre o ícone e o texto */
+    gap: 12px;
 }
 
-.auth-form-section .subtitle {
-    font-size: 16px;
-    color: var(--text-light, #666);
-    margin-bottom: 40px;
-}
-
-/* --- Seção da Ilustração (Direita) --- */
-.auth-illustration-section {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--illustration-bg, #fdf5f3);
-    padding: 20px;
-}
-
-.auth-illustration-section img {
-    max-width: 90%;
-    height: auto;
-}
-
-/* --- Botões de Ação --- */
 .action-buttons {
     display: flex;
-    gap: 15px; /* <<< ESSA LINHA JÁ CRIA O ESPAÇAMENTO! Você pode aumentar se quiser. */
+    gap: 12px;
     margin-top: 20px;
 }
 
 .action-buttons .btn {
-    flex: 1; /* Faz os botões terem a mesma largura */
+    flex: 1;
 }
 
-/* Estilo Base do Botão */
-.btn {
-    padding: 12px 28px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-block;
-    border: 2px solid transparent;
-    cursor: pointer;
-    font-size: 15px;
-    text-align: center;
-}
-
-/* EFEITO HOVER GERAL PARA TODOS OS BOTÕES */
-.btn:hover {
-    transform: translateY(-3px); /* Efeito de "levantar" o botão */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave */
-}
-
-/* Botão Secundário (Cancelar) */
-.btn-secondary {
-    background-color: transparent;
-    color: var(--text-light, #666);
-    border-color: var(--border-color, #ddd);
-}
-
-.btn-secondary:hover {
-    background-color: var(--page-bg, #f0f2f5);
-    color: var(--text-color, #333);
-    border-color: #ccc; /* Pode escurecer um pouco a borda no hover */
-}
-
-/* Botão de Perigo (Sair) */
 .btn-danger {
-    background-color: var(--danger-color, #c9302c);
-    color: var(--white, #fff);
-    border-color: transparent; /* Garante que não tenha borda por padrão */
+    box-shadow: 0 12px 30px rgba(217, 83, 79, 0.2);
 }
 
-.btn-danger:hover {
-    background-color: var(--danger-color-dark, #a92824);
+.btn-secondary {
+    background-color: var(--white);
 }
 
-/* --- Responsividade --- */
-@media (max-width: 768px) {
-    .auth-layout {
-        padding: 0;
-        align-items: flex-start;
-    }
-    .auth-container {
-        flex-direction: column;
-        width: 100%;
-        min-height: 100vh;
-        border-radius: 0;
-        box-shadow: none;
-    }
-    .auth-illustration-section {
-        display: none;
-    }
-    .auth-form-section {
-        padding: 40px 25px;
-        flex-grow: 1;
-    }
+@media (max-width: 480px) {
     .action-buttons {
         flex-direction: column;
     }
