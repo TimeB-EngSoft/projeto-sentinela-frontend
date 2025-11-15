@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
                 
                 // Redireciona para a página principal do sistema
-                window.location.href = '../secretaria/secretaria.html';
+                window.location.href = '../../app/users/secretaria/secretaria.html';
 
             } catch (error) {
                 // A mensagem de erro agora vem da propriedade 'message' do JSON
