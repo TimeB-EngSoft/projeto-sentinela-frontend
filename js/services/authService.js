@@ -5,49 +5,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- LÓGICA DE LOGIN ---
     const loginForm = document.getElementById('form-login');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('password').value;
-            const submitButton = loginForm.querySelector('button[type="submit"]');
+/**
+ * Retorna a página de destino correta com base no cargo do usuário.
+ */
+function getRedirectPageByCargo(cargo) {
+    const basePath = '../../app/users/';
+    
+    // Mapeia os cargos para suas respectivas páginas
+    const rolePages = {
+        'SECRETARIA': 'secretaria/secretaria.html',
+        'GESTOR_SECRETARIA': 'gestor-secretaria/gestor-secretaria.html',
+        'GESTOR_INSTITUICAO': 'gestor-instituicao/gestor-instituicao.html',
+        'USUARIO_SECRETARIA': 'usuario-secretaria/usuario-secretaria.html',
+        'USUARIO_INSTITUICAO': 'usuario-instituicao/usuario-instituicao.html' // Exemplo: redireciona para a mesma tela de usuário
+        // Adicione outros cargos e páginas conforme necessário
+    };
 
-            if (!email.trim() || !senha.trim()) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
+    // Retorna a página do cargo ou uma página padrão (ex: secretaria.html) se o cargo não for encontrado
+    return basePath + (rolePages[cargo] || 'secretaria.html');
+}
 
-            submitButton.disabled = true;
-            submitButton.textContent = 'Entrando...';
+if (loginForm) {
+    loginForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-            try {
-                // A função loginUser agora retorna o objeto do usuário diretamente
-                const usuario = await loginUser(email, senha);
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('password').value;
+        const submitButton = loginForm.querySelector('button[type="submit"]');
 
-                // Salva os dados do usuário logado no localStorage
-                // CORREÇÃO: Acessamos as propriedades diretamente do objeto 'usuario'
-                localStorage.setItem('userId', usuario.id);
-                localStorage.setItem('userName', usuario.nome);
-                localStorage.setItem('userEmail', usuario.email);
-                localStorage.setItem('userCargo', usuario.cargo);
-                // Acessa o nome da instituição de forma segura
-                localStorage.setItem('userInstituicao', usuario.instituicao?.nome || '');
+        if (!email.trim() || !senha.trim()) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
 
-                alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
-                
-                // Redireciona para a página principal do sistema
-                window.location.href = '../../app/users/secretaria/secretaria.html';
+        submitButton.disabled = true;
+        submitButton.textContent = 'Entrando...';
 
-            } catch (error) {
-                // A mensagem de erro agora vem da propriedade 'message' do JSON
-                alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Entrar no Sistema';
-            }
-        });
-    }
+        try {
+            // A função loginUser agora retorna o objeto do usuário diretamente
+            const usuario = await loginUser(email, senha);
+
+            // Salva os dados do usuário logado no localStorage
+            localStorage.setItem('userId', usuario.id);
+            localStorage.setItem('userName', usuario.nome);
+            localStorage.setItem('userEmail', usuario.email);
+            localStorage.setItem('userCargo', usuario.cargo);
+            localStorage.setItem('userInstituicao', usuario.instituicao?.nome || '');
+
+            alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
+            
+            // *** MUDANÇA PRINCIPAL AQUI ***
+            // Redireciona para a página correta baseada no cargo
+            const redirectPage = getRedirectPageByCargo(usuario.cargo);
+            window.location.href = redirectPage;
+
+        } catch (error) {
+            // A mensagem de erro agora vem da propriedade 'message' do JSON
+            alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Entrar no Sistema';
+        }
+    });
+}
 
     // --- LÓGICA DE RECUPERAÇÃO DE SENHA (SOLICITAÇÃO) ---
     const recoveryForm = document.getElementById('recovery-form');

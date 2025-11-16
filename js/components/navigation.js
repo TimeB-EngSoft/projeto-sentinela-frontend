@@ -89,32 +89,23 @@
             USUARIO_INSTITUICAO: ['managers', 'institutions', 'team', 'systemUsers', 'conflicts', 'reports', 'audit']
         };
 
-        // remover a condição quando for descoberto a variável do cargo no banco de dados e-
-        // somente fazer cargoAtual == variaveldocargo; após isso- 
-        // devemos modificar o nome dos cargos acima.
-        // const userCargo = localStorage.getItem('userCargo'); ???
-        // console.log(userCargo);
-        if (sidebar.dataset.sidebarSubtitle == 'Painel Gestor Secretaria') {
-            const cargoAtual = "GESTOR_SECRETARIA";
-            for (const item of cargos[cargoAtual]) {
-                removeNavItem(item);
-            }
-        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Gestor Instituição') {
-            const cargoAtual = "GESTOR_INSTITUICAO";
-            for (const item of cargos[cargoAtual]) {
-                removeNavItem(item);
-            }
-        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Usuário Secretaria') {
-            const cargoAtual = "USUARIO_SECRETARIA";
-            for (const item of cargos[cargoAtual]) {
-                removeNavItem(item);
-            }
-        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Usuário Instituição') {
-            const cargoAtual = "USUARIO_SECRETARIA";
-            for (const item of cargos[cargoAtual]) {
-                removeNavItem(item);
+        
+        // 1. Pega o cargo do usuário que foi salvo no localStorage durante o login
+        const userCargo = localStorage.getItem('userCargo'); 
+
+        // 2. Verifica se esse cargo existe no mapa de permissões 'cargos'
+        if (userCargo && cargos[userCargo]) {
+            
+            // 3. Pega a lista de itens a serem removidos para esse cargo
+            const itemsToRemove = cargos[userCargo]; // Estava "userVargo"
+            
+            // 4. Itera e remove cada item da navegação
+            for (const itemKey of itemsToRemove) {
+                removeNavItem(itemKey);
             }
         }
+        // O bloco 'if/else if' anterior que checava o 'sidebar.dataset.sidebarSubtitle' foi removido.
+
 
         const navigationHtml = createNavList(NAVIGATION_SECTIONS, activeKey, basePath);
 

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Sentinela</title>
+    <link rel="stylesheet" href="../../../css/app/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"
+               data-sidebar
+               data-logo-path="../../../assets/images/logo.png"
+               data-sidebar-title="SENTINELA"
+               data-sidebar-subtitle="Painel Gestor Instituição"
+               data-active-nav="overview">
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Visão Geral</h2>
+                    <p>Governança e administração do sistema</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3</span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                         <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                        <!-- <span id="headerUserRole" class="user-role"></span> -->
+                    </div>
+                    
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Total de Gestores</p>
+                        <span>24</span>
+                        <small>+ 3 este mês</small>
+                    </div>
+                    <div class="stat-card__icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Instituições Ativas</p>
+                        <span>8</span>
+                    </div>
+                    <div class="stat-card__icon">
+                        <i class="fas fa-building-user"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Conflitos Ativos</p>
+                        <span>45</span>
+                        <small>+ 5 este mês</small>
+                    </div>
+                    <div class="stat-card__icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Denúncias Validadas</p>
+                        <span>123</span>
+                    </div>
+                    <div class="stat-card__icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pending-approvals">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Aprovações Pendentes</h3>
+                        <span class="badge">3 Pendentes</span>
+                    </div>
+                    <div class="approvals-list">
+                        <div class="approval-item">
+                            <div class="approval-item">
+                                <div class="avatar avatar-placeholder"><i class="fas fa-user"></i></div>
+                            </div>
+                            
+                            <div class="item-details">
+                                <p>Carlos Silva</p>
+                                <small>Gestor - INCRA</small>
+                            </div>
+                            <span class="item-time">2h atrás</span>
+                            <div class="item-actions">
+                                <button class="btn btn-secondary">Revisar</button>
+                                <button class="btn btn-primary">Aprovar</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="avatar-icon"><i class="fas fa-building"></i></div>
+                            <div class="item-details">
+                                <p>Instituto Estadual de Terras</p>
+                                <small>Instituição</small>
+                            </div>
+                            <span class="item-time">5h atrás</span>
+                            <div class="item-actions">
+                                <button class="btn btn-secondary">Revisar</button>
+                                <button class="btn btn-primary">Aprovar</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="approval-item">
+                                <div class="avatar avatar-placeholder"><i class="fas fa-user"></i></div>
+                            </div>
+                            <div class="item-details">
+                                <p>Ana Paula</p>
+                                <small>Gestor - FUNAI</small>
+                            </div>
+                            <span class="item-time">1 dia atrás</span>
+                            <div class="item-actions">
+                                <button class="btn btn-secondary">Revisar</button>
+                                <button class="btn btn-primary">Aprovar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="../../../js/components/navigation.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="../../../js/pages/secretaria.js"></script>
+
+</body>
+</html>
