@@ -44,6 +44,11 @@
     color: var(--color-tag-estadual-text);
 }
 
+.tag.tag-neutral {
+    background-color: var(--color-border);
+    color: var(--color-text);
+}
+
 .status-badge {
     padding: 4px 12px;
     border-radius: var(--border-radius);

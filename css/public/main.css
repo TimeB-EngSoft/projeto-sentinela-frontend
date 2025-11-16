@@ -338,6 +338,31 @@ form input:focus, form select:focus, form textarea:focus {
     margin-top: 20px;
 }
 
+.form-alert {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: none;
+}
+
+.form-alert.is-visible {
+    display: block;
+}
+
+.form-alert.is-success {
+    background-color: #e7f6ec;
+    color: #1f7a3d;
+    border: 1px solid #b5e2c4;
+}
+
+.form-alert.is-error {
+    background-color: #fdecea;
+    color: #b3261e;
+    border: 1px solid #f5c6c2;
+}
+
 /* FOOTER */
 footer {
     background-color: var(--footer-bg);

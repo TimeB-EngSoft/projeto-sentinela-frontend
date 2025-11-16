@@ -46,7 +46,27 @@ export const API_ENDPOINTS = {
         update: (userId) => `/user/${userId}/atualizar`,
         updatePassword: (userId) => `/user/${userId}/senha`,
         listByStatus: '/user/listByStatus',
-        approve: (userId, isApproved) => `/user/${userId}/aprovar?aprovado=${isApproved}`
+        approve: (userId) => `/user/${userId}/aprovar`
+    },
+
+    instituicao: {
+        cadastrar: '/instituicao/cadastrar',
+        atualizar: (id) => `/instituicao/${id}/atualizar`,
+        listar: '/instituicao/listar',
+        listarUsuarios: (id) => `/instituicao/${id}/listUsers`
+    },
+
+    denuncia: {
+        listar: '/denuncias/listarDenuncias',
+        registrarExterna: '/denuncias/registrarexterna',
+        atualizar: (id) => `/denuncias/${id}`
+    },
+
+    conflito: {
+        cadastrar: '/conflito/cadastroDireto',
+        listar: '/conflito/listarConflitos',
+        buscar: (id) => `/conflito/${id}`,
+        atualizar: (id) => `/conflito/${id}`
     }
 };
 

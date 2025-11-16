@@ -1,3 +1,5 @@
+import { registrarDenunciaExterna } from './services/apiService.js';
+
 document.addEventListener("DOMContentLoaded", function() {
 
     // Animated Counter
@@ -47,28 +49,75 @@ document.addEventListener("DOMContentLoaded", function() {
     // Form Handling
     const form = document.getElementById('denunciaForm');
 
-    if (form) {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent the default form submission
+    const feedback = document.getElementById('denunciaFeedback');
 
-            // Simple validation check
+    const toggleFeedback = (message, type) => {
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.classList.remove('is-success', 'is-error', 'is-visible');
+        if (type) feedback.classList.add(`is-${type}`);
+        feedback.classList.add('is-visible');
+    };
+
+    const setSubmittingState = (isSubmitting) => {
+        const submitButton = form?.querySelector('button[type="submit"]');
+        if (!submitButton) return;
+        submitButton.disabled = isSubmitting;
+        submitButton.textContent = isSubmitting ? 'Registrando...' : 'Registrar';
+    };
+
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
             let isValid = true;
             const requiredFields = form.querySelectorAll('[required]');
-            
+
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
                     isValid = false;
-                    field.style.borderColor = 'red'; // Highlight empty required fields
+                    field.style.borderColor = 'red';
                 } else {
-                    field.style.borderColor = ''; // Reset border color
+                    field.style.borderColor = '';
                 }
             });
 
-            if (isValid) {
-                alert('Denúncia registrada com sucesso! Agradecemos sua colaboração.');
-                form.reset(); // Clear the form
-            } else {
-                alert('Por favor, preencha todos os campos obrigatórios (*).');
+            if (!isValid) {
+                toggleFeedback('Por favor, preencha todos os campos obrigatórios (*).', 'error');
+                return;
+            }
+
+            const denunciaData = {
+                nomeDenunciante: form.nome.value.trim(),
+                cpf: form.cpf.value.trim(),
+                email: form.email.value.trim(),
+                telefone: form.telefone.value.trim(),
+                tipoConflito: form['tipo-conflito'].value,
+                titulo: form.titulo.value.trim(),
+                descricao: form.descricao.value.trim(),
+                dataOcorrido: form['data-ocorrido'].value,
+                status: form.status.value,
+                cep: form.cep.value.trim(),
+                estado: form.estado.value.trim(),
+                cidade: form.cidade.value.trim(),
+                bairro: form.bairro.value.trim(),
+                rua: form.rua.value.trim(),
+                numero: form.numero.value.trim(),
+                referencia: form.referencia.value.trim(),
+                partesEnvolvidas: form['partes-envolvidas'].value.trim()
+            };
+
+            setSubmittingState(true);
+
+            try {
+                await registrarDenunciaExterna(denunciaData);
+                toggleFeedback('Denúncia registrada com sucesso! Agradecemos sua colaboração.', 'success');
+                form.reset();
+            } catch (error) {
+                const message = error?.message || 'Não foi possível registrar a denúncia. Tente novamente.';
+                toggleFeedback(message, 'error');
+            } finally {
+                setSubmittingState(false);
             }
         });
     }

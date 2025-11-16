@@ -1,56 +1,29 @@
-// Assumindo que você tem um módulo 'apiService.js' no local correto
-import { logoutUser } from '../services/apiService.js'; 
+import { listarInstituicoes } from '../services/apiService.js';
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ===========================================
-    // ===== CÓDIGO DO HEADER/SIDEBAR =====
-    // ===========================================
+function loadHeaderUserData() {
+    const userName = localStorage.getItem('userName');
+    const headerName = document.getElementById('headerUserName');
+    if (headerName) {
+        headerName.textContent = userName || 'Usuário';
+    }
 
-    /**
-     * Carrega os dados do usuário (nome e avatar) no cabeçalho.
-     */
-    function loadHeaderUserData() {
-        const userName = localStorage.getItem('userName');
-        
+    const avatar = document.getElementById('headerUserAvatar');
+    if (avatar) {
         if (userName) {
-            document.getElementById('headerUserName').textContent = userName;
-        } else {
-            document.getElementById('headerUserName').textContent = 'Usuário';
-        }
-
-        // Esta tela não exibe o "cargo" no header.
-        // const userCargo = localStorage.getItem('userCargo');
-        // if (userCargo) {
-        //     document.getElementById('headerUserRole').textContent = userCargo;
-        // }
-
-        // Lógica do Avatar: Usa a inicial do nome ou um ícone placeholder.
-        const avatar = document.getElementById('headerUserAvatar');
-        if (userName && avatar) {
-            const inicial = userName.charAt(0).toUpperCase();
-            // Remove a classe placeholder e define a inicial
             avatar.classList.remove('avatar-placeholder');
-            avatar.innerHTML = `<span>${inicial}</span>`;
-            
-            // Adiciona estilo para a inicial
-            avatar.style.backgroundColor = 'var(--color-light-beige)'; 
+            avatar.innerHTML = `<span>${userName.charAt(0).toUpperCase()}</span>`;
+            avatar.style.backgroundColor = 'var(--color-light-beige)';
             avatar.style.color = 'var(--color-dark-brown)';
-
-        } else if (avatar) {
-             // Garante que o ícone de usuário apareça se não houver nome
-            avatar.innerHTML = `<i class="fas fa-user"></i>`;
+        } else {
             avatar.classList.add('avatar-placeholder');
-            // Remove estilos de inicial se houver
-            avatar.style.backgroundColor = ''; 
+            avatar.innerHTML = '<i class="fas fa-user"></i>';
+            avatar.style.backgroundColor = '';
             avatar.style.color = '';
         }
     }
+}
 
-    // Chama a função ao carregar a página
-    loadHeaderUserData();
-    
-    // Lógica para o menu hambúrguer em telas móveis
+function setupSidebarToggle() {
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.querySelector('.sidebar');
 
@@ -60,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Lógica para fechar a sidebar ao clicar fora dela
     document.addEventListener('click', (event) => {
         if (sidebar && sidebar.classList.contains('open')) {
             const isClickInsideSidebar = sidebar.contains(event.target);
@@ -71,5 +43,93 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
 
-});
+function setFeedback(message, type = 'info') {
+    const feedback = document.getElementById('institutionsFeedback');
+    if (!feedback) return;
+
+    const stateClass = type === 'error' ? 'is-error' : 'is-info';
+    feedback.className = ['card', 'empty-card', stateClass].join(' ');
+    feedback.textContent = message;
+    feedback.dataset.state = type;
+    feedback.style.display = message ? 'block' : 'none';
+}
+
+function formatLocation(instituicao) {
+    const cidade = instituicao?.cidade || instituicao?.municipio;
+    const estado = instituicao?.estado || instituicao?.uf;
+    const partes = [cidade, estado].filter(Boolean);
+    if (!partes.length && instituicao?.endereco) return instituicao.endereco;
+    return partes.join(' - ') || 'Localização não informada';
+}
+
+function buildInstitutionCard(instituicao) {
+    const tipo = instituicao?.tipo || instituicao?.categoria || 'Instituição';
+    const sigla = instituicao?.sigla || instituicao?.nomeCurto || instituicao?.nome || 'Instituição';
+    const nome = instituicao?.nome || instituicao?.razaoSocial || sigla;
+    const gestor = instituicao?.gestorResponsavel || instituicao?.gestor || '—';
+
+    return `
+        <article class="institution-card card">
+            <div class="inst-card-header">
+                <div class="inst-card-id">
+                    <div class="inst-card-icon"><i class="fas fa-landmark"></i></div>
+                    <div class="inst-card-title">
+                        <h3>${sigla}</h3>
+                        <div class="inst-card-tags">
+                            <span class="tag tag-neutral">${tipo}</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="icon-button" title="Mais opções"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+            <p class="inst-card-fullname">${nome}</p>
+            <p class="inst-card-location"><i class="fas fa-map-marker-alt"></i> ${formatLocation(instituicao)}</p>
+            <div class="inst-card-stats">
+                <div class="stat-item">
+                    <span>${instituicao?.totalUsuarios ?? '—'}</span>
+                    <p><i class="fas fa-users"></i> Usuários</p>
+                </div>
+                <div class="stat-item">
+                    <span>${instituicao?.totalConflitos ?? '—'}</span>
+                    <p><i class="fas fa-exclamation-triangle"></i> Conflitos</p>
+                </div>
+            </div>
+            <div class="inst-card-footer">
+                <small>Gestor Responsável</small>
+                <p>${gestor}</p>
+            </div>
+        </article>
+    `;
+}
+
+async function loadInstitutions() {
+    const container = document.getElementById('institutionsContainer');
+    if (!container) return;
+
+    setFeedback('Carregando instituições...', 'info');
+    container.innerHTML = '';
+
+    try {
+        const institutions = await listarInstituicoes();
+        if (!Array.isArray(institutions) || institutions.length === 0) {
+            setFeedback('Nenhuma instituição encontrada no momento.', 'info');
+            return;
+        }
+
+        setFeedback('', 'info');
+        container.innerHTML = institutions.map(buildInstitutionCard).join('');
+    } catch (error) {
+        console.error('Erro ao carregar instituições:', error);
+        setFeedback(error?.message || 'Não foi possível carregar as instituições agora.', 'error');
+    }
+}
+
+function bootstrap() {
+    loadHeaderUserData();
+    setupSidebarToggle();
+    loadInstitutions();
+}
+
+document.addEventListener('DOMContentLoaded', bootstrap);

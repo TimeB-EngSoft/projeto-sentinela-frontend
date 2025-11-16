@@ -7,6 +7,104 @@
     <link rel="stylesheet" href="../../../css/app/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 10% auto;
+            padding: 2.5rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-button {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #888;
+            cursor: pointer;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+        
+        .close-button:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #344054;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d0d5dd;
+            border-radius: 6px;
+            box-sizing: border-box; /* Garante que padding não afete a largura */
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -31,9 +129,7 @@
                     </div>
                     <div class="user-info">
                         <span id="headerUserName" class="user-name">Carregando...</span>
-                        <!-- <span id="headerUserRole" class="user-role"></span> -->
                     </div>
-                    
                     <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
                 </div>
             </header>
@@ -43,17 +139,17 @@
             </div>
 
             <section class="institution-search-bar">
-                <input type="text" placeholder="Buscar por nome, email ou instituição...">
-                <button class="btn btn-secondary"><i class="fas fa-search"></i> Buscar</button>
+                <input type="text" placeholder="Buscar por nome, email ou instituição..." id="searchInput">
+                <button class="btn btn-secondary" id="searchButton"><i class="fas fa-search"></i> Buscar</button>
             </section>
 
             <section class="user-approvals-list">
                 <div class="section-header">
                     <h3>Aprovações Pendentes</h3>
-                    <span class="badge">0 Pendentes</span>
+                    <span class="badge" id="pending-users-badge">0 Pendentes</span>
                 </div>
                 
-                <div class="approval-card-list">
+                <div class="approval-card-list" id="approval-list-container">
                     <p class="no-approvals-message">Nenhuma aprovação pendente no momento.</p>
                 </div>
             </section>
@@ -61,71 +157,62 @@
             <section class="user-active-list">
                 <div class="section-header">
                     <h3>Usuários Ativos</h3>
-                    <span class="badge badge-neutral">24 Usuários</span>
+                    <span class="badge badge-neutral" id="active-users-badge">0 Usuários</span>
                 </div>
 
-                <div class="active-user-list">
-                    <div class="active-user-card card">
-                        <div class="avatar-initials" style="background-color: #e6f7ec; color: #0d8a4f;">MS</div>
-                        <div class="user-card-info">
-                            <p>Maria Santos</p>
-                            <small>maria.santos@incra.br</small>
-                            <small>INCRA • Há 2 horas</small>
-                        </div>
-                        <div class="user-card-tags">
-                            <span class="tag tag-instituicao">Instituição</span>
-                        </div>
-                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
-                    </div>
-
-                    <div class="active-user-card card">
-                        <div class="avatar-initials" style="background-color: #e6f7ec; color: #0d8a4f;">JS</div>
-                        <div class="user-card-info">
-                            <p>João Silva</p>
-                            <small>joao.silva@incra.br</small>
-                            <small>INCRA • Há 1 dia</small>
-                        </div>
-                        <div class="user-card-tags">
-                            <span class="tag tag-gestor-instituicao">Gestor Instituição</span>
-                        </div>
-                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
-                    </div>
-
-                    <div class="active-user-card card">
-                        <div class="avatar-initials" style="background-color: #fceeee; color: #d9534f;">PL</div>
-                        <div class="user-card-info">
-                            <p>Patricia Lima</p>
-                            <small>patricia@secretaria.br</small>
-                            <small>Secretaria de Estado • Há 3 horas</small>
-                        </div>
-                        <div class="user-card-tags">
-                            <span class="tag tag-gestor-secretaria">Gestor Secretaria</span>
-                        </div>
-                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
-                    </div>
-
-                    <div class="active-user-card card">
-                        <div class="avatar-initials" style="background-color: #fef8e5; color: #f0ad4e;">FC</div>
-                        <div class="user-card-info">
-                            <p>Fernando Costa</p>
-                            <small>fernando@governo.br</small>
-                            <small>Secretaria de Estado • Online</small>
-                        </div>
-                        <div class="user-card-tags">
-                            <span class="tag tag-secretaria">Secretaria</span>
-                        </div>
-                        <button class="icon-button"><i class="fas fa-ellipsis-v"></i></button>
-                    </div>
+                <div class="active-user-list" id="active-user-list-container">
+                    <p>Carregando usuários ativos...</p>
                 </div>
             </section>
-            
-            
             
             <footer class="main-footer">
                 <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
             </footer>
         </main>
     </div>
+
+    <div id="invite-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Convidar Novo Usuário</h2>
+                <button class="close-button" id="modal-close-button">&times;</button>
+            </div>
+            
+            <form id="invite-form">
+                <div class="form-group">
+                    <label for="invite-name">Nome Completo</label>
+                    <input type="text" id="invite-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="invite-email">Email</label>
+                    <input type="email" id="invite-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="invite-instituicao">Instituição</label>
+                    <input type="text" id="invite-instituicao" required>
+                </div>
+                <div class="form-group">
+                    <label for="invite-cargo">Cargo</label>
+                    <select id="invite-cargo" required>
+                        <option value="">Selecione um cargo...</option>
+                        <option value="GESTOR_SECRETARIA">Gestor da Secretaria</option>
+                        <option value="USUARIO_SECRETARIA">Usuário da Secretaria</option>
+                        <option value="GESTOR_INSTITUICAO">Gestor de Instituição</option>
+                        <option value="USUARIO_INSTITUICAO">Usuário de Instituição</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invite-justificativa">Justificativa</label>
+                    <textarea id="invite-justificativa" required>Convidado pelo administrador.</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modal-cancel-button">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="modal-submit-button">Enviar Convite</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script src="../../../js/components/navigation.js"></script>
     <script type="module" src="../../../js/pages/usuarios-sistema.js"></script>

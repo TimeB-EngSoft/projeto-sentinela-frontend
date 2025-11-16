@@ -99,6 +99,8 @@
                     </button>
                 </div>
 
+                <div id="conflitosFeedback" class="card empty-card" aria-live="polite"></div>
+
                 <div class="table-responsive-wrapper">
                     <table class="denuncias-table">
                         <thead>
@@ -113,68 +115,8 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Desentendimento entre alunos</td>
-                                <td>Escola Municipal Santos Dumont</td>
-                                <td class="envolvidos-cell">
-                                    <div>João Silva</div>
-                                    <div>Maria Santos</div>
-                                </td>
-                                <td><span class="tag tag-prioridade-media">Média</span></td>
-                                <td>
-                                    <span class="status-tag status-analise">
-                                        <i class="fas fa-search"></i> Em Análise
-                                    </span>
-                                </td>
-                                <td>15/03/2024</td>
-                                <td>Ana Oliveira</td>
-                                <td class="table-actions">
-                                    <a href="#" title="Ver"><i class="fas fa-eye"></i></a>
-                                    <a href="#" title="Editar"><i class="fas fa-pen"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Agressão verbal</td>
-                                <td>Colégio Estadual Dom Pedro</td>
-                                <td class="envolvidos-cell">
-                                    <div>Pedro Costa</div>
-                                    <div>Lucas Almeida</div>
-                                </td>
-                                <td><span class="tag tag-prioridade-alta">Alta</span></td>
-                                <td>
-                                    <span class="status-tag status-pendente">
-                                        <i class="fas fa-hourglass-half"></i> Pendente
-                                    </span>
-                                </td>
-                                <td>18/03/2024</td>
-                                <td>–</td>
-                                <td class="table-actions">
-                                    <a href="#" title="Ver"><i class="fas fa-eye"></i></a>
-                                    <a href="#" title="Editar"><i class="fas fa-pen"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Conflito em sala de aula</td>
-                                <td>Escola Municipal Santos Dumont</td>
-                                <td class="envolvidos-cell">
-                                    <div>Carlos Santos</div>
-                                    <div>Ana Silva</div>
-                                </td>
-                                <td><span class="tag tag-prioridade-baixa">Baixa</span></td>
-                                <td>
-                                    <span class="status-tag status-resolvido">
-                                        <i class="fas fa-check-circle"></i> Resolvido
-                                    </span>
-                                </td>
-                                <td>10/03/2024</td>
-                                <td>João Santos</td>
-                                <td class="table-actions">
-                                    <a href="#" title="Ver"><i class="fas fa-eye"></i></a>
-                                    <a href="#" title="Editar"><i class="fas fa-pen"></i></a>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <tbody id="conflitosTableBody"></tbody>
+                        
                     </table>
                 </div>
             </section>
@@ -187,6 +129,7 @@
 
     <script src="../../../js/components/navigation.js"></script>
     <script type="module" src="../../../js/pages/secretaria.js"></script>
+    <script type="module" src="../../../js/pages/secretaria/conflitos.js"></script>
 
 </body>
 </html>

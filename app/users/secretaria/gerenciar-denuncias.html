@@ -92,6 +92,7 @@
 
             <section class="card denuncias-list-card">
                 <h3 class="card-title">Lista de Denúncias</h3>
+                <div id="denunciasFeedback" class="card empty-card" aria-live="polite"></div>
                 <div class="table-responsive-wrapper">
                     <table class="denuncias-table">
                         <thead>
@@ -107,74 +108,7 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>D-2024-045</td>
-                                <td>Invasão de terra indígena Guarani</td>
-                                <td>Maria da Silva Santos</td>
-                                <td>MS - Dourados</td>
-                                <td><span class="tag tag-tipo-terra">Terra Indígena</span></td>
-                                <td>15/10/2025</td>
-                                <td><span class="tag tag-prioridade-alta">Alta</span></td>
-                                <td><span class="tag tag-status-pendente">Pendente</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>D-2024-044</td>
-                                <td>Conflito por água em assentamento</td>
-                                <td>João Costa Lima</td>
-                                <td>BA - Juazeiro</td>
-                                <td><span class="tag tag-tipo-recursos">Recursos Hídricos</span></td>
-                                <td>14/10/2025</td>
-                                <td><span class="tag tag-prioridade-media">Média</span></td>
-                                <td><span class="tag tag-status-pendente">Pendente</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>D-2024-043</td>
-                                <td>Desmatamento irregular em área de...</td>
-                                <td>Ana Paula Oliveira</td>
-                                <td>PA - Santarém</td>
-                                <td><span class="tag tag-tipo-desmatamento">Desmatamento</span></td>
-                                <td>13/10/2025</td>
-                                <td><span class="tag tag-prioridade-alta">Alta</span></td>
-                                <td><span class="tag tag-status-aprovada">Aprovada</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>D-2024-042</td>
-                                <td>Ameaça a líderes quilombolas</td>
-                                <td>Carlos Roberto Santos</td>
-                                <td>MA - Alcântara</td>
-                                <td><span class="tag tag-tipo-territorio">Território Quilombola</span></td>
-                                <td>12/10/2025</td>
-                                <td><span class="tag tag-prioridade-alta">Alta</span></td>
-                                <td><span class="tag tag-status-aprovada">Aprovada</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>D-2024-041</td>
-                                <td>Disputa de limites entre propriedade</td>
-                                <td>Pedro Henrique Silva</td>
-                                <td>MT - Cáceres</td>
-                                <td><span class="tag tag-tipo-disputa">Disputa de Posse</span></td>
-                                <td>11/10/2025</td>
-                                <td><span class="tag tag-prioridade-baixa">Baixa</span></td>
-                                <td><span class="tag tag-status-rejeitada">Rejeitada</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>D-2024-040</td>
-                                <td>Poluição de rio por agrotóxicos</td>
-                                <td>Fernanda Alves Costa</td>
-                                <td>GO - Rio Verde</td>
-                                <td><span class="tag tag-tipo-recursos">Recursos Hídricos</span></td>
-                                <td>10/10/2025</td>
-                                <td><span class="tag tag-prioridade-media">Média</span></td>
-                                <td><span class="tag tag-status-pendente">Pendente</span></td>
-                                <td><a href="#" class="btn btn-secondary btn-sm">Ver Detalhes</a></td>
-                            </tr>
-                        </tbody>
+                        <tbody id="denunciasTableBody"></tbody>
                     </table>
                 </div>
             </section>
@@ -187,6 +121,7 @@
 
     <script src="../../../js/components/navigation.js"></script>
     <script type="module" src="../../../js/pages/secretaria.js"></script>
+    <script type="module" src="../../../js/pages/secretaria/denuncias.js"></script>
 
 </body>
 </html>
