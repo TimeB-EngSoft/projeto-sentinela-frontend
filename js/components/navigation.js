@@ -62,6 +62,17 @@
         }).join('');
     };
 
+    function removeNavItem(key) {
+        for (const section of NAVIGATION_SECTIONS) {
+            const index = section.items.findIndex(i => i.key === key);
+            if (index !== -1) {
+                section.items.splice(index, 1);
+                return true;
+            }
+        }
+        return false;
+    }
+
     const renderSidebar = (sidebar) => {
         const activeKey = sidebar.dataset.activeNav || '';
         const basePath = sidebar.dataset.basePath || '';
@@ -69,6 +80,41 @@
         const logoAlt = sidebar.dataset.logoAlt || 'Logo Sentinela';
         const title = sidebar.dataset.sidebarTitle || 'SENTINELA';
         const subtitle = sidebar.dataset.sidebarSubtitle || 'Painel Secretaria';
+
+
+        const cargos = {
+            GESTOR_SECRETARIA: ['systemUsers'],
+            GESTOR_INSTITUICAO: ['managers', 'institutions', 'systemUsers', 'audit'],
+            USUARIO_SECRETARIA: ['managers', 'institutions', 'team', 'systemUsers', 'conflicts', 'reports', 'audit'],
+            USUARIO_INSTITUICAO: ['managers', 'institutions', 'team', 'systemUsers', 'conflicts', 'reports', 'audit']
+        };
+
+        // remover a condição quando for descoberto a variável do cargo no banco de dados e-
+        // somente fazer cargoAtual == variaveldocargo; após isso- 
+        // devemos modificar o nome dos cargos acima.
+        // const userCargo = localStorage.getItem('userCargo'); ???
+        // console.log(userCargo);
+        if (sidebar.dataset.sidebarSubtitle == 'Painel Gestor Secretaria') {
+            const cargoAtual = "GESTOR_SECRETARIA";
+            for (const item of cargos[cargoAtual]) {
+                removeNavItem(item);
+            }
+        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Gestor Instituição') {
+            const cargoAtual = "GESTOR_INSTITUICAO";
+            for (const item of cargos[cargoAtual]) {
+                removeNavItem(item);
+            }
+        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Usuário Secretaria') {
+            const cargoAtual = "USUARIO_SECRETARIA";
+            for (const item of cargos[cargoAtual]) {
+                removeNavItem(item);
+            }
+        } else if (sidebar.dataset.sidebarSubtitle == 'Painel Usuário Instituição') {
+            const cargoAtual = "USUARIO_SECRETARIA";
+            for (const item of cargos[cargoAtual]) {
+                removeNavItem(item);
+            }
+        }
 
         const navigationHtml = createNavList(NAVIGATION_SECTIONS, activeKey, basePath);
 
