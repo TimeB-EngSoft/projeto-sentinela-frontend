@@ -91,13 +91,13 @@
 
         
         // 1. Pega o cargo do usuário que foi salvo no localStorage durante o login
-        const userCargo = localStorage.getItem('userCargo'); 
+        const userCargo = localStorage.getItem('userCargo');
 
         // 2. Verifica se esse cargo existe no mapa de permissões 'cargos'
         if (userCargo && cargos[userCargo]) {
             
             // 3. Pega a lista de itens a serem removidos para esse cargo
-            const itemsToRemove = cargos[userCargo]; // Estava "userVargo"
+            const itemsToRemove = cargos[userCargo]; // Estava "userCargo"
             
             // 4. Itera e remove cada item da navegação
             for (const itemKey of itemsToRemove) {
