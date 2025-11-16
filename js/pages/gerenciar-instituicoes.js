@@ -1,4 +1,9 @@
-import { listarInstituicoes, cadastrarInstituicao } from '../services/apiService.js';
+// Importa as funções da API
+import { 
+    listarInstituicoes, 
+    cadastrarInstituicao,
+    listarUsuariosPorInstituicao // <-- Importado
+} from '../services/apiService.js';
 
 function loadHeaderUserData() {
     const userName = localStorage.getItem('userName');
@@ -68,11 +73,16 @@ function buildInstitutionCard(instituicao) {
     const tipo = instituicao?.tipo || instituicao?.categoria || 'Instituição';
     const sigla = instituicao?.sigla || instituicao?.nomeCurto || instituicao?.nome || 'Instituição';
     const nome = instituicao?.nome || instituicao?.razaoSocial || sigla;
-    const gestor = instituicao?.gestorResponsavel || instituicao?.gestor || '—';
+    
+    // !! NOTA: Estes dados (gestor, totalUsuarios, totalConflitos) não estão vindo da API.
+    // O backend (ServicoInstituicao.java) precisa ser atualizado para enviá-los.
+    const gestor = instituicao?.gestorResponsavel || '—';
+    const totalUsuarios = instituicao?.totalUsuarios ?? '—';
+    const totalConflitos = instituicao?.totalConflitos ?? '—';
 
-    // Ajusta o tipo com base nos campos disponíveis
     const tipoReal = instituicao.areaAtuacao || tipo;
 
+    // Adicionamos o nome da instituição (sigla) ao botão para usar no título do modal
     return `
         <article class="institution-card card">
             <div class="inst-card-header">
@@ -91,11 +101,11 @@ function buildInstitutionCard(instituicao) {
             <p class="inst-card-location"><i class="fas fa-map-marker-alt"></i> ${formatLocation(instituicao)}</p>
             <div class="inst-card-stats">
                 <div class="stat-item">
-                    <span>${instituicao?.totalUsuarios ?? '—'}</span>
+                    <span>${totalUsuarios}</span>
                     <p><i class="fas fa-users"></i> Usuários</p>
                 </div>
                 <div class="stat-item">
-                    <span>${instituicao?.totalConflitos ?? '—'}</span>
+                    <span>${totalConflitos}</span>
                     <p><i class="fas fa-exclamation-triangle"></i> Conflitos</p>
                 </div>
             </div>
@@ -105,7 +115,7 @@ function buildInstitutionCard(instituicao) {
                     <small>Gestor Responsável</small>
                     <p>${gestor}</p>
                 </div>
-                <a href="#" class="btn btn-secondary btn-sm" data-institution-id="${instituicao.id}">
+                <a href="#" class="btn btn-secondary btn-sm" data-institution-id="${instituicao.id}" data-institution-name="${sigla}">
                     <i class="fas fa-users"></i> Ver Usuários
                 </a>
             </div>
@@ -140,9 +150,6 @@ async function loadInstitutions() {
 // ##               LÓGICA DO MODAL (CADASTRAR)                  ##
 // ##################################################################
 
-/**
- * Configura os listeners para abrir, fechar e enviar o modal de cadastro.
- */
 function setupModalListeners() {
     const modal = document.getElementById('add-institution-modal');
     const openButton = document.getElementById('addInstitutionButton');
@@ -155,12 +162,10 @@ function setupModalListeners() {
         return;
     }
 
-    // Abrir o modal
     openButton.addEventListener('click', () => {
         modal.style.display = 'block';
     });
 
-    // Função para fechar o modal
     const closeModal = () => {
         modal.style.display = 'none';
         form.reset();
@@ -169,20 +174,15 @@ function setupModalListeners() {
     closeButton.addEventListener('click', closeModal);
     cancelButton.addEventListener('click', closeModal);
     
-    // Fechar ao clicar fora
     window.addEventListener('click', (event) => {
         if (event.target == modal) {
             closeModal();
         }
     });
 
-    // Listener de submit do formulário
     form.addEventListener('submit', handleRegisterSubmit);
 }
 
-/**
- * Lida com o envio do formulário de cadastro de instituição.
- */
 async function handleRegisterSubmit(event) {
     event.preventDefault();
     
@@ -190,7 +190,6 @@ async function handleRegisterSubmit(event) {
     submitButton.disabled = true;
     submitButton.textContent = 'Salvando...';
 
-    // Coleta os dados do formulário
     const instituicaoData = {
         nome: document.getElementById('inst-nome').value,
         sigla: document.getElementById('inst-sigla').value,
@@ -202,15 +201,9 @@ async function handleRegisterSubmit(event) {
     };
 
     try {
-        // Chama a API
         const novaInstituicao = await cadastrarInstituicao(instituicaoData);
-        
         alert(`Instituição "${novaInstituicao.nome}" cadastrada com sucesso!`);
-        
-        // Fecha o modal
         document.getElementById('modal-inst-close-button').click();
-        
-        // Recarrega a lista de instituições para mostrar a nova
         await loadInstitutions();
 
     } catch (error) {
@@ -224,6 +217,112 @@ async function handleRegisterSubmit(event) {
 
 
 // ##################################################################
+// ##                LÓGICA DO MODAL (VER USUÁRIOS)                ##
+// ##################################################################
+
+/**
+ * Configura os listeners para o modal "Ver Usuários".
+ */
+function setupViewUsersModalListeners() {
+    const modal = document.getElementById('view-users-modal');
+    const closeButton = document.getElementById('modal-view-users-close-button');
+    const cancelButton = document.getElementById('modal-view-users-cancel-button');
+    const container = document.getElementById('institutionsContainer');
+
+    if (!modal || !closeButton || !cancelButton || !container) {
+        console.warn('Elementos do modal "Ver Usuários" não encontrados.');
+        return;
+    }
+
+    // Listener de clique no container principal para pegar cliques nos botões
+    container.addEventListener('click', (event) => {
+        const button = event.target.closest('a[data-institution-id]');
+        if (button) {
+            event.preventDefault(); // Impede a navegação do link '#'
+            
+            const institutionId = button.dataset.institutionId;
+            const institutionName = button.dataset.institutionName;
+            
+            // Abre o modal e carrega os dados
+            modal.style.display = 'block';
+            loadAndShowUsers(institutionId, institutionName);
+        }
+    });
+
+    // Listeners para fechar o modal
+    const closeModal = () => {
+        modal.style.display = 'none';
+        // Limpa o conteúdo ao fechar
+        const listContainer = document.getElementById('view-users-list-container');
+        listContainer.innerHTML = '<p>Carregando usuários...</p>';
+    };
+
+    closeButton.addEventListener('click', closeModal);
+    cancelButton.addEventListener('click', closeModal);
+
+    window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+}
+
+/**
+ * Busca e exibe os usuários de uma instituição no modal.
+ */
+async function loadAndShowUsers(institutionId, institutionName) {
+    const listContainer = document.getElementById('view-users-list-container');
+    const title = document.getElementById('view-users-title');
+
+    title.textContent = `Usuários - ${institutionName}`;
+    listContainer.innerHTML = '<p>Carregando usuários...</p>';
+
+    try {
+        // Busca todos os tipos de usuário da instituição
+        const users = await listarUsuariosPorInstituicao(institutionId, 'all'); 
+        
+        if (!users || users.length === 0) {
+            listContainer.innerHTML = '<p>Nenhum usuário encontrado para esta instituição.</p>';
+            return;
+        }
+
+        // Renderiza a lista de usuários
+        listContainer.innerHTML = createUsersListHTML(users);
+
+    } catch (error) {
+        console.error('Erro ao listar usuários da instituição:', error);
+        listContainer.innerHTML = `<p style="color: red;">${error.message || 'Erro ao carregar usuários.'}</p>`;
+    }
+}
+
+/**
+ * Cria o HTML para a lista de usuários dentro do modal.
+ */
+function createUsersListHTML(users) {
+    return users.map(user => {
+        const initials = (user.nome || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+        
+        // Formata o cargo
+        const cargoText = (user.cargo || 'Cargo')
+            .replace('GESTOR_', 'Gestor ')
+            .replace('USUARIO_', 'Usuário ')
+            .replace('INSTITUICAO', 'Instituição');
+
+        return `
+            <div class="user-item-card">
+                <div class="user-item-avatar">${initials}</div>
+                <div class="user-item-info">
+                    <p>${user.nome}</p>
+                    <small>${user.email}</small>
+                </div>
+                <span class="user-item-tag ${user.status === 'ATIVO' ? 'status-ativo' : ''}">${cargoText}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+
+// ##################################################################
 // ##                  INICIALIZAÇÃO DA PÁGINA                     ##
 // ##################################################################
 
@@ -231,7 +330,8 @@ function bootstrap() {
     loadHeaderUserData();
     setupSidebarToggle();
     loadInstitutions();
-    setupModalListeners(); // Adiciona o listener do modal
+    setupModalListeners(); // Modal de Cadastro
+    setupViewUsersModalListeners(); // Modal de "Ver Usuários"
 }
 
-document.addEventListener('DOMContentLoaded', bootstrap);   
+document.addEventListener('DOMContentLoaded', bootstrap);
