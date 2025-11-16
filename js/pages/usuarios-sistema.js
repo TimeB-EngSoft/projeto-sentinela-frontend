@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function createApprovalCard(user) {
+   function createApprovalCard(user) {
         const card = document.createElement('div');
         card.className = 'approval-card card';
         card.dataset.userId = user.id; 
@@ -111,11 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const initials = (user.nome || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         
+        
         // 1. Pega o cargo
         const role = user.cargo || 'Cargo não informado';
 
         // 2. Decide o que mostrar para a instituição
-        let institutionName = user.instituicaoSolicitada;
+        // O DTO do backend envia o campo "instituicaoNome"
+        let institutionName = user.instituicaoNome; 
         
         if (!institutionName) {
             // Se o cargo for da secretaria, a instituição é a própria secretaria

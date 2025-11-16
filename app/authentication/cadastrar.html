@@ -21,10 +21,10 @@
                     <label for="accessLevel">Nível de Acesso Solicitado *</label>
                     <select id="accessLevel" name="accessLevel" required>
                         <option value="" disabled selected>Selecione seu nível de Acesso</option>
-                        <option value="Gestor Secretaria">Gestor Secretária</option>
-                        <option value="Gestor Instituicao">Gestor Instituição</option>
-                        <option value="Usuario Instituicao">Usuário Instituição</option>
-                        <option value="Usuario Secretaria">Usuário Secretaria</option>
+                        <option value="GESTOR_SECRETARIA">Gestor da Secretaria</option>
+                        <option value="USUARIO_SECRETARIA">Usuário da Secretaria</option>
+                        <option value="GESTOR_INSTITUICAO">Gestor de Instituição</option>
+                        <option value="USUARIO_INSTITUICAO">Usuário de Instituição</option>
                     </select>
                 </div>
 
@@ -38,14 +38,11 @@
                     <input type="email" id="email" name="email" placeholder="usuario@gmail.com" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="institution">Instituição</label>
-                    <input type="text" id="institution" name="institution" placeholder="Nome da instituição">
-                </div>
-
-                <div class="form-group">
-                    <label for="department">Departamento / Setor</label>
-                    <input type="text" id="department" name="department" placeholder="Departamento ou setor">
+                <div class="form-group" id="institution-form-group" style="display: none;">
+                    <label for="institution">Instituição *</label>
+                    <select id="institution" name="institution" required>
+                        <option value="">Carregando instituições...</option>
+                        </select>
                 </div>
 
                 <div class="form-group">
