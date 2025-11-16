@@ -99,11 +99,17 @@ function buildInstitutionCard(instituicao) {
                     <p><i class="fas fa-exclamation-triangle"></i> Conflitos</p>
                 </div>
             </div>
+
             <div class="inst-card-footer">
-                <small>Gestor Responsável</small>
-                <p>${gestor}</p>
+                <div class="footer-info">
+                    <small>Gestor Responsável</small>
+                    <p>${gestor}</p>
+                </div>
+                <a href="#" class="btn btn-secondary btn-sm" data-institution-id="${instituicao.id}">
+                    <i class="fas fa-users"></i> Ver Usuários
+                </a>
             </div>
-        </article>
+            </article>
     `;
 }
 
