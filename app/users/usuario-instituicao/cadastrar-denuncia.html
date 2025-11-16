@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Denúncia</title>
+    <link rel="stylesheet" href="../../../css/app/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <!--código do sidebar-->
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Cadastrar Denúncia</h2>
+                    <p>Preencha as informações do conflito</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3<span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Usuário</span>
+                    </div>
+
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <section id="report-form">
+            <div class="container">
+                <h3>Informações Básicas</h3>
+                <form id="denunciaForm">
+                    <div id="denunciaFeedback" class="form-alert" role="status" aria-live="polite"></div>
+
+                    <fieldset>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tipo-conflito">Tipo de Conflito *</label>
+                                <select id="tipo-conflito" name="tipo-conflito" required>
+                                    <option value="">Selecione</option>
+                                    <option value="terra-indigena">Terras Indígenas</option>
+                                    <option value="disputa-posse">Disputa de Possse</option>
+                                    <option value="territorio-quilombola">Território Quilombola</option>
+                                    <option value="recursos-hidricos">Recursos Hídricos</option>
+                                    <option value="desmatamento">Desmatamento</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="titulo">Título *</label>
+                                <input type="text" id="titulo" name="titulo" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao">Descrição *</label>
+                            <textarea id="descricao" name="descricao" rows="4" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="data-ocorrido">Data do Ocorrido *</label>
+                                <input type="date" id="data-ocorrido" name="data-ocorrido" required>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                <h3>Localização</h3>
+                <fieldset>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cep">CEP *</label>
+                            <input type="text" id="cep" name="cep" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="estado">Estado *</label>
+                            <input type="text" id="estado" name="estado" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cidade">Cidade *</label>
+                            <input type="text" id="cidade" name="cidade" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bairro">Bairro *</label>
+                            <input type="text" id="bairro" name="bairro" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rua">Rua *</label>
+                            <input type="text" id="rua" name="rua" required>
+                        </div>
+                        <div class="form-group short">
+                            <label for="numero">Número</label>
+                            <input type="text" id="numero" name="numero">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="referencia">Ponto de Referência</label>
+                        <input type="text" id="referencia" name="referencia">
+                    </div>
+                </fieldset>
+
+                <h3>Partes Envolvidas</h3>
+                <fieldset>
+                    <div class="form-group">
+                        <label for="partes-envolvidas">Descreva as pessoas ou empresas envolvidas no conflito</label>
+                        <textarea id="partes-envolvidas" name="partes-envolvidas" rows="4"></textarea>
+                    </div>
+                </fieldset>
+                <div class="form-buttons">
+                    <button type="reset" class="btn btn-secondary">Limpar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+                </form>
+            </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

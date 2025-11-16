@@ -19,6 +19,7 @@
 
 /* 3. ESTILOS ESPECÍFICOS DAS PÁGINAS */
 @import url('3-pages/_auditoria.css');
+@import url('3-pages/_cadastar-denuncia.css');
 @import url('3-pages/_configuracoes.css');
 @import url('3-pages/_gerenciar-conflitos.css');
 @import url('3-pages/_gerenciar-denuncias.css');
