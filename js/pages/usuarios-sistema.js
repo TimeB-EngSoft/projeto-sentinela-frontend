@@ -4,9 +4,9 @@ import {
     approveOrRejectUser,
     cadastrarParcial,
     cadastrarInstituicao,
-    listarInstituicoes,          // <-- 1. Importar
-    listarUsuariosPorInstituicao, // <-- 2. Importar
-    updateUser                    // <-- 3. Importar
+    listarInstituicoes,
+    listarUsuariosPorInstituicao,
+    updateUser
 } from '../services/apiService.js';
 
 // Variável para armazenar os usuários ativos para filtragem
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupApprovalEventListeners();
     setupSearchListeners();
     setupModalListeners(); // Modal "Convidar"
-    setupInstitutionModalListeners(); // Modal "Criar Instituição" (agora obsoleto para aprovação)
-    setupLinkInstitutionModalListeners(); // <-- 4. Adicionar listener do novo modal
+    setupInstitutionModalListeners(); // Modal "Criar Instituição"
+    setupLinkInstitutionModalListeners(); 
 
 
     // ##################################################################
@@ -108,23 +108,22 @@ document.addEventListener('DOMContentLoaded', function() {
         card.dataset.userId = user.id; 
         card.dataset.userCargo = user.cargo;
         card.dataset.userName = user.nome;
+        
+        // --- MUDANÇA 1/4 ---
+        // Salvamos o NOME da instituição (do DTO) no dataset do card
+        // para que possamos lê-lo ao clicar em "Aprovar".
+        card.dataset.instituicaoNome = user.instituicaoNome || '';
+        // --- FIM DA MUDANÇA ---
 
         const initials = (user.nome || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         
-        
-        // 1. Pega o cargo
         const role = user.cargo || 'Cargo não informado';
-
-        // 2. Decide o que mostrar para a instituição
-        // O DTO do backend envia o campo "instituicaoNome"
         let institutionName = user.instituicaoNome; 
         
         if (!institutionName) {
-            // Se o cargo for da secretaria, a instituição é a própria secretaria
             if (role === 'GESTOR_SECRETARIA' || role === 'USUARIO_SECRETARIA') {
                 institutionName = 'Secretaria (Interno)';
             } else {
-                // Se não for da secretaria e não tiver nome, é um problema (ou não se aplica)
                 institutionName = 'Não Informada';
             }
         }
@@ -163,29 +162,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!userId) return;
 
-            // <-- 5. NOVA LÓGICA DE APROVAÇÃO -->
             const userCargo = card.dataset.userCargo;
             const userName = card.dataset.userName;
             
+            // --- MUDANÇA 2/4 ---
+            // Lemos o nome da instituição que salvamos no dataset
+            const instituicaoNome = card.dataset.instituicaoNome;
+            // --- FIM DA MUDANÇA ---
+            
             if (isApproved) {
-                // Se for cargo de Instituição (Gestor ou Usuário), abre o modal de VINCULAR
                 if (userCargo === 'GESTOR_INSTITUICAO' || userCargo === 'USUARIO_INSTITUICAO') {
-                    openLinkInstitutionModal(userId, userName, userCargo, card);
+                    // --- MUDANÇA 3/4 ---
+                    // Passamos o nome da instituição para a função que abre o modal
+                    openLinkInstitutionModal(userId, userName, userCargo, card, instituicaoNome);
+                    // --- FIM DA MUDANÇA ---
                 } else {
-                    // Se for Secretaria (ou outro), aprova direto
                     await executeApproval(userId, true, card);
                 }
             } else {
-                // Se a ação for "rejeitar", executa direto
                 await executeApproval(userId, false, card);
             }
         });
     }
 
-    /**
-     * Executa a chamada final à API para aprovar ou rejeitar o usuário.
-     * Esta função AGORA SÓ MUDA O STATUS. O VÍNCULO É FEITO ANTES.
-     */
     async function executeApproval(userId, isApproved, cardElement) {
         const buttons = cardElement.querySelectorAll('.user-card-actions button');
         buttons.forEach(btn => btn.disabled = true);
@@ -230,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- (O restante de loadActiveUsers, createActiveUserCard, getInitials, getRoleTag é igual) ---
     // ##################################################################
     // ##                   CARREGAR USUÁRIOS ATIVOS                   ##
     // ##################################################################
@@ -267,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.className = 'active-user-card card';
         const initials = getInitials(user.nome);
         const role = getRoleTag(user.cargo);
+        // O DTO de usuário ATIVO tem o objeto 'instituicao' aninhado
         const instituicao = user.instituicao ? user.instituicao.nome : 'Sem instituição';
         card.innerHTML = `
             <div class="avatar-initials" style="background-color: ${role.bgColor}; color: ${role.color};">${initials}</div>
@@ -300,10 +299,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- (A lógica do Modal "Convidar" e "Criar Instituição" permanece a mesma) ---
+
     // ##################################################################
     // ##                 LÓGICA DO MODAL (CONVIDAR)                   ##
     // ##################################################################
+    
+    // (Esta função precisa ser atualizada para usar o dropdown de instituições, como fizemos no cadastro.js)
     function setupModalListeners() {
         const modal = document.getElementById('invite-user-modal');
         const openButton = document.getElementById('inviteUserButton');
@@ -330,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const partialData = {
                 nome: document.getElementById('invite-name').value,
                 email: document.getElementById('invite-email').value,
-                instituicao: document.getElementById('invite-instituicao').value,
+                instituicao: document.getElementById('invite-instituicao').value, // (!! CUIDADO: Este ainda é um input de texto)
                 cargo: document.getElementById('invite-cargo').value,
                 justificativa: document.getElementById('invite-justificativa').value,
             };
@@ -345,10 +346,11 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Enviar Convite';
         }
     }
+    
     // ##################################################################
     // ##             LÓGICA DO MODAL (CRIAR INSTITUIÇÃO)            ##
     // ##################################################################
-    // (Esta função não é mais usada para aprovação, mas pode ser usada para outra coisa)
+    
     function setupInstitutionModalListeners() {
         const modal = document.getElementById('create-institution-modal');
         const form = document.getElementById('create-institution-form');
@@ -366,8 +368,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleInstitutionSubmit);
     }
     async function handleInstitutionSubmit(event) {
-        // ... (Esta lógica agora está "morta" para o fluxo de aprovação)
-        // ... (Mas a deixamos aqui caso o admin queira criar uma instituição avulsa)
         event.preventDefault();
         const submitButton = document.getElementById('modal-inst-submit-button');
         submitButton.disabled = true;
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const instituicaoData = {
             nome: document.getElementById('inst-name').value,
             sigla: document.getElementById('inst-sigla').value,
-            tipo: document.getElementById('inst-tipo').value,
+            tipo: document.getElementById('inst-tipo').value, // (!! CUIDADO: o DTO não tem 'tipo')
         };
         try {
             const novaInstituicao = await cadastrarInstituicao(instituicaoData);
@@ -392,15 +392,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // ##################################################################
-    // ##             LÓGICA DO MODAL (VINCULAR INSTITUIÇÃO) (NOVO)     ##
+    // ##             LÓGICA DO MODAL (VINCULAR INSTITUIÇÃO)           ##
     // ##################################################################
 
-    /**
-     * Abre o modal de VÍNCULO de instituição.
-     */
-    function openLinkInstitutionModal(userId, userName, userCargo, cardElement) {
-        // Guarda os dados da aprovação
-        pendingApprovalData = { userId, isApproved: true, cardElement, userCargo };
+    function openLinkInstitutionModal(userId, userName, userCargo, cardElement, instituicaoNome) {
+        // Guarda os dados da aprovação, incluindo o nome da instituição solicitada
+        pendingApprovalData = { userId, isApproved: true, cardElement, userCargo, instituicaoNome };
 
         const modal = document.getElementById('link-institution-modal');
         const title = document.getElementById('link-institution-title');
@@ -419,13 +416,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (modal) {
             modal.style.display = 'block';
-            populateLinkInstitutionsDropdown(); // Carrega as instituições no dropdown
+            populateLinkInstitutionsDropdown(); 
         }
     }
 
-    /**
-     * Configura os listeners do novo modal de VÍNCULO.
-     */
     function setupLinkInstitutionModalListeners() {
         const modal = document.getElementById('link-institution-modal');
         const form = document.getElementById('link-institution-form');
@@ -437,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const closeModal = () => {
             modal.style.display = 'none';
             form.reset();
-            pendingApprovalData = null; // Cancela a aprovação pendente
+            pendingApprovalData = null; 
         };
 
         closeButton.addEventListener('click', closeModal);
@@ -447,25 +441,22 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleLinkSubmit);
     }
 
-    /**
-     * Popula o dropdown de instituições no modal de VÍNCULO.
-     */
     async function populateLinkInstitutionsDropdown() {
         const select = document.getElementById('link-inst-select');
         if (!select) return;
 
-        // Usa o cache se disponível
-        if (cachedApprovalInstitutions) {
-            renderInstitutionOptions(cachedApprovalInstitutions);
-            return;
+        // Limpa opções antigas, exceto se o cache já foi renderizado
+        if (!cachedApprovalInstitutions) {
+             select.innerHTML = '<option value="">Carregando...</option>';
+             select.disabled = true;
         }
-        
-        select.innerHTML = '<option value="">Carregando...</option>';
-        select.disabled = true;
 
         try {
-            const institutions = await listarInstituicoes();
-            cachedApprovalInstitutions = institutions || []; // Armazena em cache
+            // Só busca na API se o cache estiver vazio
+            if (!cachedApprovalInstitutions) {
+                const institutions = await listarInstituicoes();
+                cachedApprovalInstitutions = institutions || []; 
+            }
             renderInstitutionOptions(cachedApprovalInstitutions);
         } catch (error) {
             console.error('Erro ao carregar instituições:', error);
@@ -475,9 +466,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Helper para renderizar as opções no <select>
-     */
     function renderInstitutionOptions(institutions) {
         const select = document.getElementById('link-inst-select');
         select.innerHTML = ''; // Limpa o "Carregando..."
@@ -490,17 +478,35 @@ document.addEventListener('DOMContentLoaded', function() {
         select.innerHTML = '<option value="">Selecione uma instituição...</option>';
         institutions.forEach(inst => {
             const option = document.createElement('option');
-            // Armazena ID no value e NOME no data-name
             option.value = inst.id;
             option.dataset.name = inst.nome; 
             option.textContent = `${inst.nome} (${inst.sigla || 'Sem Sigla'})`;
             select.appendChild(option);
         });
+
+        // --- MUDANÇA 4/4 ---
+        // Agora que as opções estão na tela, tentamos pré-selecionar
+        // com base no nome que guardamos no 'pendingApprovalData'.
+        const requestedInstitutionName = pendingApprovalData?.instituicaoNome;
+        
+        if (requestedInstitutionName) {
+            // Encontra a opção cujo NOME (no dataset) corresponde ao nome solicitado
+            const optionToSelect = Array.from(select.options).find(
+                opt => opt.dataset.name === requestedInstitutionName
+            );
+
+            if (optionToSelect) {
+                // Se achou, define o valor do <select> para o ID daquela opção
+                select.value = optionToSelect.value;
+            } else {
+                // Se não achou (ex: "Secretaria (Interno)" ou nome não existe mais)
+                // apenas deixa em "Selecione uma instituição..."
+                select.value = "";
+            }
+        }
+        // --- FIM DA MUDANÇA ---
     }
 
-    /**
-     * Lida com o envio do formulário de VÍNCULO de instituição.
-     */
     async function handleLinkSubmit(event) {
         event.preventDefault();
         
@@ -515,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const institutionId = selectedOption.value;
-        const institutionName = selectedOption.dataset.name; // Pegamos o nome do data-name
+        const institutionName = selectedOption.dataset.name; 
         const { userId, userCargo, cardElement } = pendingApprovalData;
 
         const submitButton = document.getElementById('modal-link-submit-button');
@@ -523,11 +529,8 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.textContent = 'Verificando...';
 
         try {
-            // 1. VERIFICAÇÃO (Apenas para Gestores)
             if (userCargo === 'GESTOR_INSTITUICAO') {
                 const gestores = await listarUsuariosPorInstituicao(institutionId, 'GESTOR_INSTITUICAO');
-                
-                // Filtra para garantir que são gestores ATIVOS (se a API retornar pendentes)
                 const gestoresAtivos = gestores.filter(g => g.status === 'ATIVO');
 
                 if (gestoresAtivos.length > 0) {
@@ -536,18 +539,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // 2. VINCULAR O USUÁRIO (se a verificação passou)
             submitButton.textContent = 'Vinculando...';
             
-            // Usamos a API de atualização para definir a instituição do usuário
-            // Assumindo que o DTO de atualização aceita `instituicaoNome`
+            // O backend espera 'instituicaoNome' no DTO de atualização
             await updateUser(userId, { instituicaoNome: institutionName });
 
-            // 3. APROVAR O USUÁRIO (se o vínculo deu certo)
             submitButton.textContent = 'Aprovando...';
             await executeApproval(userId, true, cardElement);
             
-            // 4. FECHAR O MODAL
             document.getElementById('modal-link-close-button').click();
 
         } catch (error) {
@@ -600,4 +599,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
         renderActiveUsers(filteredUsers);
     }
-}); 
+});
