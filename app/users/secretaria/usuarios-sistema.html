@@ -213,6 +213,68 @@
         </div>
     </div>
 
+    <div id="create-institution-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="create-institution-title">Criar Instituição para Gestor</h2>
+                <button class="close-button" id="modal-inst-close-button">&times;</button>
+            </div>
+            
+            <form id="create-institution-form">
+                <p>Para aprovar este gestor, é obrigatório criar a instituição que ele irá gerenciar.</p>
+                
+                <div class="form-group">
+                    <label for="inst-name">Nome da Instituição</label>
+                    <input type="text" id="inst-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="inst-sigla">Sigla (Nome Curto)</label>
+                    <input type="text" id="inst-sigla">
+                </div>
+                <div class="form-group">
+                    <label for="inst-tipo">Tipo</label>
+                    <select id="inst-tipo" required>
+                        <option value="">Selecione o tipo...</option>
+                        <option value="ESCOLA">Escola</option>
+                        <option value="UNIVERSIDADE">Universidade</option>
+                        <option value="ORGAO_PUBLICO">Órgão Público</option>
+                        <option value="ONG">ONG</option>
+                        <option value="OUTRO">Outro</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modal-inst-cancel-button">Cancelar Aprovação</button>
+                    <button type="submit" class="btn btn-primary" id="modal-inst-submit-button">Criar e Aprovar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="link-institution-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="link-institution-title">Vincular Instituição</h2>
+                <button class="close-button" id="modal-link-close-button">&times;</button>
+            </div>
+            
+            <form id="link-institution-form">
+                <p id="link-institution-desc">Para aprovar este usuário, selecione a instituição à qual ele será vinculado.</p>
+                
+                <div class="form-group">
+                    <label for="link-inst-select">Instituições Cadastradas</label>
+                    <select id="link-inst-select" required>
+                        <option value="">Carregando instituições...</option>
+                        </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modal-link-cancel-button">Cancelar Aprovação</button>
+                    <button type="submit" class="btn btn-primary" id="modal-link-submit-button">Vincular e Aprovar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="../../../js/components/navigation.js"></script>
     <script type="module" src="../../../js/pages/usuarios-sistema.js"></script>

@@ -50,10 +50,10 @@ export const API_ENDPOINTS = {
     },
 
     instituicao: {
-        cadastrar: '/instituicao/cadastrar',
-        atualizar: (id) => `/instituicao/${id}/atualizar`,
-        listar: '/instituicao/listar',
-        listarUsuarios: (id) => `/instituicao/${id}/listUsers`
+        cadastrar: '/instituicoes/cadastrar', 
+        atualizar: (id) => `/instituicoes/${id}/atualizar`, 
+        listar: '/instituicoes/listar', 
+        listarUsuarios: (id) => `/instituicoes/${id}/listUsers` 
     },
 
     denuncia: {

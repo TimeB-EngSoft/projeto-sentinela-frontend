@@ -1,4 +1,4 @@
-import { listarInstituicoes } from '../services/apiService.js';
+import { listarInstituicoes, cadastrarInstituicao } from '../services/apiService.js';
 
 function loadHeaderUserData() {
     const userName = localStorage.getItem('userName');
@@ -70,6 +70,9 @@ function buildInstitutionCard(instituicao) {
     const nome = instituicao?.nome || instituicao?.razaoSocial || sigla;
     const gestor = instituicao?.gestorResponsavel || instituicao?.gestor || '—';
 
+    // Ajusta o tipo com base nos campos disponíveis
+    const tipoReal = instituicao.areaAtuacao || tipo;
+
     return `
         <article class="institution-card card">
             <div class="inst-card-header">
@@ -78,7 +81,7 @@ function buildInstitutionCard(instituicao) {
                     <div class="inst-card-title">
                         <h3>${sigla}</h3>
                         <div class="inst-card-tags">
-                            <span class="tag tag-neutral">${tipo}</span>
+                            <span class="tag tag-neutral">${tipoReal}</span>
                         </div>
                     </div>
                 </div>
@@ -118,7 +121,7 @@ async function loadInstitutions() {
             return;
         }
 
-        setFeedback('', 'info');
+        setFeedback('', 'info'); // Limpa o feedback
         container.innerHTML = institutions.map(buildInstitutionCard).join('');
     } catch (error) {
         console.error('Erro ao carregar instituições:', error);
@@ -126,10 +129,103 @@ async function loadInstitutions() {
     }
 }
 
+
+// ##################################################################
+// ##               LÓGICA DO MODAL (CADASTRAR)                  ##
+// ##################################################################
+
+/**
+ * Configura os listeners para abrir, fechar e enviar o modal de cadastro.
+ */
+function setupModalListeners() {
+    const modal = document.getElementById('add-institution-modal');
+    const openButton = document.getElementById('addInstitutionButton');
+    const closeButton = document.getElementById('modal-inst-close-button');
+    const cancelButton = document.getElementById('modal-inst-cancel-button');
+    const form = document.getElementById('add-institution-form');
+
+    if (!modal || !openButton || !closeButton || !cancelButton || !form) {
+        console.warn('Elementos do modal de cadastro não encontrados.');
+        return;
+    }
+
+    // Abrir o modal
+    openButton.addEventListener('click', () => {
+        modal.style.display = 'block';
+    });
+
+    // Função para fechar o modal
+    const closeModal = () => {
+        modal.style.display = 'none';
+        form.reset();
+    };
+
+    closeButton.addEventListener('click', closeModal);
+    cancelButton.addEventListener('click', closeModal);
+    
+    // Fechar ao clicar fora
+    window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+    // Listener de submit do formulário
+    form.addEventListener('submit', handleRegisterSubmit);
+}
+
+/**
+ * Lida com o envio do formulário de cadastro de instituição.
+ */
+async function handleRegisterSubmit(event) {
+    event.preventDefault();
+    
+    const submitButton = document.getElementById('modal-inst-submit-button');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Salvando...';
+
+    // Coleta os dados do formulário
+    const instituicaoData = {
+        nome: document.getElementById('inst-nome').value,
+        sigla: document.getElementById('inst-sigla').value,
+        cnpj: document.getElementById('inst-cnpj').value,
+        email: document.getElementById('inst-email').value,
+        telefone: document.getElementById('inst-telefone').value,
+        areaAtuacao: document.getElementById('inst-area').value,
+        descricao: document.getElementById('inst-descricao').value,
+    };
+
+    try {
+        // Chama a API
+        const novaInstituicao = await cadastrarInstituicao(instituicaoData);
+        
+        alert(`Instituição "${novaInstituicao.nome}" cadastrada com sucesso!`);
+        
+        // Fecha o modal
+        document.getElementById('modal-inst-close-button').click();
+        
+        // Recarrega a lista de instituições para mostrar a nova
+        await loadInstitutions();
+
+    } catch (error) {
+        console.error('Erro ao cadastrar instituição:', error);
+        alert(`Erro: ${error.message || 'Não foi possível cadastrar a instituição.'}`);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Salvar Instituição';
+    }
+}
+
+
+// ##################################################################
+// ##                  INICIALIZAÇÃO DA PÁGINA                     ##
+// ##################################################################
+
 function bootstrap() {
     loadHeaderUserData();
     setupSidebarToggle();
     loadInstitutions();
+    setupModalListeners(); // Adiciona o listener do modal
 }
 
-document.addEventListener('DOMContentLoaded', bootstrap);
+document.addEventListener('DOMContentLoaded', bootstrap);   

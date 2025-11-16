@@ -7,11 +7,12 @@
     gap: 25px;
 }
 
+/* Em _gerenciar-instituicoes.css */
 .institution-grid__list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-    gap: 25px;
-    width: 100%;
+    /* Cria colunas automáticas de no mínimo 300px */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px; /* Ou o espaçamento que você estiver usando */
 }
 
 @media (max-width: 500px) {
