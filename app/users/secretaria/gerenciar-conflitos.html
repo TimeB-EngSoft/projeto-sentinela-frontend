@@ -7,6 +7,82 @@
     <link rel="stylesheet" href="../../../css/app/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.6);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal.show { display: block; opacity: 1; }
+        .modal-content {
+            background-color: #ffffff; margin: 10% auto; padding: 0;
+            border: 1px solid #ddd; width: 90%; max-width: 600px;
+            border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateY(-50px); transition: transform 0.3s ease;
+        }
+        .modal.show .modal-content { transform: translateY(0); }
+        .modal-header {
+            padding: 16px 24px; border-bottom: 1px solid #e9ecef;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+        .modal-close {
+            font-size: 1.5rem; font-weight: 700; color: #000;
+            text-shadow: 0 1px 0 #fff; opacity: .5;
+            background: transparent; border: 0; cursor: pointer;
+        }
+        .modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid #e9ecef;
+            display: flex; justify-content: flex-end; gap: 8px;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block; margin-bottom: .5rem;
+            font-weight: 500; color: #333;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: .75rem; font-size: 1rem;
+            border: 1px solid #ccc; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-group textarea { min-height: 100px; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        
+        /* Estilos do Modal de Detalhes */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .detail-item {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .detail-item strong {
+            display: block;
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .detail-item span, .detail-item p {
+            font-size: 0.95rem;
+            color: #111;
+            margin: 0;
+            white-space: pre-wrap; /* Preserva quebras de linha */
+        }
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -41,7 +117,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Total de Conflitos</p>
-                        <span>3</span>
+                        <span id="stat-total-conflitos">0</span>
                     </div>
                     <div class="stat-card__icon-bg icon-bg-danger">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -50,7 +126,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Pendentes</p>
-                        <span>1</span>
+                        <span id="stat-pendentes">0</span>
                     </div>
                     <div class="stat-card__icon-bg icon-bg-danger">
                         <i class="fas fa-hourglass-half"></i>
@@ -59,7 +135,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Em Análise</p>
-                        <span>1</span>
+                        <span id="stat-analise">0</span>
                     </div>
                     <div class="stat-card__icon-bg icon-bg-danger">
                         <i class="fas fa-search"></i>
@@ -68,7 +144,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Resolvidos</p>
-                        <span>1</span>
+                        <span id="stat-resolvidos">0</span>
                     </div>
                     <div class="stat-card__icon-bg icon-bg-success">
                         <i class="fas fa-check-circle"></i>
@@ -79,24 +155,26 @@
             <section class="card conflitos-list-card">
                 <div class="card-header">
                     <h3 class="card-title">Lista de Conflitos</h3>
-                    <a href="#" class="btn btn-primary">Registrar Conflito</a>
+                    <a href="#" class="btn btn-primary" id="addConflitoButton">Registrar Conflito</a>
                 </div>
 
                 <div class="conflitos-filter-bar">
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar conflitos...">
+                        <input type="text" id="search-input" placeholder="Buscar por título, partes...">
                     </div>
-                    <button class="btn-filter">
-                        <i class="fas fa-filter"></i>
-                        <span>Todas</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <button class="btn-filter">
-                        <i class="fas fa-filter"></i>
-                        <span>Todos</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
+                    <select class="btn-filter" id="status-filter">
+                        <option value="">Todos os Status</option>
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="EM_ANALISE">Em Análise</option>
+                        <option value="RESOLVIDO">Resolvido</option>
+                    </select>
+                    <select class="btn-filter" id="prioridade-filter">
+                        <option value="">Todas as Prioridades</option>
+                        <option value="BAIXA">Baixa</option>
+                        <option value="MEDIA">Média</option>
+                        <option value="ALTA">Alta</option>
+                    </select>
                 </div>
 
                 <div id="conflitosFeedback" class="card empty-card" aria-live="polite"></div>
@@ -106,11 +184,10 @@
                         <thead>
                             <tr>
                                 <th>Título</th>
-                                <th>Instituição</th>
                                 <th>Envolvidos</th>
                                 <th>Prioridade</th>
                                 <th>Status</th>
-                                <th>Data</th>
+                                <th>Data Início</th>
                                 <th>Responsável</th>
                                 <th>Ações</th>
                             </tr>
@@ -127,8 +204,99 @@
         </main>
     </div>
 
+    <div id="modal-conflito-details" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detail-modal-title">Detalhes do Conflito</h3>
+                <button type="button" class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+                <p>Carregando...</p>
+            </div>
+            <div class="modal-footer" id="detail-modal-footer">
+                <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-conflito" class="modal">
+        <div class="modal-content">
+            <form id="form-add-conflito">
+                <div class="modal-header">
+                    <h3>Registrar Novo Conflito</h3>
+                    <button type="button" class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group full-width">
+                        <label for="conflito-titulo">Título do Conflito *</label>
+                        <input type="text" id="conflito-titulo" required>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="conflito-tipo">Tipo de Conflito *</label>
+                            <select id="conflito-tipo" required>
+                                <option value="">Selecione...</option>
+                                <option value="TERRA_INDIGENA">Terra Indígena</option>
+                                <option value="DISPUTA_DE_POSSE">Disputa de Posse</option>
+                                <option value="TERRITORIO_QUILOMBOLA">Quilombola</option>
+                                <option value="RECURSO_HIDRICO">Recurso Hídrico</option>
+                                <option value="DESMATAMENTO">Desmatamento</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="conflito-data-inicio">Data Início *</label>
+                            <input type="date" id="conflito-data-inicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="conflito-status">Status *</label>
+                            <select id="conflito-status" required>
+                                <option value="PENDENTE">Pendente</option>
+                                <option value="EM_ANALISE">Em Análise</option>
+                                <option value="RESOLVIDO">Resolvido</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="conflito-prioridade">Prioridade *</label>
+                            <select id="conflito-prioridade" required>
+                                <option value="BAIXA">Baixa</option>
+                                <option value="MEDIA" selected>Média</option>
+                                <option value="ALTA">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="conflito-descricao">Descrição</label>
+                        <textarea id="conflito-descricao" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="conflito-reclamante">Parte Reclamante</label>
+                            <input type="text" id="conflito-reclamante">
+                        </div>
+                        <div class="form-group">
+                            <label for="conflito-reclamada">Parte Reclamada</label>
+                            <input type="text" id="conflito-reclamada">
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="conflito-grupos">Grupos Vulneráveis</label>
+                        <input type="text" id="conflito-grupos" placeholder="Ex: Crianças, Idosos, etc.">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="add-conflito-submit-button">Salvar Conflito</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script src="../../../js/components/navigation.js"></script>
-    <script type="module" src="../../../js/pages/secretaria.js"></script>
     <script type="module" src="../../../js/pages/secretaria/conflitos.js"></script>
 
 </body>

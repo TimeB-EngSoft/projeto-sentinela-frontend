@@ -7,6 +7,67 @@
     <link rel="stylesheet" href="../../../css/app/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.6);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal.show { display: block; opacity: 1; }
+        .modal-content {
+            background-color: #ffffff; margin: 10% auto; padding: 0;
+            border: 1px solid #ddd; width: 90%; max-width: 600px; /* Maior para detalhes */
+            border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateY(-50px); transition: transform 0.3s ease;
+        }
+        .modal.show .modal-content { transform: translateY(0); }
+        .modal-header {
+            padding: 16px 24px; border-bottom: 1px solid #e9ecef;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+        .modal-close {
+            font-size: 1.5rem; font-weight: 700; color: #000;
+            text-shadow: 0 1px 0 #fff; opacity: .5;
+            background: transparent; border: 0; cursor: pointer;
+        }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid #e9ecef;
+            display: flex; justify-content: flex-end; gap: 8px;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .detail-item {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .detail-item strong {
+            display: block;
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .detail-item span {
+            font-size: 0.95rem;
+            color: #111;
+        }
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+        .detail-item p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #111;
+            white-space: pre-wrap; /* Preserva quebras de linha */
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -41,29 +102,25 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Total de Denúncias</p>
-                        <span>6</span>
-                        <small>Todas as denúncias</small>
+                        <span id="stat-total-denuncias">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Pendentes</p>
-                        <span>3</span>
-                        <small>Aguardando validação</small>
+                        <span id="stat-pendentes">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Aprovadas</p>
-                        <span>2</span>
-                        <small>Validadas e ativas</small>
+                        <span id="stat-aprovadas">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Rejeitadas</p>
-                        <span>1</span>
-                        <small>Não validadas</small>
+                        <span id="stat-rejeitadas">0</span>
                     </div>
                 </div>
             </section>
@@ -73,19 +130,22 @@
                 <div class="filter-controls">
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar por código, título ou localização...">
+                        <input type="text" id="search-input" placeholder="Buscar por código, título ou localização...">
                     </div>
-                    <select name="status">
+                    <select name="status" id="status-filter">
                         <option value="">Todos os status</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="aprovada">Aprovada</option>
-                        <option value="rejeitada">Rejeitada</option>
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="APROVADA">Aprovada</option>
+                        <option value="REJEITADA">Rejeitada</option>
                     </select>
-                    <select name="prioridade">
-                        <option value="">Todas as prioridades</option>
-                        <option value="baixa">Baixa</option>
-                        <option value="media">Média</option>
-                        <option value="alta">Alta</option>
+                    <select name="prioridade" id="tipo-filter">
+                        <option value="">Todos os tipos</option>
+                        <option value="TERRA_INDIGENA">Terra Indígena</option>
+                        <option value="DISPUTA_DE_POSSE">Disputa de Posse</option>
+                        <option value="TERRITORIO_QUILOMBOLA">Quilombola</option>
+                        <option value="RECURSO_HIDRICO">Recurso Hídrico</option>
+                        <option value="DESMATAMENTO">Desmatamento</option>
+                        <option value="OUTRO">Outro</option>
                     </select>
                 </div>
             </section>
@@ -103,7 +163,6 @@
                                 <th>Localização</th>
                                 <th>Tipo</th>
                                 <th>Data</th>
-                                <th>Prioridade</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
@@ -119,8 +178,25 @@
         </main>
     </div>
 
+    <div id="modal-denuncia-details" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detail-modal-title">Detalhes da Denúncia</h3>
+                <button type="button" class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+                <p>Carregando...</p>
+            </div>
+            <div class="modal-footer" id="detail-modal-footer">
+                <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+                <button type="button" class="btn btn-primary" id="btn-converter-conflito" style="display: none;">
+                    <i class="fas fa-file-export"></i> Converter em Conflito
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="../../../js/components/navigation.js"></script>
-    <script type="module" src="../../../js/pages/secretaria.js"></script>
     <script type="module" src="../../../js/pages/secretaria/denuncias.js"></script>
 
 </body>

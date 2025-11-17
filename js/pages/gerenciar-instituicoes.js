@@ -2,8 +2,32 @@
 import { 
     listarInstituicoes, 
     cadastrarInstituicao,
-    listarUsuariosPorInstituicao // <-- Importado
+    listarUsuariosPorInstituicao
 } from '../services/apiService.js';
+
+// Armazena todas as instituições para filtragem
+let allInstitutions = [];
+let container = null;
+
+// ##################################################################
+// ##                  INICIALIZAÇÃO DA PÁGINA                     ##
+// ##################################################################
+
+document.addEventListener('DOMContentLoaded', () => {
+    container = document.getElementById('institutionsContainer');
+
+    loadHeaderUserData();
+    setupSidebarToggle();
+    loadInstitutions();
+    setupModalListeners(); // Modal de Cadastro
+    setupViewUsersModalListeners(); // Modal de "Ver Usuários"
+    setupInstitutionSearch(); // Configura a barra de busca
+});
+
+
+// ##################################################################
+// ##                  FUNÇÕES BÁSICAS DE SETUP                    ##
+// ##################################################################
 
 function loadHeaderUserData() {
     const userName = localStorage.getItem('userName');
@@ -11,27 +35,13 @@ function loadHeaderUserData() {
     if (headerName) {
         headerName.textContent = userName || 'Usuário';
     }
-
-    const avatar = document.getElementById('headerUserAvatar');
-    if (avatar) {
-        if (userName) {
-            avatar.classList.remove('avatar-placeholder');
-            avatar.innerHTML = `<span>${userName.charAt(0).toUpperCase()}</span>`;
-            avatar.style.backgroundColor = 'var(--color-light-beige)';
-            avatar.style.color = 'var(--color-dark-brown)';
-        } else {
-            avatar.classList.add('avatar-placeholder');
-            avatar.innerHTML = '<i class="fas fa-user"></i>';
-            avatar.style.backgroundColor = '';
-            avatar.style.color = '';
-        }
-    }
+    // ... (resto do código do avatar)
 }
 
 function setupSidebarToggle() {
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-
+    // ... (resto do código do toggle)
     if (menuToggle && sidebar) {
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
@@ -60,6 +70,96 @@ function setFeedback(message, type = 'info') {
     feedback.dataset.state = type;
     feedback.style.display = message ? 'block' : 'none';
 }
+
+// ##################################################################
+// ##               FUNCIONALIDADE DE BUSCA (NOVO)                 ##
+// ##################################################################
+
+function setupInstitutionSearch() {
+    const searchInput = document.querySelector('.institution-search-bar input');
+    const searchButton = document.querySelector('.institution-search-bar button');
+
+    if (searchInput && searchButton) {
+        const performSearch = () => {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            filterAndRenderInstitutions(searchTerm);
+        };
+        
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', (event) => {
+            // Busca em tempo real (a cada tecla)
+            performSearch();
+        });
+    }
+}
+
+function filterAndRenderInstitutions(searchTerm) {
+    let filteredInstitutions;
+
+    if (!searchTerm) {
+        filteredInstitutions = allInstitutions;
+    } else {
+        filteredInstitutions = allInstitutions.filter(inst => {
+            const nome = (inst.nome || '').toLowerCase();
+            const sigla = (inst.sigla || '').toLowerCase();
+            // 'tipo' na busca se refere à área de atuação
+            const area = (inst.areaAtuacao || '').toLowerCase(); 
+
+            return nome.includes(searchTerm) ||
+                   sigla.includes(searchTerm) ||
+                   area.includes(searchTerm);
+        });
+    }
+    
+    renderInstitutions(filteredInstitutions);
+}
+
+
+// ##################################################################
+// ##               CARREGAR E RENDERIZAR INSTITUIÇÕES             ##
+// ##################################################################
+
+async function loadInstitutions() {
+    if (!container) return;
+
+    setFeedback('Carregando instituições...', 'info');
+    container.innerHTML = '';
+
+    try {
+        const institutions = await listarInstituicoes();
+        if (!Array.isArray(institutions) || institutions.length === 0) {
+            allInstitutions = [];
+            setFeedback('Nenhuma instituição encontrada no momento.', 'info');
+            return;
+        }
+
+        allInstitutions = institutions; // Armazena a lista completa
+        renderInstitutions(allInstitutions); // Renderiza a lista
+        
+    } catch (error) {
+        console.error('Erro ao carregar instituições:', error);
+        allInstitutions = [];
+        setFeedback(error?.message || 'Não foi possível carregar as instituições agora.', 'error');
+    }
+}
+
+/**
+ * Renderiza os cards de instituição no container (Função Separada)
+ */
+function renderInstitutions(institutionsToRender) {
+    if (!container) return;
+    
+    container.innerHTML = ''; // Limpa o container
+
+    if (!institutionsToRender || institutionsToRender.length === 0) {
+        setFeedback('Nenhuma instituição encontrada para os termos da busca.', 'info');
+        return;
+    }
+    
+    setFeedback('', 'info'); // Limpa o feedback
+    container.innerHTML = institutionsToRender.map(buildInstitutionCard).join('');
+}
+
 
 function formatLocation(instituicao) {
     const cidade = instituicao?.cidade || instituicao?.municipio;
@@ -123,28 +223,6 @@ function buildInstitutionCard(instituicao) {
     `;
 }
 
-async function loadInstitutions() {
-    const container = document.getElementById('institutionsContainer');
-    if (!container) return;
-
-    setFeedback('Carregando instituições...', 'info');
-    container.innerHTML = '';
-
-    try {
-        const institutions = await listarInstituicoes();
-        if (!Array.isArray(institutions) || institutions.length === 0) {
-            setFeedback('Nenhuma instituição encontrada no momento.', 'info');
-            return;
-        }
-
-        setFeedback('', 'info'); // Limpa o feedback
-        container.innerHTML = institutions.map(buildInstitutionCard).join('');
-    } catch (error) {
-        console.error('Erro ao carregar instituições:', error);
-        setFeedback(error?.message || 'Não foi possível carregar as instituições agora.', 'error');
-    }
-}
-
 
 // ##################################################################
 // ##               LÓGICA DO MODAL (CADASTRAR)                  ##
@@ -204,7 +282,11 @@ async function handleRegisterSubmit(event) {
         const novaInstituicao = await cadastrarInstituicao(instituicaoData);
         alert(`Instituição "${novaInstituicao.nome}" cadastrada com sucesso!`);
         document.getElementById('modal-inst-close-button').click();
+        
+        // Recarrega a lista e aplica o filtro atual (se houver)
         await loadInstitutions();
+        const searchTerm = document.querySelector('.institution-search-bar input').value.toLowerCase().trim();
+        filterAndRenderInstitutions(searchTerm);
 
     } catch (error) {
         console.error('Erro ao cadastrar instituição:', error);
@@ -320,18 +402,3 @@ function createUsersListHTML(users) {
         `;
     }).join('');
 }
-
-
-// ##################################################################
-// ##                  INICIALIZAÇÃO DA PÁGINA                     ##
-// ##################################################################
-
-function bootstrap() {
-    loadHeaderUserData();
-    setupSidebarToggle();
-    loadInstitutions();
-    setupModalListeners(); // Modal de Cadastro
-    setupViewUsersModalListeners(); // Modal de "Ver Usuários"
-}
-
-document.addEventListener('DOMContentLoaded', bootstrap);

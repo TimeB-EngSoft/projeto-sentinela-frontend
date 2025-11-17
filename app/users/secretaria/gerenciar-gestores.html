@@ -3,10 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Sentinela</title>
+    <title>Painel Sentinela - Gerenciar Gestores</title>
     <link rel="stylesheet" href="../../../css/app/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.6);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal.show { display: block; opacity: 1; }
+        .modal-content {
+            background-color: #ffffff; margin: 10% auto; padding: 0;
+            border: 1px solid #ddd; width: 90%; max-width: 500px;
+            border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateY(-50px); transition: transform 0.3s ease;
+        }
+        .modal.show .modal-content { transform: translateY(0); }
+        .modal-header {
+            padding: 16px 24px; border-bottom: 1px solid #e9ecef;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+        .modal-close {
+            font-size: 1.5rem; font-weight: 700; color: #000;
+            text-shadow: 0 1px 0 #fff; opacity: .5;
+            background: transparent; border: 0; cursor: pointer;
+        }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid #e9ecef;
+            display: flex; justify-content: flex-end; gap: 8px;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block; margin-bottom: .5rem;
+            font-weight: 500; color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: .75rem; font-size: 1rem;
+            border: 1px solid #ccc; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .user-details-list {
+            list-style: none; padding: 0; margin: 0;
+        }
+        .user-details-list li {
+            display: flex; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #eee;
+        }
+        .user-details-list li:last-child { border-bottom: 0; }
+        .user-details-list li strong { color: #555; font-weight: 600; }
+        .user-details-list li span { color: #333; text-align: right; }
+        .status-badge {
+            padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;
+            font-weight: 600; text-transform: uppercase;
+        }
+        .status-badge.status-ativo { background-color: #e6f7ec; color: #0d8a4f; }
+        .status-badge.status-inativo { background-color: #fceeee; color: #d9534f; }
+        .status-badge.status-pendente { background-color: #fff3cd; color: #856404; }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -31,7 +90,6 @@
                     </div>
                     <div class="user-info">
                         <span id="headerUserName" class="user-name">Carregando...</span>
-                        <!-- <span id="headerUserRole" class="user-role"></span> -->
                     </div>
                     
                     <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
@@ -42,8 +100,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Total de Gestores</p>
-                        <span>3</span>
-                        <small>+ 1 este mês</small>
+                        <span id="stat-total-gestores">0</span>
                     </div>
                     <div class="stat-card__icon">
                         <i class="fas fa-user-friends"></i>
@@ -52,7 +109,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Gestores Ativos</p>
-                        <span>2</span>
+                        <span id="stat-gestores-ativos">0</span>
                     </div>
                     <div class="stat-card__icon">
                         <i class="fas fa-user-check"></i>
@@ -61,7 +118,7 @@
                 <div class="stat-card">
                     <div class="stat-card__info">
                         <p>Aguardando Aprovação</p>
-                        <span>1</span>
+                        <span id="stat-gestores-pendentes">0</span>
                     </div>
                     <div class="stat-card__icon">
                         <i class="fas fa-user-clock"></i>
@@ -69,8 +126,8 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-card__info">
-                        <p>Gestores Inativoss</p>
-                        <span>0</span>
+                        <p>Gestores Inativos</p>
+                        <span id="stat-gestores-inativos">0</span>
                     </div>
                     <div class="stat-card__icon">
                         <i class="fas fa-user-slash"></i>
@@ -91,7 +148,7 @@
                         <div class="filter-controls">
                             <div class="search-bar">
                                 <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Buscar por nome ou email...">
+                                <input type="text" id="manager-search-input" placeholder="Buscar por nome ou email...">
                             </div>
                             <button class="btn btn-secondary btn-filter">
                                 <i class="fas fa-filter"></i> Todos os Tipos
@@ -117,36 +174,9 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="managers-table-body">
                             <tr>
-                                <td>Maria Silva</td>
-                                <td>maria.silva@secretaria.gov.br</td>
-                                <td><span class="tag tag-secretaria">Gestor Secretaria</span></td>
-                                <td>-</td>
-                                <td><span class="status-badge status-ativo">Ativo</span></td>
-                                <td>45</td>
-                                <td>12</td>
-                                <td><a href="#" class="action-link">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>João Santos</td>
-                                <td>joao.santos@escola.edu.br</td>
-                                <td><span class="tag tag-instituicao">Gestor Instituição</span></td>
-                                <td>Escola Municipal Santos Dumont</td>
-                                <td><span class="status-badge status-ativo">Ativo</span></td>
-                                <td>23</td>
-                                <td>8</td>
-                                <td><a href="#" class="action-link">Ver Detalhes</a></td>
-                            </tr>
-                            <tr>
-                                <td>Ana Oliveira</td>
-                                <td>ana.oliveira@escola.edu.br</td>
-                                <td><span class="tag tag-instituicao">Gestor Instituição</span></td>
-                                <td>Colégio Estadual Dom Pedro</td>
-                                <td><span class="status-badge status-pendente">Pendente</span></td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td><a href="#" class="action-link">Ver Detalhes</a></td>
+                                <td colspan="8" style="text-align: center; padding: 20px;">Carregando gestores...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -159,9 +189,67 @@
         </main>
     </div>
 
+    <div id="modal-add-manager" class="modal">
+        <div class="modal-content">
+            <form id="form-add-manager">
+                <div class="modal-header">
+                    <h3>Adicionar Novo Gestor</h3>
+                    <button type="button" class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>O gestor receberá um e-mail para definir sua senha e completar o cadastro.</p>
+                    <div class="form-group">
+                        <label for="add-nome">Nome Completo</label>
+                        <input type="text" id="add-nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-email">Email</label>
+                        <input type="email" id="add-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-cargo">Tipo de Gestor</label>
+                        <select id="add-cargo" required>
+                            <option value="" disabled selected>Selecione o tipo</option>
+                            <option value="GESTOR_SECRETARIA">Gestor da Secretaria</option>
+                            <option value="GESTOR_INSTITUICAO">Gestor de Instituição</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="add-instituicao-group" style="display: none;">
+                        <label for="add-instituicao-select">Instituição</label>
+                        <select id="add-instituicao-select">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="add-manager-submit-button">
+                        <i class="fas fa-paper-plane"></i> Enviar Convite
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-manager-details" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detail-modal-title">Detalhes do Gestor</h3>
+                <button type="button" class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+                <p>Carregando...</p>
+            </div>
+            <div class="modal-footer" id="detail-modal-footer">
+                <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+                <button type="button" class="btn btn-danger" id="detail-action-button" data-user-id="" data-action="">
+                    </button>
+            </div>
+        </div>
+    </div>
+
     <script src="../../../js/components/navigation.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="../../../js/pages/secretaria.js"></script>
+    <script type="module" src="../../../js/pages/gerenciar-gestores.js"></script>
 
 </body>
 </html>

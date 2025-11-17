@@ -6,7 +6,9 @@ import {
     cadastrarInstituicao,
     listarInstituicoes,
     listarUsuariosPorInstituicao,
-    updateUser
+    updateUser,
+    // (A função getUserData pode ser necessária se você adicionar um modal de "detalhes" aqui)
+    // getUserData 
 } from '../services/apiService.js';
 
 // Variável para armazenar os usuários ativos para filtragem
@@ -63,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configura listeners
     setupApprovalEventListeners();
     setupSearchListeners();
-    setupModalListeners(); // Modal "Convidar"
+    setupInviteUserModalListeners(); // Modal "Convidar" ATUALIZADO
     setupInstitutionModalListeners(); // Modal "Criar Instituição"
     setupLinkInstitutionModalListeners(); 
 
@@ -81,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         listContainer.innerHTML = '<p>Carregando aprovações...</p>';
 
         try {
-            const users = await listUsersByStatus('PENDENTE');
+            const users = await fetchUsersSafely('PENDENTE');
 
             if (!users || users.length === 0) {
                 listContainer.innerHTML = '<p class="no-approvals-message">Nenhuma aprovação pendente no momento.</p>';
@@ -102,18 +104,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Função auxiliar para buscar usuários por status, tratando o erro "Não há usuários" como lista vazia.
+     */
+    async function fetchUsersSafely(status) {
+        try {
+            return await listUsersByStatus(status);
+        } catch (error) {
+            if (error.message && error.message.includes("Não há usuários com este status")) {
+                return []; // Retorna lista vazia em vez de lançar erro
+            }
+            throw error; // Lança outros erros
+        }
+    }
+
    function createApprovalCard(user) {
         const card = document.createElement('div');
         card.className = 'approval-card card';
         card.dataset.userId = user.id; 
         card.dataset.userCargo = user.cargo;
         card.dataset.userName = user.nome;
-        
-        // --- MUDANÇA 1/4 ---
-        // Salvamos o NOME da instituição (do DTO) no dataset do card
-        // para que possamos lê-lo ao clicar em "Aprovar".
         card.dataset.instituicaoNome = user.instituicaoNome || '';
-        // --- FIM DA MUDANÇA ---
 
         const initials = (user.nome || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         
@@ -164,18 +175,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const userCargo = card.dataset.userCargo;
             const userName = card.dataset.userName;
-            
-            // --- MUDANÇA 2/4 ---
-            // Lemos o nome da instituição que salvamos no dataset
             const instituicaoNome = card.dataset.instituicaoNome;
-            // --- FIM DA MUDANÇA ---
             
             if (isApproved) {
                 if (userCargo === 'GESTOR_INSTITUICAO' || userCargo === 'USUARIO_INSTITUICAO') {
-                    // --- MUDANÇA 3/4 ---
-                    // Passamos o nome da instituição para a função que abre o modal
                     openLinkInstitutionModal(userId, userName, userCargo, card, instituicaoNome);
-                    // --- FIM DA MUDANÇA ---
                 } else {
                     await executeApproval(userId, true, card);
                 }
@@ -204,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
 
             if (isApproved) {
-                loadActiveUsers();
+                loadActiveUsers(); // Recarrega lista de ativos
             }
 
         } catch (error) {
@@ -238,9 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!listContainer || !activeBadge) return;
         listContainer.innerHTML = '<p>Carregando usuários ativos...</p>';
         try {
-            const users = await listUsersByStatus('ATIVO');
+            const users = await fetchUsersSafely('ATIVO');
             allActiveUsers = users || []; 
-            renderActiveUsers(allActiveUsers);
+            renderActiveUsers(allActiveUsers); // Renderiza a lista completa
             activeBadge.textContent = `${allActiveUsers.length} Usuários`;
         } catch (error) {
             console.error('Erro ao carregar usuários ativos:', error);
@@ -248,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
             listContainer.innerHTML = '<p style="color: red;">Erro ao carregar usuários. Tente novamente mais tarde.</p>';
         }
     }
+
     function renderActiveUsers(users) {
         const listContainer = document.getElementById('active-user-list-container');
         listContainer.innerHTML = ''; 
@@ -260,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
             listContainer.appendChild(card);
         });
     }
+
     function createActiveUserCard(user) {
         const card = document.createElement('div');
         card.className = 'active-user-card card';
@@ -301,43 +307,118 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // ##################################################################
-    // ##                 LÓGICA DO MODAL (CONVIDAR)                   ##
+    // ##             LÓGICA DO MODAL (CONVIDAR) ATUALIZADA            ##
     // ##################################################################
     
-    // (Esta função precisa ser atualizada para usar o dropdown de instituições, como fizemos no cadastro.js)
-    function setupModalListeners() {
+    function setupInviteUserModalListeners() {
         const modal = document.getElementById('invite-user-modal');
         const openButton = document.getElementById('inviteUserButton');
         const closeButton = document.getElementById('modal-close-button');
         const cancelButton = document.getElementById('modal-cancel-button');
         const inviteForm = document.getElementById('invite-form');
-        if (!modal || !openButton || !closeButton || !cancelButton || !inviteForm) return;
-        openButton.addEventListener('click', () => { modal.style.display = 'block'; });
+        
+        const cargoSelect = document.getElementById('invite-cargo');
+        const instituicaoGroup = document.getElementById('invite-instituicao-group');
+        const instituicaoSelect = document.getElementById('invite-instituicao-select');
+
+        if (!modal || !openButton || !inviteForm || !cargoSelect || !instituicaoGroup) return;
+
+        openButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+            // Popula as instituições *toda vez* que abre, usando o cache se disponível
+            // Isso garante que o dropdown de "Vincular" e o de "Convidar" estejam em sincronia
+            populateInstitutionsDropdown(instituicaoSelect, "Selecione uma instituição");
+            toggleInviteInstituicaoField(); // Garante o estado correto ao abrir
+        });
+
         const closeModal = () => {
             modal.style.display = 'none';
             inviteForm.reset();
+            instituicaoGroup.style.display = 'none'; // Reseta o campo
         };
+
         closeButton.addEventListener('click', closeModal);
         cancelButton.addEventListener('click', closeModal);
         window.addEventListener('click', (event) => { if (event.target == modal) { closeModal(); } });
+
+        // Listener para mostrar/ocultar campo de instituição
+        cargoSelect.addEventListener('change', toggleInviteInstituicaoField);
+
+        function toggleInviteInstituicaoField() {
+            const selectedCargo = cargoSelect.value;
+            if (selectedCargo === 'GESTOR_INSTITUICAO' || selectedCargo === 'USUARIO_INSTITUICAO') {
+                instituicaoGroup.style.display = 'block';
+                instituicaoSelect.setAttribute('required', 'required');
+            } else {
+                instituicaoGroup.style.display = 'none';
+                instituicaoSelect.removeAttribute('required');
+                instituicaoSelect.value = ''; // Limpa a seleção
+            }
+        }
+        
         inviteForm.addEventListener('submit', handleInviteSubmit);
     }
+
+    /**
+     * Lida com o envio do formulário de convite (lógica de cadastro + aprovação).
+     */
     async function handleInviteSubmit(event) {
         event.preventDefault(); 
         const submitButton = document.getElementById('modal-submit-button');
         submitButton.disabled = true;
         submitButton.textContent = 'Enviando...';
+
+        const nome = document.getElementById('invite-name').value;
+        const email = document.getElementById('invite-email').value;
+        const cargo = document.getElementById('invite-cargo').value;
+        const justificativa = document.getElementById('invite-justificativa').value || 'Convidado pelo administrador.';
+        
+        const instituicaoSelect = document.getElementById('invite-instituicao-select');
+        const instituicaoNome = instituicaoSelect.options[instituicaoSelect.selectedIndex]?.text; // Pega o NOME da instituição
+        
         try {
             const partialData = {
-                nome: document.getElementById('invite-name').value,
-                email: document.getElementById('invite-email').value,
-                instituicao: document.getElementById('invite-instituicao').value, // (!! CUIDADO: Este ainda é um input de texto)
-                cargo: document.getElementById('invite-cargo').value,
-                justificativa: document.getElementById('invite-justificativa').value,
+                nome,
+                email,
+                cargo,
+                justificativa,
+                instituicaoNome: null // Default
             };
-            const message = await cadastrarParcial(partialData);
-            alert(message);
-            document.getElementById('modal-close-button').click(); 
+
+            // Adiciona instituição apenas se o cargo exigir
+            if (cargo === 'GESTOR_INSTITUICAO' || cargo === 'USUARIO_INSTITUICAO') {
+                if (!instituicaoNome || instituicaoSelect.value === "") {
+                    throw new Error('Por favor, selecione uma instituição para este cargo.');
+                }
+                partialData.instituicaoNome = instituicaoNome;
+            } else {
+                // Para Secretaria, o backend deve tratar 'instituicaoNome' nulo
+                // ou podemos enviar um valor padrão se a API exigir.
+                // Assumindo que a API pode lidar com nulo ou "" para Secretaria.
+                partialData.instituicaoNome = 'Secretaria'; // Garante que não é nulo
+            }
+
+            // ETAPA 1: Cadastrar o usuário (ele ficará PENDENTE)
+            await cadastrarParcial(partialData);
+
+            // ETAPA 2: Buscar o ID do usuário recém-criado
+            const pendingUsers = await fetchUsersSafely('PENDENTE');
+            const newUser = pendingUsers.find(u => u.email === email);
+
+            if (!newUser) {
+                throw new Error('Não foi possível encontrar o usuário recém-criado para aprovação.');
+            }
+
+            // ETAPA 3: Aprovar o usuário (isso dispara o e-mail de cadastro)
+            await approveOrRejectUser(newUser.id, true);
+
+            alert('Usuário convidado com sucesso! Um e-mail de cadastro foi enviado para ' + email);
+            document.getElementById('modal-close-button').click();
+            
+            // Recarrega ambas as listas
+            loadPendingUsers();
+            loadActiveUsers();
+
         } catch (error) {
             console.error('Erro ao enviar convite:', error);
             alert(`Erro: ${error.message || 'Não foi possível enviar o convite.'}`);
@@ -367,20 +448,47 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('click', (event) => { if (event.target == modal) { closeModal(); } });
         form.addEventListener('submit', handleInstitutionSubmit);
     }
+
     async function handleInstitutionSubmit(event) {
         event.preventDefault();
         const submitButton = document.getElementById('modal-inst-submit-button');
         submitButton.disabled = true;
         submitButton.textContent = 'Criando...';
+        
+        // Cuidado: O DTO de Instituição do 'gerenciar-instituicoes.js'
+        // parece ser diferente deste (lá tem nome, sigla, cnpj, email, etc.)
+        // Aqui está usando nome, sigla, tipo.
         const instituicaoData = {
             nome: document.getElementById('inst-name').value,
             sigla: document.getElementById('inst-sigla').value,
-            tipo: document.getElementById('inst-tipo').value, // (!! CUIDADO: o DTO não tem 'tipo')
+            // O backend espera 'areaAtuacao', não 'tipo'
+            areaAtuacao: document.getElementById('inst-tipo').value, 
+            
+            // Você pode precisar adicionar campos nulos/vazios se o DTO for o mesmo
+            // da tela de 'gerenciar-instituicoes'
+            // cnpj: "", email: "", telefone: "", descricao: ""
         };
+
         try {
             const novaInstituicao = await cadastrarInstituicao(instituicaoData);
             alert(`Instituição "${novaInstituicao.nome}" criada com sucesso!`);
+            
+            // Invalida o cache para que o dropdown seja recarregado com a nova instituição
+            cachedApprovalInstitutions = null;
+
             document.getElementById('modal-inst-close-button').click();
+
+            // Após criar, reabre o modal de vincular com o usuário original
+            if (pendingApprovalData) {
+                const { userId, userName, userCargo, cardElement, instituicaoNome } = pendingApprovalData;
+                openLinkInstitutionModal(userId, userName, userCargo, cardElement, instituicaoNome);
+                
+                // Tenta pré-selecionar a instituição recém-criada
+                // (O 'populateLinkInstitutionsDropdown' dentro do 'openLink' vai lidar com isso)
+                // Vamos dar um "empurrão" para pré-selecionar o nome recém-criado
+                pendingApprovalData.instituicaoNome = novaInstituicao.nome; 
+            }
+
         } catch (error) {
             console.error('Erro ao criar instituição:', error);
             alert(`Erro: ${error.message || 'Não foi possível criar a instituição.'}`);
@@ -403,20 +511,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const title = document.getElementById('link-institution-title');
         const desc = document.getElementById('link-institution-desc');
         
-        if (title) {
-            title.textContent = `Vincular ${userName} à Instituição`;
-        }
+        if (title) title.textContent = `Vincular ${userName} à Instituição`;
         if (desc) {
-            if (userCargo === 'GESTOR_INSTITUICAO') {
-                desc.textContent = 'Este usuário é um Gestor. Selecione a instituição que ele irá gerenciar.';
-            } else {
-                desc.textContent = 'Selecione a instituição da qual este usuário fará parte.';
-            }
+            desc.textContent = (userCargo === 'GESTOR_INSTITUICAO')
+                ? 'Este usuário é um Gestor. Selecione a instituição que ele irá gerenciar.'
+                : 'Selecione a instituição da qual este usuário fará parte.';
         }
         
         if (modal) {
             modal.style.display = 'block';
-            populateLinkInstitutionsDropdown(); 
+            const select = document.getElementById('link-inst-select');
+            populateInstitutionsDropdown(select, "Selecione uma instituição...");
         }
     }
 
@@ -441,14 +546,16 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleLinkSubmit);
     }
 
-    async function populateLinkInstitutionsDropdown() {
-        const select = document.getElementById('link-inst-select');
-        if (!select) return;
+    /**
+     * Função REUTILIZÁVEL para popular dropdowns de instituição
+     */
+    async function populateInstitutionsDropdown(selectElement, placeholderText) {
+        if (!selectElement) return;
 
         // Limpa opções antigas, exceto se o cache já foi renderizado
         if (!cachedApprovalInstitutions) {
-             select.innerHTML = '<option value="">Carregando...</option>';
-             select.disabled = true;
+             selectElement.innerHTML = `<option value="">Carregando...</option>`;
+             selectElement.disabled = true;
         }
 
         try {
@@ -457,17 +564,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const institutions = await listarInstituicoes();
                 cachedApprovalInstitutions = institutions || []; 
             }
-            renderInstitutionOptions(cachedApprovalInstitutions);
+            renderInstitutionOptions(selectElement, cachedApprovalInstitutions, placeholderText);
         } catch (error) {
             console.error('Erro ao carregar instituições:', error);
-            select.innerHTML = '<option value="">Erro ao carregar</option>';
+            selectElement.innerHTML = `<option value="">Erro ao carregar</option>`;
         } finally {
-            select.disabled = false;
+            selectElement.disabled = false;
         }
     }
 
-    function renderInstitutionOptions(institutions) {
-        const select = document.getElementById('link-inst-select');
+    function renderInstitutionOptions(select, institutions, placeholderText) {
         select.innerHTML = ''; // Limpa o "Carregando..."
             
         if (institutions.length === 0) {
@@ -475,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        select.innerHTML = '<option value="">Selecione uma instituição...</option>';
+        select.innerHTML = `<option value="">${placeholderText}</option>`;
         institutions.forEach(inst => {
             const option = document.createElement('option');
             option.value = inst.id;
@@ -484,27 +590,19 @@ document.addEventListener('DOMContentLoaded', function() {
             select.appendChild(option);
         });
 
-        // --- MUDANÇA 4/4 ---
-        // Agora que as opções estão na tela, tentamos pré-selecionar
-        // com base no nome que guardamos no 'pendingApprovalData'.
+        // Tenta pré-selecionar se os dados pendentes existirem (para o modal "Vincular")
         const requestedInstitutionName = pendingApprovalData?.instituicaoNome;
-        
-        if (requestedInstitutionName) {
-            // Encontra a opção cujo NOME (no dataset) corresponde ao nome solicitado
+        if (requestedInstitutionName && select.id === 'link-inst-select') {
             const optionToSelect = Array.from(select.options).find(
                 opt => opt.dataset.name === requestedInstitutionName
             );
 
             if (optionToSelect) {
-                // Se achou, define o valor do <select> para o ID daquela opção
                 select.value = optionToSelect.value;
             } else {
-                // Se não achou (ex: "Secretaria (Interno)" ou nome não existe mais)
-                // apenas deixa em "Selecione uma instituição..."
                 select.value = "";
             }
         }
-        // --- FIM DA MUDANÇA ---
     }
 
     async function handleLinkSubmit(event) {
@@ -531,10 +629,11 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             if (userCargo === 'GESTOR_INSTITUICAO') {
                 const gestores = await listarUsuariosPorInstituicao(institutionId, 'GESTOR_INSTITUICAO');
-                const gestoresAtivos = gestores.filter(g => g.status === 'ATIVO');
+                // Filtra gestores ATIVOS ou PENDENTES (para evitar duplicidade)
+                const gestoresAtivosOuPendentes = gestores.filter(g => g.status === 'ATIVO' || g.status === 'PENDENTE');
 
-                if (gestoresAtivos.length > 0) {
-                    alert(`Erro: A instituição "${institutionName}" já possui um gestor ativo (${gestoresAtivos[0].nome}). Não é possível aprovar um novo gestor.`);
+                if (gestoresAtivosOuPendentes.length > 0) {
+                    alert(`Erro: A instituição "${institutionName}" já possui um gestor ativo ou pendente (${gestoresAtivosOuPendentes[0].nome}). Não é possível aprovar um novo gestor.`);
                     throw new Error('Instituição já possui gestor.');
                 }
             }
@@ -562,7 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // ##################################################################
-    // ##                     LÓGICA DA BUSCA                        ##
+    // ##                 LÓGICA DA BUSCA (USUÁRIOS ATIVOS)            ##
     // ##################################################################
 
     function setupSearchListeners() {
@@ -570,33 +669,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchButton = document.getElementById('searchButton');
 
         if (!searchInput || !searchButton) return;
-        searchButton.addEventListener('click', filterActiveUsers);
-        searchInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
-                filterActiveUsers();
+        
+        const filterActiveUsers = () => {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            if (!searchTerm) {
+                renderActiveUsers(allActiveUsers);
+                return;
             }
-        });
-    }
 
-    function filterActiveUsers() {
-        const searchInput = document.getElementById('searchInput');
-        const searchTerm = searchInput.value.toLowerCase().trim();
+            const filteredUsers = allActiveUsers.filter(user => {
+                const nome = user.nome.toLowerCase();
+                const email = user.email.toLowerCase();
+                const instituicao = (user.instituicao ? user.instituicao.nome : '').toLowerCase();
 
-        if (!searchTerm) {
-            renderActiveUsers(allActiveUsers);
-            return;
-        }
+                return nome.includes(searchTerm) || 
+                       email.includes(searchTerm) || 
+                       instituicao.includes(searchTerm);
+            });
 
-        const filteredUsers = allActiveUsers.filter(user => {
-            const nome = user.nome.toLowerCase();
-            const email = user.email.toLowerCase();
-            const instituicao = (user.instituicao ? user.instituicao.nome : '').toLowerCase();
-
-            return nome.includes(searchTerm) || 
-                   email.includes(searchTerm) || 
-                   instituicao.includes(searchTerm);
-        });
-
-        renderActiveUsers(filteredUsers);
+            renderActiveUsers(filteredUsers);
+        };
+        
+        searchButton.addEventListener('click', filterActiveUsers);
+        searchInput.addEventListener('keyup', filterActiveUsers); // Busca em tempo real
     }
 });

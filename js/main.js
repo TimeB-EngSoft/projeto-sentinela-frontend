@@ -87,24 +87,43 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
 
+            // 1. Mapa de conversão do valor do HTML para o ENUM do Java
+            const tipoDenunciaMap = {
+                'terra-indigena': 'TERRA_INDIGENA',
+                'disputa-posse': 'DISPUTA_DE_POSSE', // Corrigido
+                'territorio-quilombola': 'TERRITORIO_QUILOMBOLA',
+                'recursos-hidricos': 'RECURSO_HIDRICO', // Corrigido (singular)
+                'desmatamento': 'DESMATAMENTO',
+                'outro': 'OUTRO'
+            };
+
+            // 2. Pega o valor do form (ex: "disputa-posse")
+            const formValue = form['tipo-conflito'].value;
+            
+            // 3. Converte para o formato ENUM (ex: "DISPUTA_DE_POSSE")
+            const tipoDenunciaEnum = tipoDenunciaMap[formValue];
+
+            // 4. Checa se o tipo é válido (caso o <select> esteja vazio)
+            if (!tipoDenunciaEnum) {
+                toggleFeedback('Por favor, selecione um Tipo de Conflito válido.', 'error');
+                setSubmittingState(false);
+                return; 
+            }
+
             const denunciaData = {
+                // Nomes corrigidos
                 nomeDenunciante: form.nome.value.trim(),
-                cpf: form.cpf.value.trim(),
-                email: form.email.value.trim(),
-                telefone: form.telefone.value.trim(),
-                tipoConflito: form['tipo-conflito'].value,
-                titulo: form.titulo.value.trim(),
-                descricao: form.descricao.value.trim(),
-                dataOcorrido: form['data-ocorrido'].value,
-                status: form.status.value,
-                cep: form.cep.value.trim(),
-                estado: form.estado.value.trim(),
-                cidade: form.cidade.value.trim(),
-                bairro: form.bairro.value.trim(),
-                rua: form.rua.value.trim(),
-                numero: form.numero.value.trim(),
-                referencia: form.referencia.value.trim(),
-                partesEnvolvidas: form['partes-envolvidas'].value.trim()
+                cpfDenunciante: form.cpf.value.trim(),
+                emailDenunciante: form.email.value.trim(),
+                telefoneDenunciante: form.telefone.value.trim(),
+                
+                tipoDenuncia: tipoDenunciaEnum, // <-- CORRIGIDO
+                // tipoDenunciaTexto: ... (removido, pois estamos enviando o Enum)
+
+                tituloDenuncia: form.titulo.value.trim(),       
+                descricaoDenuncia: form.descricao.value.trim(),   
+                dataOcorrido: form['data-ocorrido'].value + 'T00:00:00', // Correto
+                descricaoPartesEnvolvidas: form['partes-envolvidas'].value.trim(), 
             };
 
             setSubmittingState(true);
