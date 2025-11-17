@@ -73,15 +73,20 @@
         return false;
     }
 
+    function updateNavItemHref(key, newHref) {
+        for (const section of NAVIGATION_SECTIONS) {
+            const item = section.items.find(i => i.key === key);
+            if (item) {
+                item.href = newHref;
+                return true;
+            }
+        }
+        return false;
+    }
+
     const renderSidebar = (sidebar) => {
-        const activeKey = sidebar.dataset.activeNav || '';
-        const basePath = sidebar.dataset.basePath || '';
-        const logoPath = sidebar.dataset.logoPath || 'assets/images/logo.png';
-        const logoAlt = sidebar.dataset.logoAlt || 'Logo Sentinela';
-        const title = sidebar.dataset.sidebarTitle || 'SENTINELA';
-        const subtitle = sidebar.dataset.sidebarSubtitle || 'Painel Secretaria';
 
-
+        // Guarda os elementos do sidebar que vão ser removidos do sidebar de acordo com o cargo atual do usuário
         const cargos = {
             GESTOR_SECRETARIA: ['systemUsers'],
             GESTOR_INSTITUICAO: ['managers', 'institutions', 'systemUsers', 'audit'],
@@ -89,16 +94,55 @@
             USUARIO_INSTITUICAO: ['managers', 'institutions', 'team', 'systemUsers', 'conflicts', 'reports', 'audit']
         };
 
-        
-        // 1. Pega o cargo do usuário que foi salvo no localStorage durante o login
-        const userCargo = localStorage.getItem('userCargo');
+        // Referencia o subtitle que vai ser aplicado no sidebar de acordo com o cargo atual do usuário
+        const subtitles = {
+            SECRETARIA: 'Painel Secretaria',
+            GESTOR_SECRETARIA: "Painel Gestor Secretaria",
+            GESTOR_INSTITUICAO: "Painel Gestor Instituição",
+            USUARIO_SECRETARIA: "Painel Usuário Secretaria",
+            USUARIO_INSTITUICAO: "Painel Usuário Secretaria"
+        };
+
+        const hrefs = {
+            SECRETARIA: 'secretaria.html',
+            GESTOR_SECRETARIA: "gestor-secretaria.html",
+            GESTOR_INSTITUICAO: "gestor-instituicao.html",
+            USUARIO_SECRETARIA: "usuario-secretaria.html",
+            USUARIO_INSTITUICAO: "cadastrar-denuncia.html"
+        };
+
+        // Bloqueia as mudanças dessas páginas (Essas eram as únicas que o nome da sua página era o mesmo-
+        // do subtitle no user secretaria, acho que é inconsistência de design mas tanto faz)
+        const BLOCKED_PAGES = ["auditoria.html", "configuracoes.html", "mapa_interativo.html", "relatorios.html"];
+
+        const userCargo = localStorage.getItem('userCargo'); // 1. Pega o cargo do usuário que foi salvo no localStorage durante o login
+
+        const currentPage = window.location.pathname.split("/").pop();
+        const activeKey = sidebar.dataset.activeNav || '';
+        const basePath = sidebar.dataset.basePath || '';
+        const logoPath = sidebar.dataset.logoPath || 'assets/images/logo.png';
+        const logoAlt = sidebar.dataset.logoAlt || 'Logo Sentinela';
+        const title = sidebar.dataset.sidebarTitle || 'SENTINELA';
+
+        if (!BLOCKED_PAGES.includes(currentPage)) {
+            if (subtitles[userCargo]) {
+                sidebar.dataset.sidebarSubtitle = subtitles[userCargo];
+            }
+        }
+
+        const subtitle = sidebar.dataset.sidebarSubtitle || 'Painel Secretaria'; // Infelizmente tem que ser declarado depois do if acima
+
+        // Isso modifica o href do item visão geral do navbar para a tela respectiva do usuário
+        // Só funciona se estiver logado
+        updateNavItemHref('overview', hrefs[userCargo]);
+
 
         // 2. Verifica se esse cargo existe no mapa de permissões 'cargos'
         if (userCargo && cargos[userCargo]) {
-            
+
             // 3. Pega a lista de itens a serem removidos para esse cargo
             const itemsToRemove = cargos[userCargo]; // Estava "userCargo"
-            
+
             // 4. Itera e remove cada item da navegação
             for (const itemKey of itemsToRemove) {
                 removeNavItem(itemKey);

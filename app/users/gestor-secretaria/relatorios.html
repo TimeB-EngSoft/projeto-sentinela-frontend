@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Painel Sentinela</title>
+    <link rel="stylesheet" href="../../../css/app/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"
+               data-sidebar
+               data-logo-path="../../../assets/images/logo.png"
+               data-sidebar-title="SENTINELA"
+               data-sidebar-subtitle="Relatórios"
+               data-active-nav="reports">
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <button id="menu-toggle" class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="header-title">
+                    <h2>Relatórios e Exportações</h2>
+                    <p>Gere relatórios personalizados e análises estatísticas</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span
+                            class="notification-badge">3</span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                        <!-- <span id="headerUserRole" class="user-role"></span> -->
+                    </div>
+
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <section class="filter-section card">
+                <h3 class="card-title filter-title"><i class="fas fa-filter"></i> Filtros de Geração</h3>
+
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="tipoRelatorio">Tipo de Relatório</label>
+                        <select id="tipoRelatorio" class="custom-select">
+                            <option value="">Selecione o tipo</option>
+                            <option value="geral">Relatório Geral</option>
+                            <option value="regional">Análise Regional</option>
+                            <option value="temporal">Evolução Temporal</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dataInicial">Período - De</label>
+                        <input type="date" id="dataInicial" class="custom-input" placeholder="Data inicial">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dataFinal">Período - Até</label>
+                        <input type="date" id="dataFinal" class="custom-input" placeholder="Data final">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" class="custom-select">
+                            <option value="">Todos os estados</option>
+                            <option value="ac">Acre</option>
+                            <option value="am">Amazonas</option>
+                            <option value="pe">Pernambuco</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="status">Status</label>
+                        <select id="status" class="custom-select">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="encerrado">Encerrado</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="formato">Formato de Exportação</label>
+                        <select id="formato" class="custom-select">
+                            <option value="pdf">PDF</option>
+                            <option value="xlsx">Excel (xlsx)</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn btn-primary" id="generateReportBtn"><i class="fas fa-file-export"></i> Gerar
+                        Relatório</button>
+                </div>
+            </section>
+
+            <section class="report-types-grid">
+
+                <div class="report-card card">
+                    <div class="report-card__header">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>Relatório Geral</h4>
+                    </div>
+                    <p class="report-card__description">Visão completa de todos os conflitos e denúncias</p>
+                    <button class="btn btn-secondary btn-generate-quick"><i class="fas fa-download"></i> Gerar</button>
+                </div>
+
+                <div class="report-card card">
+                    <div class="report-card__header">
+                        <i class="fas fa-clock"></i>
+                        <h4>Análise Regional</h4>
+                    </div>
+                    <p class="report-card__description">Conflitos agrupados por região e estado</p>
+                    <button class="btn btn-secondary btn-generate-quick"><i class="fas fa-download"></i> Gerar</button>
+                </div>
+
+                <div class="report-card card">
+                    <div class="report-card__header">
+                        <i class="fas fa-chart-area"></i>
+                        <h4>Evolução Temporal</h4>
+                    </div>
+                    <p class="report-card__description">Tendências e estatísticas ao longo do tempo</p>
+                    <button class="btn btn-secondary btn-generate-quick"><i class="fas fa-download"></i> Gerar</button>
+                </div>
+            </section>
+
+            <section class="recent-reports-section card">
+                <h3 class="card-title"><i class="fas fa-clock"></i> Relatórios Gerados Recentemente</h3>
+                <div class="recent-reports-list" id="recentReportsList">
+                </div>
+            </section>
+
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="../../../js/components/navigation.js"></script>
+    <script src="../../../js/pages/relatorios.js"></script>
+
+</body>
+
+</html>

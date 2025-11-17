@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Conflitos - Painel Sentinela</title>
+    <link rel="stylesheet" href="../../../css/app/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"
+               data-sidebar
+               data-logo-path="../../../assets/images/logo.png"
+               data-sidebar-title="SENTINELA"
+               data-sidebar-subtitle="Painel Secretaria"
+               data-active-nav="conflicts">
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2>Gerenciamento de Conflitos</h2>
+                    <p>Visualize, filtre e gerencie todos os conflitos recebidos no sistema</p>
+                </div>
+                <div class="header-user">
+                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3</span></button>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
+                         <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="headerUserName" class="user-name">Carregando...</span>
+                    </div>
+                    
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+           <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Total de Conflitos</p>
+                        <span>3</span>
+                    </div>
+                    <div class="stat-card__icon-bg icon-bg-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Pendentes</p>
+                        <span>1</span>
+                    </div>
+                    <div class="stat-card__icon-bg icon-bg-danger">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Em Análise</p>
+                        <span>1</span>
+                    </div>
+                    <div class="stat-card__icon-bg icon-bg-danger">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__info">
+                        <p>Resolvidos</p>
+                        <span>1</span>
+                    </div>
+                    <div class="stat-card__icon-bg icon-bg-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card conflitos-list-card">
+                <div class="card-header">
+                    <h3 class="card-title">Lista de Conflitos</h3>
+                    <a href="#" class="btn btn-primary">Registrar Conflito</a>
+                </div>
+
+                <div class="conflitos-filter-bar">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Buscar conflitos...">
+                    </div>
+                    <button class="btn-filter">
+                        <i class="fas fa-filter"></i>
+                        <span>Todas</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <button class="btn-filter">
+                        <i class="fas fa-filter"></i>
+                        <span>Todos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <div id="conflitosFeedback" class="card empty-card" aria-live="polite"></div>
+
+                <div class="table-responsive-wrapper">
+                    <table class="denuncias-table">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Instituição</th>
+                                <th>Envolvidos</th>
+                                <th>Prioridade</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Responsável</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conflitosTableBody"></tbody>
+                        
+                    </table>
+                </div>
+            </section>
+            
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="../../../js/components/navigation.js"></script>
+    <script type="module" src="../../../js/pages/secretaria.js"></script>
+    <script type="module" src="../../../js/pages/secretaria/conflitos.js"></script>
+
+</body>
+</html>
