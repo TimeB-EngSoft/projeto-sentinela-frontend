@@ -82,6 +82,16 @@
         .detail-item.full-width {
             grid-column: 1 / -1;
         }
+
+        /* --- NOVO CSS PARA OCULTAR SCROLLBAR --- */
+        .modal-body::-webkit-scrollbar {
+            display: none; /* WebKit (Chrome, Safari, Edge) */
+        }
+        .modal-body {
+            -ms-overflow-style: none;  /* IE e Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* --- FIM DO NOVO CSS --- */
     </style>
 </head>
 <body>

@@ -65,6 +65,16 @@
         .status-badge.status-ativo { background-color: #e6f7ec; color: #0d8a4f; }
         .status-badge.status-inativo { background-color: #fceeee; color: #d9534f; }
         .status-badge.status-pendente { background-color: #fff3cd; color: #856404; }
+
+        /* --- NOVO CSS PARA OCULTAR SCROLLBAR --- */
+        .modal-body::-webkit-scrollbar {
+            display: none; /* WebKit (Chrome, Safari, Edge) */
+        }
+        .modal-body {
+            -ms-overflow-style: none;  /* IE e Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* --- FIM DO NOVO CSS --- */
     </style>
 </head>
 <body>

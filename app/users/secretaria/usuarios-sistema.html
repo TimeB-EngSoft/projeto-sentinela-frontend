@@ -80,7 +80,7 @@
             padding: 0.75rem;
             border: 1px solid #d0d5dd;
             border-radius: 6px;
-            box-sizing: border-box; /* Garante que padding não afete a largura */
+            box-sizing: border-box; /* Garante que o padding não afete a largura */
         }
         
         .form-group textarea {
@@ -104,6 +104,18 @@
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        /* --- NOVO CSS PARA OCULTAR SCROLLBAR --- */
+        .modal-body::-webkit-scrollbar,
+        .modal-content::-webkit-scrollbar { /* Aplicando ao .modal-content também, caso ele role */
+            display: none; /* WebKit (Chrome, Safari, Edge) */
+        }
+        .modal-body,
+        .modal-content {
+            -ms-overflow-style: none;  /* IE e Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* --- FIM DO NOVO CSS --- */
     </style>
 </head>
 <body>

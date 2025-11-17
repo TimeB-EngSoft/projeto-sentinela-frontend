@@ -177,6 +177,18 @@
              background-color: var(--color-status-ativo-bg);
              color: var(--color-status-ativo-text);
         }
+
+        /* --- NOVO CSS PARA OCULTAR SCROLLBAR --- */
+        .modal-body::-webkit-scrollbar,
+        #view-users-list-container::-webkit-scrollbar {
+            display: none; /* WebKit (Chrome, Safari, Edge) */
+        }
+        .modal-body,
+        #view-users-list-container {
+            -ms-overflow-style: none;  /* IE e Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* --- FIM DO NOVO CSS --- */
     </style>
 </head>
 <body>
