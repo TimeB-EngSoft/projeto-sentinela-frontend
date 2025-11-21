@@ -55,11 +55,8 @@ if (loginForm) {
 
             alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
             
-            // *** MUDANÇA PRINCIPAL AQUI ***
-            // Redireciona para a página correta baseada no cargo
-            const redirectPage = getRedirectPageByCargo(usuario.cargo);
-            window.location.href = redirectPage;
-
+            window.location.href = '../../app/index.html';
+            
         } catch (error) {
             // A mensagem de erro agora vem da propriedade 'message' do JSON
             alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');

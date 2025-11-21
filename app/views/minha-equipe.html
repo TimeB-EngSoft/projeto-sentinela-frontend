@@ -1,0 +1,83 @@
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Total de Membros</p>
+            <span id="stat-total">0</span>
+        </div>
+        <div class="stat-card__icon">
+            <i class="fas fa-users"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Membros Ativos</p>
+            <span id="stat-active">0</span>
+        </div>
+        <div class="stat-card__icon" style="color: var(--color-priority-low);">
+            <i class="fas fa-user-check"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Membros Inativos</p>
+            <span id="stat-inactive">0</span>
+        </div>
+        <div class="stat-card__icon" style="color: var(--color-priority-high);">
+            <i class="fas fa-user-slash"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Tarefas da Equipe</p>
+            <span>12</span>
+        </div>
+        <div class="stat-card__icon">
+            <i class="fas fa-tasks"></i>
+        </div>
+    </div>
+</section>
+
+<section class="team-overview card">
+    <div class="card-header">
+        <h3 class="card-title">Membros da Equipe</h3>
+        <div class="card-header-actions">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar por nome, email ou cargo...">
+            </div>
+            </div>
+    </div>
+    
+    <div class="team-grid" id="team-grid-container">
+        </div>
+</section>
+
+<div id="modal-confirm-member-action" class="modal" style="z-index: 2200;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="confirm-modal-title">Confirmação</h3>
+            <button class="close-button" id="close-confirm-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="confirm-modal-msg">Tem certeza?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="btn-cancel-action">Cancelar</button>
+            <button class="btn" id="btn-confirm-action">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-add-member" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Adicionar Membro</h3>
+            <button class="close-button" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Funcionalidade em desenvolvimento.</p>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>

@@ -1,0 +1,146 @@
+<div id="toast-container"></div>
+
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Total de Gestores</p>
+            <span id="stat-total-gestores">0</span>
+        </div>
+        <div class="stat-card__icon"><i class="fas fa-user-friends"></i></div>
+    </div>
+     <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Ativos</p>
+            <span id="stat-gestores-ativos">0</span>
+        </div>
+        <div class="stat-card__icon"><i class="fas fa-user-check"></i></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Aguardando Aprovação</p>
+            <span id="stat-gestores-pendentes">0</span>
+        </div>
+        <div class="stat-card__icon"><i class="fas fa-user-clock"></i></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Inativos</p>
+            <span id="stat-gestores-inativos">0</span>
+        </div>
+        <div class="stat-card__icon"><i class="fas fa-user-slash"></i></div>
+    </div>
+</section>
+
+<section class="managers-list-container card">
+    <div class="card-header">
+        <h3 class="card-title">Lista de Gestores</h3>
+        <div class="card-header-actions">
+            <button class="btn btn-primary" id="addManagerButton">
+                <i class="fas fa-plus"></i> Adicionar Gestor
+            </button>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="manager-search-input" placeholder="Buscar por nome ou email...">
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="managers-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Instituição</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="managers-table-body"></tbody>
+        </table>
+    </div>
+</section>
+
+<div id="modal-add-manager" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Novo Gestor</h3>
+            <button type="button" class="close-button" data-close-modal>&times;</button>
+        </div>
+        
+        <form id="form-add-manager" style="display: contents;">
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--color-text-light);">
+                    O gestor receberá um e-mail para definir sua senha e completar o cadastro.
+                </p>
+                
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="add-nome">Nome Completo *</label>
+                        <input type="text" id="add-nome" required placeholder="Nome do gestor">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-email">Email *</label>
+                        <input type="email" id="add-email" required placeholder="email@exemplo.com">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="add-cargo">Tipo de Gestor *</label>
+                        <select id="add-cargo" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="GESTOR_SECRETARIA">Gestor da Secretaria</option>
+                            <option value="GESTOR_INSTITUICAO">Gestor de Instituição</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="add-instituicao-group" style="display: none;">
+                        <label for="add-instituicao-select">Instituição *</label>
+                        <select id="add-instituicao-select">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="add-manager-submit-button">
+                    <i class="fas fa-paper-plane"></i> Enviar Convite
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-manager-details" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="detail-modal-title">Detalhes</h3>
+            <button type="button" class="close-button" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body" id="detail-modal-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-deactivate-manager" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-slash" style="color: #dc3545;"></i> Desativar Gestor</h3>
+            <button class="close-button" id="modal-deactivate-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Tem certeza que deseja desativar o acesso de <strong id="deactivate-manager-name"></strong>?</p>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                O gestor perderá acesso ao sistema imediatamente.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modal-deactivate-cancel">Cancelar</button>
+            <button class="btn btn-danger" id="modal-deactivate-confirm">Sim, Desativar</button>
+        </div>
+    </div>
+</div>

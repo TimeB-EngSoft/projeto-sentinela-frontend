@@ -1,404 +1,346 @@
-// Importa as funções da API
-import { 
-    listarInstituicoes, 
-    cadastrarInstituicao,
-    listarUsuariosPorInstituicao
-} from '../services/apiService.js';
+import { listarInstituicoes, cadastrarInstituicao, listarUsuariosPorInstituicao, atualizarInstituicao, getUserData } from '../services/apiService.js';
 
-// Armazena todas as instituições para filtragem
 let allInstitutions = [];
 let container = null;
+let currentInstitutionId = null; 
 
-// ##################################################################
-// ##                  INICIALIZAÇÃO DA PÁGINA                     ##
-// ##################################################################
-
-document.addEventListener('DOMContentLoaded', () => {
+export async function init() {
     container = document.getElementById('institutionsContainer');
-
-    loadHeaderUserData();
-    setupSidebarToggle();
-    loadInstitutions();
-    setupModalListeners(); // Modal de Cadastro
-    setupViewUsersModalListeners(); // Modal de "Ver Usuários"
-    setupInstitutionSearch(); // Configura a barra de busca
-});
-
-
-// ##################################################################
-// ##                  FUNÇÕES BÁSICAS DE SETUP                    ##
-// ##################################################################
-
-function loadHeaderUserData() {
-    const userName = localStorage.getItem('userName');
-    const headerName = document.getElementById('headerUserName');
-    if (headerName) {
-        headerName.textContent = userName || 'Usuário';
-    }
-    // ... (resto do código do avatar)
+    await loadInstitutions();
+    setupModalListeners();
+    setupDetailsModalListeners();
+    setupInstitutionSearch();
+    setupDeactivateModal();
 }
 
-function setupSidebarToggle() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    // ... (resto do código do toggle)
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    toast.innerHTML = `<i class="fas fa-${icon}"></i><div class="toast-content"><span class="toast-title">${type === 'success' ? 'Sucesso' : 'Aviso'}</span><span class="toast-message">${message}</span></div>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+}
+
+// =========================================================================
+// CARREGAMENTO E LISTAGEM
+// =========================================================================
+
+async function loadInstitutions() {
+    const feedback = document.getElementById('institutionsFeedback');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Carregando...</p>';
+    if(feedback) feedback.style.display = 'none';
+
+    try {
+        allInstitutions = await listarInstituicoes();
+        renderInstitutions(allInstitutions);
+    } catch (error) {
+        container.innerHTML = '<p class="is-error" style="grid-column: 1/-1; text-align: center;">Erro ao carregar instituições.</p>';
     }
+}
 
-    document.addEventListener('click', (event) => {
-        if (sidebar && sidebar.classList.contains('open')) {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnMenuToggle = menuToggle ? menuToggle.contains(event.target) : false;
+function renderInstitutions(list) {
+    const feedback = document.getElementById('institutionsFeedback');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!list || list.length === 0) {
+        if(feedback) feedback.style.display = 'block';
+        return;
+    }
+    if(feedback) feedback.style.display = 'none';
 
-            if (!isClickInsideSidebar && !isClickOnMenuToggle) {
-                sidebar.classList.remove('open');
-            }
-        }
+    list.forEach(inst => {
+        const statusClass = inst.status === 'ATIVO' ? 'status-ativo' : (inst.status === 'INATIVO' ? 'status-inativo' : 'status-pendente');
+        
+        const div = document.createElement('div');
+        div.className = 'institution-card'; 
+        div.innerHTML = `
+            <div class="inst-card-header">
+                <div class="inst-card-title">
+                    <h3>${inst.nome}</h3>
+                    <p>${inst.sigla || ''}</p>
+                </div>
+                <div class="inst-card-icon"><i class="fas fa-building"></i></div>
+            </div>
+            <div class="inst-card-body">
+                <div class="inst-info-row"><i class="fas fa-envelope"></i> ${inst.email || '-'}</div>
+                <div class="inst-info-row"><i class="fas fa-map-marker-alt"></i> ${inst.areaAtuacao || 'Área não inf.'}</div>
+                <div class="inst-info-row" style="margin-top:10px;">
+                    <span class="status-badge ${statusClass}">${inst.status}</span>
+                </div>
+            </div>
+            <div class="inst-card-footer">
+                <button class="btn btn-secondary btn-sm w-100" data-action="details" data-id="${inst.id}">
+                    <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+            </div>
+        `;
+        container.appendChild(div);
     });
 }
 
-function setFeedback(message, type = 'info') {
-    const feedback = document.getElementById('institutionsFeedback');
-    if (!feedback) return;
-
-    const stateClass = type === 'error' ? 'is-error' : 'is-info';
-    feedback.className = ['card', 'empty-card', stateClass].join(' ');
-    feedback.textContent = message;
-    feedback.dataset.state = type;
-    feedback.style.display = message ? 'block' : 'none';
-}
-
-// ##################################################################
-// ##               FUNCIONALIDADE DE BUSCA (NOVO)                 ##
-// ##################################################################
-
 function setupInstitutionSearch() {
-    const searchInput = document.querySelector('.institution-search-bar input');
-    const searchButton = document.querySelector('.institution-search-bar button');
-
-    if (searchInput && searchButton) {
-        const performSearch = () => {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            filterAndRenderInstitutions(searchTerm);
-        };
+    const input = document.getElementById('institution-search-input');
+    if(input) {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
         
-        searchButton.addEventListener('click', performSearch);
-        searchInput.addEventListener('keyup', (event) => {
-            // Busca em tempo real (a cada tecla)
-            performSearch();
+        newInput.addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allInstitutions.filter(i => {
+                const matchNome = i.nome && i.nome.toLowerCase().includes(term);
+                const matchSigla = i.sigla && i.sigla.toLowerCase().includes(term);
+                const matchArea = i.areaAtuacao && i.areaAtuacao.toLowerCase().includes(term);
+                return matchNome || matchSigla || matchArea;
+            });
+            renderInstitutions(filtered);
         });
     }
 }
 
-function filterAndRenderInstitutions(searchTerm) {
-    let filteredInstitutions;
+// =========================================================================
+// MODAL DE DETALHES E AÇÕES (ATIVAR/DESATIVAR)
+// =========================================================================
 
-    if (!searchTerm) {
-        filteredInstitutions = allInstitutions;
-    } else {
-        filteredInstitutions = allInstitutions.filter(inst => {
-            const nome = (inst.nome || '').toLowerCase();
-            const sigla = (inst.sigla || '').toLowerCase();
-            // 'tipo' na busca se refere à área de atuação
-            const area = (inst.areaAtuacao || '').toLowerCase(); 
+function setupDetailsModalListeners() {
+    const modal = document.getElementById('modal-institution-details');
+    const userOverlay = document.getElementById('modal-user-details-overlay');
 
-            return nome.includes(searchTerm) ||
-                   sigla.includes(searchTerm) ||
-                   area.includes(searchTerm);
+    if (container) {
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action="details"]');
+            if (btn) {
+                const id = btn.dataset.id;
+                openInstitutionDetails(id);
+            }
         });
     }
+
+    // Botão de Alternar Status (Ativar/Desativar)
+    const btnToggleStatus = document.getElementById('btn-toggle-status-inst');
+    if(btnToggleStatus) {
+        const newBtn = btnToggleStatus.cloneNode(true);
+        btnToggleStatus.parentNode.replaceChild(newBtn, btnToggleStatus);
+
+        newBtn.addEventListener('click', async () => {
+            const nextStatus = newBtn.dataset.nextStatus;
+            
+            if (nextStatus === 'INATIVO') {
+                // Abrir modal de confirmação para desativar
+                openDeactivateModal(currentInstitutionId);
+            } else {
+                // Reativar direto (ou com confirm simples)
+                if(confirm("Deseja reativar esta instituição?")) {
+                    try {
+                        await atualizarInstituicao(currentInstitutionId, { status: 'ATIVO' });
+                        showToast("Instituição reativada com sucesso.");
+                        document.getElementById('modal-institution-details').classList.remove('show');
+                        loadInstitutions();
+                    } catch(e) { showToast(e.message, 'error'); }
+                }
+            }
+        });
+    }
+
+    const closeMain = () => modal.classList.remove('show');
+    const closeUser = () => userOverlay.classList.remove('show');
+
+    document.getElementById('modal-detail-close').addEventListener('click', closeMain);
+    document.getElementById('modal-detail-close-btn').addEventListener('click', closeMain);
+    document.getElementById('modal-user-close').addEventListener('click', closeUser);
+    document.getElementById('modal-user-close-btn').addEventListener('click', closeUser);
+}
+
+function openDeactivateModal(id) {
+    const inst = allInstitutions.find(i => i.id == id);
+    if(!inst) return;
     
-    renderInstitutions(filteredInstitutions);
+    document.getElementById('deactivate-inst-name').textContent = inst.nome;
+    document.getElementById('modal-deactivate-inst').classList.add('show');
 }
 
+function setupDeactivateModal() {
+    const modal = document.getElementById('modal-deactivate-inst');
+    const btnConfirm = document.getElementById('modal-deact-inst-confirm');
+    const close = () => modal.classList.remove('show');
 
-// ##################################################################
-// ##               CARREGAR E RENDERIZAR INSTITUIÇÕES             ##
-// ##################################################################
+    document.getElementById('modal-deact-inst-close').addEventListener('click', close);
+    document.getElementById('modal-deact-inst-cancel').addEventListener('click', close);
 
-async function loadInstitutions() {
-    if (!container) return;
+    const newBtn = btnConfirm.cloneNode(true);
+    btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
 
-    setFeedback('Carregando instituições...', 'info');
-    container.innerHTML = '';
+    newBtn.addEventListener('click', async () => {
+        if(!currentInstitutionId) return;
+        newBtn.disabled = true; newBtn.textContent = 'Processando...';
+        try {
+            await atualizarInstituicao(currentInstitutionId, { status: 'INATIVO' });
+            showToast("Instituição desativada com sucesso.");
+            close();
+            document.getElementById('modal-institution-details').classList.remove('show');
+            loadInstitutions();
+        } catch(e) { showToast(e.message, 'error'); }
+        finally { newBtn.disabled = false; newBtn.textContent = 'Sim, Desativar'; }
+    });
+}
+
+async function openInstitutionDetails(id) {
+    const modal = document.getElementById('modal-institution-details');
+    currentInstitutionId = id;
+
+    const inst = allInstitutions.find(i => i.id == id);
+    if(!inst) return;
+
+    // Preenche dados básicos
+    document.getElementById('detail-inst-title').textContent = inst.nome;
+    document.getElementById('detail-inst-sigla').textContent = inst.sigla || '';
+    document.getElementById('detail-inst-cnpj').textContent = inst.cnpj || '-';
+    document.getElementById('detail-inst-email').textContent = inst.email || '-';
+    document.getElementById('detail-inst-phone').textContent = inst.telefone || '-';
+    document.getElementById('detail-inst-area').textContent = inst.areaAtuacao || '-';
+    document.getElementById('detail-inst-desc').textContent = inst.descricao || 'Sem descrição.';
+    
+    const statusBadge = document.getElementById('detail-inst-status');
+    statusBadge.className = `status-badge ${inst.status === 'ATIVO' ? 'status-ativo' : 'status-inativo'}`;
+    statusBadge.textContent = inst.status;
+
+    // Configura o botão de ação baseado no status atual
+    const btnToggle = document.getElementById('btn-toggle-status-inst');
+    if (inst.status === 'INATIVO') {
+        btnToggle.className = 'btn btn-success';
+        btnToggle.innerHTML = '<i class="fas fa-check-circle"></i> Reativar Instituição';
+        btnToggle.dataset.nextStatus = 'ATIVO';
+    } else {
+        btnToggle.className = 'btn btn-danger';
+        btnToggle.innerHTML = '<i class="fas fa-ban"></i> Desativar Instituição';
+        btnToggle.dataset.nextStatus = 'INATIVO';
+    }
+
+    // Carrega usuários
+    const tbody = document.getElementById('detail-inst-users-body');
+    const noUsersMsg = document.getElementById('detail-inst-no-users');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Carregando usuários...</td></tr>';
+    noUsersMsg.style.display = 'none';
+
+    modal.classList.add('show');
 
     try {
-        const institutions = await listarInstituicoes();
-        if (!Array.isArray(institutions) || institutions.length === 0) {
-            allInstitutions = [];
-            setFeedback('Nenhuma instituição encontrada no momento.', 'info');
-            return;
+        const users = await listarUsuariosPorInstituicao(id, 'all');
+        tbody.innerHTML = '';
+
+        if (users && users.length > 0) {
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.nome}</td>
+                    <td>${u.cargo ? u.cargo.replace(/_/g, ' ') : ''}</td>
+                    <td><span class="status-badge ${u.status === 'ATIVO' ? 'status-ativo' : 'status-pendente'}" style="font-size:0.7rem; padding:2px 6px;">${u.status}</span></td>
+                    <td><button class="btn-icon-small"><i class="fas fa-user-circle"></i></button></td>
+                `;
+                tr.querySelector('button').addEventListener('click', () => openUserDetails(u.id));
+                tbody.appendChild(tr);
+            });
+        } else {
+            noUsersMsg.style.display = 'block';
         }
-
-        allInstitutions = institutions; // Armazena a lista completa
-        renderInstitutions(allInstitutions); // Renderiza a lista
-        
     } catch (error) {
-        console.error('Erro ao carregar instituições:', error);
-        allInstitutions = [];
-        setFeedback(error?.message || 'Não foi possível carregar as instituições agora.', 'error');
+        tbody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center">Erro ao carregar usuários.</td></tr>';
     }
 }
 
-/**
- * Renderiza os cards de instituição no container (Função Separada)
- */
-function renderInstitutions(institutionsToRender) {
-    if (!container) return;
+async function openUserDetails(userId) {
+    const overlay = document.getElementById('modal-user-details-overlay');
+    const body = document.getElementById('user-overlay-body');
     
-    container.innerHTML = ''; // Limpa o container
+    // Adiciona a classe show. Graças ao z-index: 3000 no CSS, ele aparecerá na frente.
+    overlay.classList.add('show'); 
+    body.innerHTML = '<p style="text-align:center">Carregando...</p>';
 
-    if (!institutionsToRender || institutionsToRender.length === 0) {
-        setFeedback('Nenhuma instituição encontrada para os termos da busca.', 'info');
-        return;
-    }
-    
-    setFeedback('', 'info'); // Limpa o feedback
-    container.innerHTML = institutionsToRender.map(buildInstitutionCard).join('');
-}
-
-
-function formatLocation(instituicao) {
-    const cidade = instituicao?.cidade || instituicao?.municipio;
-    const estado = instituicao?.estado || instituicao?.uf;
-    const partes = [cidade, estado].filter(Boolean);
-    if (!partes.length && instituicao?.endereco) return instituicao.endereco;
-    return partes.join(' - ') || 'Localização não informada';
-}
-
-function buildInstitutionCard(instituicao) {
-    const tipo = instituicao?.tipo || instituicao?.categoria || 'Instituição';
-    const sigla = instituicao?.sigla || instituicao?.nomeCurto || instituicao?.nome || 'Instituição';
-    const nome = instituicao?.nome || instituicao?.razaoSocial || sigla;
-    
-    // !! NOTA: Estes dados (gestor, totalUsuarios, totalConflitos) não estão vindo da API.
-    // O backend (ServicoInstituicao.java) precisa ser atualizado para enviá-los.
-    const gestor = instituicao?.gestorResponsavel || '—';
-    const totalUsuarios = instituicao?.totalUsuarios ?? '—';
-    const totalConflitos = instituicao?.totalConflitos ?? '—';
-
-    const tipoReal = instituicao.areaAtuacao || tipo;
-
-    // Adicionamos o nome da instituição (sigla) ao botão para usar no título do modal
-    return `
-        <article class="institution-card card">
-            <div class="inst-card-header">
-                <div class="inst-card-id">
-                    <div class="inst-card-icon"><i class="fas fa-landmark"></i></div>
-                    <div class="inst-card-title">
-                        <h3>${sigla}</h3>
-                        <div class="inst-card-tags">
-                            <span class="tag tag-neutral">${tipoReal}</span>
-                        </div>
-                    </div>
+    try {
+        const user = await getUserData(userId);
+        body.innerHTML = `
+            <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+                <div class="avatar-placeholder" style="width: 60px; height: 60px; font-size: 1.5rem; border-radius: 50%;">
+                    <i class="fas fa-user"></i>
                 </div>
-                <button class="icon-button" title="Mais opções"><i class="fas fa-ellipsis-v"></i></button>
-            </div>
-            <p class="inst-card-fullname">${nome}</p>
-            <p class="inst-card-location"><i class="fas fa-map-marker-alt"></i> ${formatLocation(instituicao)}</p>
-            <div class="inst-card-stats">
-                <div class="stat-item">
-                    <span>${totalUsuarios}</span>
-                    <p><i class="fas fa-users"></i> Usuários</p>
-                </div>
-                <div class="stat-item">
-                    <span>${totalConflitos}</span>
-                    <p><i class="fas fa-exclamation-triangle"></i> Conflitos</p>
+                <div>
+                    <h4 style="margin:0;">${user.nome}</h4>
+                    <span class="tag tag-neutral">${user.cargo}</span>
                 </div>
             </div>
-
-            <div class="inst-card-footer">
-                <div class="footer-info">
-                    <small>Gestor Responsável</small>
-                    <p>${gestor}</p>
-                </div>
-                <a href="#" class="btn btn-secondary btn-sm" data-institution-id="${instituicao.id}" data-institution-name="${sigla}">
-                    <i class="fas fa-users"></i> Ver Usuários
-                </a>
+            <div class="form-grid-2">
+                <div class="info-group"><small>Email</small><p>${user.email}</p></div>
+                <div class="info-group"><small>Telefone</small><p>${user.telefone || '-'}</p></div>
+                <div class="info-group"><small>CPF</small><p>${user.cpf || '-'}</p></div>
+                <div class="info-group"><small>Status</small><p>${user.status}</p></div>
             </div>
-            </article>
-    `;
+        `;
+    } catch (e) { body.innerHTML = 'Erro.'; }
 }
 
-
-// ##################################################################
-// ##               LÓGICA DO MODAL (CADASTRAR)                  ##
-// ##################################################################
+// =========================================================================
+// CADASTRO (COM AUTO-ATIVAÇÃO)
+// =========================================================================
 
 function setupModalListeners() {
     const modal = document.getElementById('add-institution-modal');
-    const openButton = document.getElementById('addInstitutionButton');
-    const closeButton = document.getElementById('modal-inst-close-button');
-    const cancelButton = document.getElementById('modal-inst-cancel-button');
+    const btnOpen = document.getElementById('addInstitutionButton');
     const form = document.getElementById('add-institution-form');
 
-    if (!modal || !openButton || !closeButton || !cancelButton || !form) {
-        console.warn('Elementos do modal de cadastro não encontrados.');
-        return;
+    if (btnOpen) {
+        const newBtn = btnOpen.cloneNode(true);
+        btnOpen.parentNode.replaceChild(newBtn, btnOpen);
+        newBtn.addEventListener('click', () => modal.classList.add('show'));
     }
 
-    openButton.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
+    const closeModal = () => { modal.classList.remove('show'); form.reset(); };
+    document.getElementById('modal-inst-close-button').addEventListener('click', closeModal);
+    document.getElementById('modal-inst-cancel-button').addEventListener('click', closeModal);
 
-    const closeModal = () => {
-        modal.style.display = 'none';
-        form.reset();
-    };
-
-    closeButton.addEventListener('click', closeModal);
-    cancelButton.addEventListener('click', closeModal);
-    
-    window.addEventListener('click', (event) => {
-        if (event.target == modal) {
-            closeModal();
-        }
-    });
-
-    form.addEventListener('submit', handleRegisterSubmit);
-}
-
-async function handleRegisterSubmit(event) {
-    event.preventDefault();
-    
-    const submitButton = document.getElementById('modal-inst-submit-button');
-    submitButton.disabled = true;
-    submitButton.textContent = 'Salvando...';
-
-    const instituicaoData = {
-        nome: document.getElementById('inst-nome').value,
-        sigla: document.getElementById('inst-sigla').value,
-        cnpj: document.getElementById('inst-cnpj').value,
-        email: document.getElementById('inst-email').value,
-        telefone: document.getElementById('inst-telefone').value,
-        areaAtuacao: document.getElementById('inst-area').value,
-        descricao: document.getElementById('inst-descricao').value,
-    };
-
-    try {
-        const novaInstituicao = await cadastrarInstituicao(instituicaoData);
-        alert(`Instituição "${novaInstituicao.nome}" cadastrada com sucesso!`);
-        document.getElementById('modal-inst-close-button').click();
+    if (form) {
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
         
-        // Recarrega a lista e aplica o filtro atual (se houver)
-        await loadInstitutions();
-        const searchTerm = document.querySelector('.institution-search-bar input').value.toLowerCase().trim();
-        filterAndRenderInstitutions(searchTerm);
+        newForm.querySelector('#modal-inst-cancel-button').addEventListener('click', closeModal);
 
-    } catch (error) {
-        console.error('Erro ao cadastrar instituição:', error);
-        alert(`Erro: ${error.message || 'Não foi possível cadastrar a instituição.'}`);
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Salvar Instituição';
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSave = newForm.querySelector('button[type="submit"]');
+            btnSave.disabled = true; btnSave.textContent = 'Salvando...';
+
+            try {
+                const data = {
+                    nome: document.getElementById('inst-nome').value,
+                    sigla: document.getElementById('inst-sigla').value,
+                    cnpj: document.getElementById('inst-cnpj').value,
+                    email: document.getElementById('inst-email').value,
+                    telefone: document.getElementById('inst-telefone').value,
+                    areaAtuacao: document.getElementById('inst-area').value,
+                    descricao: document.getElementById('inst-descricao').value
+                };
+                
+                const novaInstituicao = await cadastrarInstituicao(data);
+                
+                if (novaInstituicao && novaInstituicao.id) {
+                    await atualizarInstituicao(novaInstituicao.id, { status: 'ATIVO' });
+                }
+
+                alert('Instituição cadastrada e ativada com sucesso!');
+                closeModal();
+                loadInstitutions();
+
+            } catch(err) { 
+                console.error(err);
+                alert('Erro: ' + (err.message || 'Falha na comunicação')); 
+            } finally { 
+                btnSave.disabled = false; btnSave.textContent = 'Salvar Instituição'; 
+            }
+        });
     }
-}
-
-
-// ##################################################################
-// ##                LÓGICA DO MODAL (VER USUÁRIOS)                ##
-// ##################################################################
-
-/**
- * Configura os listeners para o modal "Ver Usuários".
- */
-function setupViewUsersModalListeners() {
-    const modal = document.getElementById('view-users-modal');
-    const closeButton = document.getElementById('modal-view-users-close-button');
-    const cancelButton = document.getElementById('modal-view-users-cancel-button');
-    const container = document.getElementById('institutionsContainer');
-
-    if (!modal || !closeButton || !cancelButton || !container) {
-        console.warn('Elementos do modal "Ver Usuários" não encontrados.');
-        return;
-    }
-
-    // Listener de clique no container principal para pegar cliques nos botões
-    container.addEventListener('click', (event) => {
-        const button = event.target.closest('a[data-institution-id]');
-        if (button) {
-            event.preventDefault(); // Impede a navegação do link '#'
-            
-            const institutionId = button.dataset.institutionId;
-            const institutionName = button.dataset.institutionName;
-            
-            // Abre o modal e carrega os dados
-            modal.style.display = 'block';
-            loadAndShowUsers(institutionId, institutionName);
-        }
-    });
-
-    // Listeners para fechar o modal
-    const closeModal = () => {
-        modal.style.display = 'none';
-        // Limpa o conteúdo ao fechar
-        const listContainer = document.getElementById('view-users-list-container');
-        listContainer.innerHTML = '<p>Carregando usuários...</p>';
-    };
-
-    closeButton.addEventListener('click', closeModal);
-    cancelButton.addEventListener('click', closeModal);
-
-    window.addEventListener('click', (event) => {
-        if (event.target == modal) {
-            closeModal();
-        }
-    });
-}
-
-/**
- * Busca e exibe os usuários de uma instituição no modal.
- */
-async function loadAndShowUsers(institutionId, institutionName) {
-    const listContainer = document.getElementById('view-users-list-container');
-    const title = document.getElementById('view-users-title');
-
-    title.textContent = `Usuários - ${institutionName}`;
-    listContainer.innerHTML = '<p>Carregando usuários...</p>';
-
-    try {
-        // Busca todos os tipos de usuário da instituição
-        const users = await listarUsuariosPorInstituicao(institutionId, 'all'); 
-        
-        if (!users || users.length === 0) {
-            listContainer.innerHTML = '<p>Nenhum usuário encontrado para esta instituição.</p>';
-            return;
-        }
-
-        // Renderiza a lista de usuários
-        listContainer.innerHTML = createUsersListHTML(users);
-
-    } catch (error) {
-        console.error('Erro ao listar usuários da instituição:', error);
-        listContainer.innerHTML = `<p style="color: red;">${error.message || 'Erro ao carregar usuários.'}</p>`;
-    }
-}
-
-/**
- * Cria o HTML para a lista de usuários dentro do modal.
- */
-function createUsersListHTML(users) {
-    return users.map(user => {
-        const initials = (user.nome || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-        
-        // Formata o cargo
-        const cargoText = (user.cargo || 'Cargo')
-            .replace('GESTOR_', 'Gestor ')
-            .replace('USUARIO_', 'Usuário ')
-            .replace('INSTITUICAO', 'Instituição');
-
-        return `
-            <div class="user-item-card">
-                <div class="user-item-avatar">${initials}</div>
-                <div class="user-item-info">
-                    <p>${user.nome}</p>
-                    <small>${user.email}</small>
-                </div>
-                <span class="user-item-tag ${user.status === 'ATIVO' ? 'status-ativo' : ''}">${cargoText}</span>
-            </div>
-        `;
-    }).join('');
 }

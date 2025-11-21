@@ -12,13 +12,25 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 0.95rem;
-    transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .btn:hover {
     opacity: 0.9;
+    transform: translateY(-1px);
 }
 
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Estilos Variados */
 .btn-primary {
     background-color: var(--color-primary);
     color: var(--color-white);
@@ -30,10 +42,37 @@
     border-color: var(--color-border);
 }
 
+.btn-secondary:hover {
+    background-color: #f8f8f8;
+    color: var(--color-text);
+}
+
+/* --- NOVOS BOTÕES DE AÇÃO --- */
+.btn-danger {
+    background-color: #dc3545; /* Vermelho */
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-success {
+    background-color: #28a745; /* Verde */
+    color: white;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+
+/* Tamanhos */
 .btn-sm {
     padding: 5px 12px;
     font-size: 0.8rem;
     font-weight: 500;
+}
+
+.w-100 {
+    width: 100%;
 }
 
 .btn-filter {

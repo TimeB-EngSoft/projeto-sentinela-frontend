@@ -1,117 +1,148 @@
 /* ======================================== */
-/* PÁGINA: PERFIL                          */
+/* PÁGINA: PERFIL (MODERNO & SIMPLES)      */
 /* ======================================== */
-.profile-section {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    margin-bottom: 30px;
+
+.profile-section.card {
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-.profile-header {
+/* --- CABEÇALHO DO PERFIL --- */
+.profile-header-simple {
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 30px;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
     border-bottom: 1px solid var(--color-border);
-    padding-bottom: 20px;
 }
 
-.profile-avatar {
+.profile-avatar-wrapper {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
 }
 
-.avatar-img {
+.profile-avatar-wrapper img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-primary);
+    color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: var(--shadow-light);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
 }
 
 .upload-btn:hover {
-    opacity: 0.9;
+    transform: scale(1.1);
+    background-color: var(--color-dark-brown);
 }
 
-#uploadAvatar {
+.upload-btn i {
+    font-size: 0.85rem;
+}
+
+#uploadAvatarInput {
     display: none;
 }
 
-.profile-info h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.profile-info p {
-    color: var(--color-text-light);
-}
-
-.profile-form,
-.password-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.profile-form .form-group,
-.password-form .form-group {
+/* --- INFORMAÇÕES DO TOPO --- */
+.profile-info-simple {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
 }
 
-.profile-form label,
-.password-form label {
-    font-weight: 500;
+.profile-info-simple h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--color-dark-brown);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- FORMULÁRIO --- */
+.form-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-light);
+    margin: 25px 0 15px 0;
+    padding-bottom: 5px;
+}
+
+.form-section-title:first-of-type {
+    margin-top: 0;
+}
+
+/* Input Travado (Visual) */
+.input-locked {
+    position: relative;
+}
+
+.input-locked input {
+    background-color: #f9f9f9;
+    color: #666;
+    cursor: not-allowed;
+    padding-right: 35px; /* Espaço para o ícone */
+    border-color: #eee;
+}
+
+.input-locked i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
     font-size: 0.9rem;
 }
 
-.profile-form input,
-.password-form input {
-    padding: 10px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--color-off-white);
-    outline: none;
-}
-
-.profile-form input:focus,
-.password-form input:focus {
-    border-color: var(--color-primary);
-    background-color: var(--color-white);
-}
-
 .form-actions {
-    grid-column: 1 / -1;
+    margin-top: 40px;
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
-    margin-top: 10px;
 }
 
-.password-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.form-actions .btn {
+    padding: 12px 30px;
+    font-size: 1rem;
 }
 
+/* Responsividade */
 @media (max-width: 768px) {
-    .profile-header {
+    .profile-header-simple {
         flex-direction: column;
-        align-items: flex-start;
+        text-align: center;
+        gap: 20px;
     }
-
-    .form-actions {
-        flex-direction: column;
-        align-items: stretch;
+    
+    .profile-badges {
+        justify-content: center;
     }
-
+    
     .form-actions .btn {
         width: 100%;
     }

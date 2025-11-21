@@ -1,0 +1,98 @@
+
+<section class="config-section">
+
+    <div class="config-card notifications-card">
+        <div>
+            <h3 style="margin-bottom: 8px;"><i class="fas fa-bell"></i> Notificações</h3>
+            <small style="color: var(--color-text-light);">Configure como deseja receber
+                notificações</small>
+        </div>
+        <div class="config-item">
+            <div class="item-details">
+                <p>Novos Conflitos</p>
+                <small>Receber alerta quando um novo conflito for registrado</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="emailNotificationsSwitch" checked>
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="config-item">
+            <div class="item-details">
+                <p>Denúncias</p>
+                <small style="color: var(--color-text-light);">Notificações sobre novas denúncias</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="pushNotificationsSwitch">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="config-item">
+            <div class="item-details">
+                <p>E-mail semanal</p>
+                <small>Receber resumo semanal das atividades</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="pendingApprovalsSwitch" checked>
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="config-card preferences-card">
+        <hgroup>
+            <h3 style="margin-bottom: 8px;"><i class="fa-solid fa-globe"></i> Preferências</h3>
+            <small style="display:block; margin-bottom:8px; color: var(--color-text-light);">Personalize sua
+                experiência no sistema</small>
+        </hgroup>
+        <div class="form-group">
+            <label for="idioma">Idioma</label>
+            <select id="idioma" name="idioma">
+                <option value="portugues">Português (Brasil)</option>
+                <option value="english">English (US)</option>
+                <option value="espanol">Español</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="fuso-horario">Fuso Horário</label>
+            <select id="fuso-horario" name="fuso-horario">
+                <option value="portugues">Brasília (GMT-3)</option>
+            </select>
+        </div>
+        <div class="config-item">
+            <div class="item-details">
+                <p>Modo escuro</p>
+                <small>Ativar tema escuro da interface</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="pendingApprovalsSwitch">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="header-actions" ; style="text-align: right;">
+        <button class="btn btn-secondary filter-btn"><i class="fa-solid fa-x"></i>   Cancelar</button>
+        <button class="btn btn-primary export-btn"> Salvar configurações</button>
+    </div>
+
+</section>
+
+<div id="modal-confirm-save-config" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Salvar Alterações?</h3>
+            <button class="close-button" id="close-config-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Deseja aplicar as novas configurações ao sistema?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="btn-cancel-config">Cancelar</button>
+            <button class="btn btn-primary" id="btn-confirm-config">Sim, Salvar</button>
+        </div>
+    </div>
+</div>
+<div id="toast-container"></div>
+
+

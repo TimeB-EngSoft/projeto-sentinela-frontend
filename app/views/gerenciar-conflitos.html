@@ -1,0 +1,124 @@
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Conflitos Ativos</p>
+            <span id="stat-conf-ativos">0</span>
+        </div>
+        <div class="stat-card__icon-bg icon-bg-danger"><i class="fas fa-fire"></i></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Resolvidos</p>
+            <span id="stat-conf-resolvidos">0</span>
+        </div>
+        <div class="stat-card__icon-bg icon-bg-success"><i class="fas fa-handshake"></i></div>
+    </div>
+</section>
+
+<section class="card conflitos-list-card">
+   <div class="card-header">
+        <h3 class="card-title">Lista de Conflitos</h3>
+        <button class="btn btn-primary" id="addConflitoButton" style="display: none;">
+            <i class="fas fa-plus"></i> Registrar Conflito (Direto)
+        </button>
+    </div>
+    <div class="conflitos-filter-bar">
+         <div class="search-bar">
+             <i class="fas fa-search"></i>
+             <input type="text" id="search-conflito" placeholder="Buscar por título ou partes...">
+         </div>
+         <select id="filter-prioridade" class="filter-dropdown">
+             <option value="">Todas Prioridades</option>
+             <option value="CRITICA">Crítica</option>
+             <option value="ALTA">Alta</option>
+             <option value="MEDIA">Média</option>
+             <option value="BAIXA">Baixa</option>
+         </select>
+    </div>
+    <div class="table-responsive-wrapper">
+        <table class="denuncias-table">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Envolvidos</th>
+                    <th>Prioridade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="conflitosTableBody"></tbody>
+        </table>
+    </div>
+</section>
+
+<div id="modal-add-conflito" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Registrar Conflito</h3>
+            <button type="button" class="close-button" data-close-modal>&times;</button>
+        </div>
+        
+        <form id="form-add-conflito" style="display: contents;">
+            <div class="modal-body">
+                <div class="form-group form-grid-full">
+                    <label>Título do Conflito *</label>
+                    <input type="text" id="new-conf-titulo" required placeholder="Ex: Disputa de terras em...">
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label>Tipo *</label>
+                        <select id="new-conf-tipo" required>
+                            <option value="TERRA_INDIGENA">Terra Indígena</option>
+                            <option value="DISPUTA_DE_POSSE">Disputa de Posse</option>
+                            <option value="TERRITORIO_QUILOMBOLA">Quilombola</option>
+                            <option value="RECURSO_HIDRICO">Recurso Hídrico</option>
+                            <option value="DESMATAMENTO">Desmatamento</option>
+                            <option value="OUTRO">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Início *</label>
+                        <input type="date" id="new-conf-data" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prioridade *</label>
+                        <select id="new-conf-prioridade" required>
+                            <option value="MEDIA">Média</option>
+                            <option value="ALTA">Alta</option>
+                            <option value="CRITICA">Crítica</option>
+                            <option value="BAIXA">Baixa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Parte Reclamante</label>
+                        <input type="text" id="new-conf-reclamante">
+                    </div>
+                    <div class="form-group">
+                        <label>Parte Reclamada</label>
+                        <input type="text" id="new-conf-reclamada">
+                    </div>
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label>Grupos Vulneráveis</label>
+                    <input type="text" id="new-conf-grupos">
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label>Descrição</label>
+                    <textarea id="new-conf-desc" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>

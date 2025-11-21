@@ -1,11 +1,13 @@
 /* ======================================== */
 /* FORMULÁRIOS, BUSCA E FILTROS            */
 /* ======================================== */
+
 .filter-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     align-items: center;
+    width: 100%;
 }
 
 .filter-controls select,
@@ -26,40 +28,51 @@
     min-width: 200px;
 }
 
+/* --- BARRA DE PESQUISA GLOBAL --- */
 .search-bar {
     display: flex;
     align-items: center;
-    background-color: var(--color-background);
+    background-color: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
-    padding: 0 10px;
+    padding: 0 15px;
     gap: 10px;
+    height: 45px;
+    width: 100%;
+    max-width: 500px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-bar:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(212, 71, 22, 0.1);
 }
 
 .search-bar i {
     color: var(--color-text-light);
-    font-size: 0.9rem;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .search-bar input {
-    width: 100%;
     border: none;
     background: transparent;
-    padding: 12px 5px;
+    padding: 0;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--color-text);
-}
-
-.search-bar input:focus {
+    width: 100%;
+    height: 100%;
     outline: none;
 }
 
+/* --- Barra específica de Instituições --- */
 .institution-search-bar {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 30px;
+    width: 100%;
 }
 
 .institution-search-bar input {
@@ -71,31 +84,21 @@
     background-color: var(--color-white);
 }
 
-.page-actions-bar {
+/* --- Outros --- */
+.page-actions-bar,
+.page-actions-bar-left {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
-.page-actions-bar-left {
-    display: flex;
-    justify-content: flex-start;
-    gap: 10px;
-    margin-bottom: 20px;
-}
+.page-actions-bar { justify-content: flex-end; }
+.page-actions-bar-left { justify-content: flex-start; }
 
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-}
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
 
 .form-group input,
 .form-group select,
@@ -107,23 +110,47 @@
     font-size: 0.9rem;
     font-family: 'Poppins', sans-serif;
     background-color: #fcfcf9;
+    transition: all 0.2s;
 }
 
+/* Efeito de foco nos inputs */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    background-color: #fff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(212, 71, 22, 0.1);
+    outline: none;
+}
+
+/* --- SISTEMA DE GRID PARA FORMULÁRIOS (Modais) --- */
+.form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-grid-full {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
-    .filter-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filter-controls select {
-        min-width: 100%;
-    }
-
-    .institution-search-bar {
-        flex-direction: column;
-    }
-
-    .page-actions-bar-left {
-        flex-wrap: wrap;
+    .filter-controls, .institution-search-bar { flex-direction: column; align-items: stretch; }
+    .search-bar { max-width: 100%; }
+    
+    .form-grid-3, .form-grid-2 {
+        grid-template-columns: 1fr; /* Vira 1 coluna no mobile */
+        gap: 15px;
     }
 }

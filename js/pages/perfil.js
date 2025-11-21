@@ -1,139 +1,123 @@
-// js/pages/perfil.js 
+import { getUserData, updateUser } from '../services/apiService.js';
 
-import { updateUser, updatePassword, getUserData } from '../services/apiService.js'; // 1. Importe a nova função
+export async function init() {
+    await loadProfileData();
+    setupProfileForm();
+    setupAvatarUpload();
+}
 
-document.addEventListener('DOMContentLoaded', function() {
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    toast.innerHTML = `<i class="fas fa-${icon}"></i><div class="toast-content"><span class="toast-title">${type === 'success' ? 'Sucesso' : 'Erro'}</span><span class="toast-message">${message}</span></div>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+}
 
-    // Função para carregar dados iniciais do localStorage enquanto busca os dados atualizados da API
-    function loadInitialDataFromStorage() {
-        const userName = localStorage.getItem('userName');
-        const userEmail = localStorage.getItem('userEmail');
-        const userCargo = localStorage.getItem('userCargo');
-        const userInstituicao = localStorage.getItem('userInstituicao');
+async function loadProfileData() {
+    const userId = localStorage.getItem('userId');
+    if(!userId) return;
 
-        // Preenche o cabeçalho principal
-        document.getElementById('headerUserName').textContent = userName || 'Usuário';
-        const roleElement = document.getElementById('headerUserRole');
-        if (roleElement) {
-            roleElement.textContent = userCargo || '';
+    try {
+        const user = await getUserData(userId);
+        
+        // Header Info
+        document.getElementById('profileName').textContent = user.nome;
+        document.getElementById('profileRoleBadge').textContent = user.cargo.replace(/_/g, ' ');
+        
+        if(user.instituicaoNome) {
+            const instBadge = document.getElementById('profileInstBadge');
+            instBadge.style.display = 'inline-flex';
+            instBadge.textContent = user.instituicaoNome;
         }
 
-        // Preenche a seção de informações do perfil
-        document.getElementById('profileName').textContent = userName || 'Carregando...';
-        document.getElementById('profileRole').textContent = userCargo || '';
-        document.getElementById('profileInstitution').textContent = userInstituicao || '';
+        // Form Fields
+        document.getElementById('nome').value = user.nome || '';
+        document.getElementById('email').value = user.email || ''; // Disabled no HTML
+        document.getElementById('telefone').value = user.telefone || '';
+        document.getElementById('cpf').value = user.cpf || ''; // Disabled no HTML
+        
+        // Campos Travados
+        document.getElementById('cargo').value = user.cargo.replace(/_/g, ' ');
+        document.getElementById('instituicao').value = user.instituicaoNome || 'Secretaria';
 
-        // Preenche os campos do formulário
-        document.getElementById('nome').value = userName || '';
-        document.getElementById('email').value = userEmail || '';
-        document.getElementById('cargo').value = userCargo || '';
-        document.getElementById('instituicao').value = userInstituicao || '';
+        // Carregar foto salva (Simulação via localStorage)
+        const savedImg = localStorage.getItem('profile_avatar_' + userId);
+        if(savedImg) {
+            document.getElementById('profileImage').src = savedImg;
+        }
+
+    } catch(e) {
+        showToast('Erro ao carregar perfil', 'error');
     }
+}
 
-    async function fetchAndDisplayLatestUserData() {
+function setupProfileForm() {
+    const form = document.querySelector('.profile-form');
+    if(!form) return;
+    
+    // Clona para limpar listeners
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    newForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = newForm.querySelector('button[type="submit"]');
+        btn.disabled = true; btn.textContent = 'Salvando...';
+
         const userId = localStorage.getItem('userId');
-        if (!userId) {
-            alert('Erro de autenticação: ID do usuário não encontrado. Por favor, faça login novamente.');
-            window.location.href = '../authentication/login.html';
-            return;
-        }
+        const data = {
+            nome: document.getElementById('nome').value,
+            telefone: document.getElementById('telefone').value
+            // Não enviamos cargo nem email nem instituicao pois são travados
+        };
 
         try {
-            // Busca os dados mais recentes do usuário da API
-            const user = await getUserData(userId);
-
-            // Atualiza o localStorage com os dados mais recentes
-            localStorage.setItem('userName', user.nome);
-            localStorage.setItem('userEmail', user.email);
-            localStorage.setItem('userCargo', user.cargo);
-            localStorage.setItem('userInstituicao', user.instituicao?.nome || '');
-
-            // Re-chama a função de carregar dados para garantir que a tela inteira seja atualizada
-            loadInitialDataFromStorage();
-
-        } catch (error) {
-            console.error('Falha ao buscar dados atualizados do usuário:', error);
-            // Não mostramos um alerta de erro aqui para não interromper o usuário,
-            // pois a tela já está com os dados do localStorage.
+            await updateUser(userId, data);
+            localStorage.setItem('userName', data.nome); // Atualiza cache local
+            document.getElementById('headerUserName').textContent = data.nome; // Atualiza header na hora
+            showToast('Perfil atualizado com sucesso!');
+        } catch(err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
         }
-    }
+    });
+}
 
-    loadInitialDataFromStorage();       // Executa primeiro para carregar a tela instantaneamente
-    fetchAndDisplayLatestUserData();    // Executa em seguida para buscar e atualizar os dados
+function setupAvatarUpload() {
+    const input = document.getElementById('uploadAvatarInput');
+    if(!input) return;
 
+    // Remove listener antigo clonando input
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
 
-    // ====== Atualizar Perfil ======
-    const profileForm = document.querySelector('.profile-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitButton = profileForm.querySelector('button[type="submit"]');
-            const userId = localStorage.getItem('userId');
-            if (!userId) {
-                alert('Erro de autenticação: ID do usuário não encontrado.');
-                return;
-            }
-
-            // CORREÇÃO: Pega os valores diretamente dos elementos no momento do envio
-            const userData = {
-                nome: document.getElementById('nome').value,
-                email: document.getElementById('email').value,
-                instituicaoNome: document.getElementById('instituicao').value,
-                cargo: document.getElementById('cargo').value.toUpperCase().replace(/ /g, '_')
-            };
-
-            submitButton.disabled = true;
-            submitButton.textContent = 'Salvando...';
-
-            try {
-                const result = await updateUser(userId, userData);
+    newInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Atualiza visualmente
+                document.getElementById('profileImage').src = e.target.result;
                 
-                // Atualiza o localStorage com os dados retornados pela API
-                localStorage.setItem('userName', result.nome);
-                localStorage.setItem('userEmail', result.email);
-                localStorage.setItem('userCargo', result.cargo);
-                localStorage.setItem('userInstituicao', result.instituicao?.nome || '');
-
-                // CORREÇÃO: Chama a função correta para recarregar os dados na tela
-                loadInitialDataFromStorage(); 
-                alert('Perfil atualizado com sucesso!');
-
-            } catch (error) {
-                alert('Erro ao salvar: ' + (error.message || 'Falha na comunicação com o servidor.'));
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Salvar Alterações';
-            }
-        });
-    }
-
-    // ====== Alterar Senha (lógica existente, sem alterações) ======
-    const passwordForm = document.querySelector('.password-form');
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const senhaAtual = document.getElementById('senhaAtual').value.trim();
-            const novaSenha = document.getElementById('novaSenha').value.trim();
-            const confirmarSenha = document.getElementById('confirmarSenha').value.trim();
-
-            if (!senhaAtual || !novaSenha || !confirmarSenha) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
-
-            if (novaSenha !== confirmarSenha) {
-                alert('As senhas não coincidem.');
-                return;
-            }
-
-            try {
+                // Salva no localStorage para persistir (Simulação)
                 const userId = localStorage.getItem('userId');
-                const message = await updatePassword(userId, senhaAtual, novaSenha);
-                alert(message || 'Senha atualizada com sucesso!');
-                passwordForm.reset();
-            } catch (error) {
-                alert('Erro ao atualizar senha: ' + error.message);
+                localStorage.setItem('profile_avatar_' + userId, e.target.result);
+                
+                // Tenta atualizar o header também
+                const headerAvatar = document.querySelector('#headerUserAvatar');
+                if(headerAvatar) {
+                    headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                }
+                
+                showToast('Foto de perfil atualizada!');
             }
-        });
-    }
-});
+            reader.readAsDataURL(file);
+        }
+    });
+}

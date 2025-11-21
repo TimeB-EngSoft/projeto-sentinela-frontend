@@ -1,310 +1,203 @@
-import { 
-    listarConflitos, 
-    buscarConflitoPorId, 
-    cadastrarConflito 
-} from '../../services/apiService.js';
+import { listarConflitos, cadastrarConflito, atualizarConflito, getUserData } from '../../services/apiService.js';
 
-const feedbackId = 'conflitosFeedback';
-const tableBodyId = 'conflitosTableBody';
-let allConflitos = []; // Armazena a lista completa
+let allConflitos = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadConflitos();
+export async function init() {
+    checkPermissions();
+    await loadConflitos();
     setupFilters();
-    setupDetailsModal();
-    setupAddConflitoModal();
-});
-
-function setFeedback(message, type = 'info') {
-    const feedback = document.getElementById(feedbackId);
-    if (!feedback) return;
-    const stateClass = type === 'error' ? 'is-error' : 'is-info';
-    feedback.className = `card empty-card ${stateClass}`;
-    feedback.textContent = message;
-    feedback.style.display = message ? 'block' : 'none';
+    setupModalAdd();
 }
 
-function formatStatus(status) {
-    if (!status) return '<span class="status-tag status-pendente"><i class="fas fa-hourglass-half"></i> PENDENTE</span>';
-    const normalized = status.toString().toUpperCase();
-    const map = {
-        PENDENTE: { class: 'status-pendente', icon: 'fa-hourglass-half' },
-        EM_ANALISE: { class: 'status-analise', icon: 'fa-search' },
-        RESOLVIDO: { class: 'status-resolvido', icon: 'fa-check-circle' }
-    };
-    const s = map[normalized] || map.EM_ANALISE;
-    const text = status.replace('_', ' ');
-    return `<span class="status-tag ${s.class}"><i class="fas ${s.icon}"></i> ${text}</span>`;
-}
-
-function formatPriority(priority) {
-    if (!priority) return '<span class="tag tag-prioridade-media">—</span>';
-    const normalized = priority.toString().toUpperCase();
-    const map = {
-        ALTA: 'tag-prioridade-alta',
-        MEDIA: 'tag-prioridade-media',
-        BAIXA: 'tag-prioridade-baixa'
-    };
-    const klass = map[normalized] || 'tag-prioridade-media';
-    return `<span class="tag ${klass}">${priority}</span>`;
-}
-
-function formatDate(value) {
-    if (!value) return '—';
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('pt-BR');
-}
-
-function buildRow(conflito) {
-    const titulo = conflito?.tituloConflito || 'Conflito sem título';
-    const envolvidos = [conflito?.parteReclamante, conflito?.parteReclamada].filter(Boolean).join(' vs ') || '—';
-    const prioridade = conflito?.prioridade || 'MEDIA';
-    const status = conflito?.status || 'PENDENTE';
-    const data = conflito?.dataInicio || conflito?.dataCriacao || '';
-    const responsavel = conflito?.usuarioResponsavel?.nome || '—'; // Assumindo aninhamento
-
-    return `
-        <tr>
-            <td>${titulo}</td>
-            <td class="envolvidos-cell">${envolvidos}</td>
-            <td>${formatPriority(prioridade)}</td>
-            <td>${formatStatus(status)}</td>
-            <td>${formatDate(data)}</td>
-            <td>${responsavel}</td>
-            <td class="table-actions">
-                <a href="#" title="Ver Detalhes" data-action="details" data-id="${conflito.id}"><i class="fas fa-eye"></i></a>
-                <a href="#" title="Editar"><i class="fas fa-pen"></i></a>
-            </td>
-        </tr>
-    `;
+function checkPermissions() {
+    const userCargo = localStorage.getItem('userCargo');
+    // ADICIONADO: GESTOR_INSTITUICAO na lista de permitidos
+    if (['SECRETARIA', 'GESTOR_SECRETARIA', 'GESTOR_INSTITUICAO'].includes(userCargo)) {
+        const btn = document.getElementById('addConflitoButton');
+        if(btn) btn.style.display = 'inline-flex';
+    }
 }
 
 async function loadConflitos() {
-    const tbody = document.getElementById(tableBodyId);
-    if (!tbody) return;
-
-    setFeedback('Carregando conflitos...', 'info');
-    tbody.innerHTML = '';
-
+    const tbody = document.getElementById('conflitosTableBody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Carregando...</td></tr>';
     try {
-        const conflitos = await listarConflitos();
-        if (!Array.isArray(conflitos) || conflitos.length === 0) {
-            allConflitos = [];
-            setFeedback('Nenhum conflito encontrado no momento.', 'info');
-        } else {
-            allConflitos = conflitos;
-            setFeedback('', 'info');
-            renderConflitosTable(allConflitos);
+        const data = await listarConflitos();
+        allConflitos = Array.isArray(data) ? data : [];
+        
+        // Filtra se for Gestor de Instituição (opcional, mas recomendado)
+        const userCargo = localStorage.getItem('userCargo');
+        if (userCargo === 'GESTOR_INSTITUICAO') {
+             const userId = localStorage.getItem('userId');
+             try {
+                 const me = await getUserData(userId);
+                 if(me.instituicao) {
+                     allConflitos = allConflitos.filter(c => c.instituicao && c.instituicao.id === me.instituicao.id);
+                 }
+             } catch(e){}
         }
-        updateStatsCards(allConflitos);
-    } catch (error) {
-        console.error('Erro ao carregar conflitos:', error);
-        allConflitos = [];
-        updateStatsCards([]);
-        setFeedback(error?.message || 'Não foi possível carregar os conflitos agora.', 'error');
+
+        updateStats(allConflitos);
+        renderTable(allConflitos);
+    } catch(e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red">Erro ao carregar conflitos.</td></tr>';
     }
 }
 
-function renderConflitosTable(conflitos) {
-    const tbody = document.getElementById(tableBodyId);
+function updateStats(list) {
+    const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+    set('stat-conf-ativos', list.filter(c => c.status === 'ATIVO').length);
+    set('stat-conf-resolvidos', list.filter(c => c.status === 'RESOLVIDO').length);
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('conflitosTableBody');
+    if(!tbody) return;
     tbody.innerHTML = '';
-    
-    if (conflitos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum conflito encontrado para os filtros.</td></tr>';
+
+    if(list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum conflito registrado.</td></tr>';
         return;
     }
-    
-    tbody.innerHTML = conflitos.map(buildRow).join('');
+
+    list.forEach(c => {
+        const prioridadeClass = c.prioridade === 'CRITICA' ? 'tag-prioridade-alta' : 
+                                (c.prioridade === 'ALTA' ? 'tag-prioridade-media' : 'tag-prioridade-baixa');
+        
+        const statusIcon = c.status === 'RESOLVIDO' ? '<i class="fas fa-check"></i>' : 
+                           (c.status === 'CANCELADO' ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-fire"></i>');
+
+        const reclamante = c.parteReclamante || '-';
+        const reclamada = c.parteReclamada || '-';
+        const tipo = c.tipoConflito ? c.tipoConflito.replace(/_/g, ' ') : 'Não informado';
+
+        const row = `
+            <tr>
+                <td><strong>${c.tituloConflito}</strong></td>
+                <td>${tipo}</td>
+                <td class="envolvidos-cell">
+                    <div><small>Rec:</small> ${reclamante}</div>
+                    <div><small>Vs:</small> ${reclamada}</div>
+                </td>
+                <td><span class="tag ${prioridadeClass}">${c.prioridade}</span></td>
+                <td><span class="status-tag">${statusIcon} ${c.status}</span></td>
+                <td class="table-actions">
+                    ${c.status === 'ATIVO' ? 
+                        `<button class="btn btn-sm btn-success" onclick="window.resolveConflict(${c.id})" title="Resolver"><i class="fas fa-check"></i></button>` : 
+                        '<span style="color:#ccc">-</span>'
+                    }
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
 }
 
-function updateStatsCards(conflitos) {
-    const total = conflitos.length;
-    const pendentes = conflitos.filter(c => (c.status || 'PENDENTE') === 'PENDENTE').length;
-    const analise = conflitos.filter(c => c.status === 'EM_ANALISE').length;
-    const resolvidos = conflitos.filter(c => c.status === 'RESOLVIDO').length;
-
-    document.getElementById('stat-total-conflitos').textContent = total;
-    document.getElementById('stat-pendentes').textContent = pendentes;
-    document.getElementById('stat-analise').textContent = analise;
-    document.getElementById('stat-resolvidos').textContent = resolvidos;
-}
-
-// ##################################################################
-// ##                      LÓGICA DE FILTROS                       ##
-// ##################################################################
+window.resolveConflict = async function(id) {
+    if(!confirm("Marcar este conflito como RESOLVIDO?")) return;
+    try {
+        await atualizarConflito(id, { status: 'RESOLVIDO' });
+        alert("Conflito resolvido com sucesso!");
+        loadConflitos();
+    } catch(e) {
+        alert("Erro ao resolver conflito: " + e.message);
+    }
+};
 
 function setupFilters() {
-    const searchInput = document.getElementById('search-input');
-    const statusFilter = document.getElementById('status-filter');
-    const prioridadeFilter = document.getElementById('prioridade-filter');
-
-    const applyFilters = () => {
-        const searchTerm = searchInput.value.toLowerCase();
-        const status = statusFilter.value;
-        const prioridade = prioridadeFilter.value;
-
-        const filteredConflitos = allConflitos.filter(conflito => {
-            const statusMatch = !status || (conflito.status || 'PENDENTE') === status;
-            const prioridadeMatch = !prioridade || (conflito.prioridade || 'MEDIA') === prioridade;
-
-            const searchMatch = !searchTerm ||
-                (conflito.tituloConflito?.toLowerCase().includes(searchTerm)) ||
-                (conflito.parteReclamante?.toLowerCase().includes(searchTerm)) ||
-                (conflito.parteReclamada?.toLowerCase().includes(searchTerm));
-
-            return statusMatch && prioridadeMatch && searchMatch;
+    const input = document.getElementById('search-conflito');
+    const select = document.getElementById('filter-prioridade');
+    
+    const filter = () => {
+        const term = input.value.toLowerCase();
+        const prio = select.value;
+        
+        const filtered = allConflitos.filter(c => {
+            const matchText = c.tituloConflito.toLowerCase().includes(term) || 
+                              (c.parteReclamante && c.parteReclamante.toLowerCase().includes(term));
+            const matchPrio = prio ? c.prioridade === prio : true;
+            return matchText && matchPrio;
         });
-
-        renderConflitosTable(filteredConflitos);
+        renderTable(filtered);
     };
 
-    searchInput.addEventListener('keyup', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
-    prioridadeFilter.addEventListener('change', applyFilters);
+    if(input) input.addEventListener('keyup', filter);
+    if(select) select.addEventListener('change', filter);
 }
 
-// ##################################################################
-// ##                 LÓGICA DO MODAL DE DETALHES                  ##
-// ##################################################################
-
-function setupDetailsModal() {
-    const tbody = document.getElementById(tableBodyId);
-    const modal = document.getElementById('modal-conflito-details');
-    
-    tbody.addEventListener('click', (event) => {
-        const button = event.target.closest('a[data-action="details"]');
-        if (button) {
-            event.preventDefault();
-            const conflitoId = button.dataset.id;
-            handleViewDetails(conflitoId);
-        }
-    });
-
-    modal.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => modal.classList.remove('show'));
-    });
-}
-
-async function handleViewDetails(conflitoId) {
-    const modal = document.getElementById('modal-conflito-details');
-    const modalBody = document.getElementById('detail-modal-body');
-    modal.classList.add('show');
-    modalBody.innerHTML = '<p>Carregando...</p>';
-
-    try {
-        const conflito = await buscarConflitoPorId(conflitoId);
-        
-        const statusTag = formatStatus(conflito.status);
-        const prioridadeTag = formatPriority(conflito.prioridade);
-
-        modalBody.innerHTML = `
-            <div class="details-grid">
-                <div class="detail-item full-width">
-                    <strong>Título</strong>
-                    <span>${conflito.tituloConflito || 'Não informado'}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Status</strong>
-                    <span>${statusTag}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Prioridade</strong>
-                    <span>${prioridadeTag}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Tipo de Conflito</strong>
-                    <span>${conflito.tipoConflito || 'Não informado'}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Data de Início</strong>
-                    <span>${formatDate(conflito.dataInicio)}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Parte Reclamante</strong>
-                    <span>${conflito.parteReclamante || 'Não informado'}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Parte Reclamada</strong>
-                    <span>${conflito.parteReclamada || 'Não informado'}</span>
-                </div>
-                <div class="detail-item full-width">
-                    <strong>Grupos Vulneráveis</strong>
-                    <span>${conflito.gruposVulneraveis || 'Nenhum'}</span>
-                </div>
-                <div class="detail-item full-width">
-                    <strong>Descrição</strong>
-                    <p>${conflito.descricaoConflito || 'Sem descrição.'}</p>
-                </div>
-                <div class="detail-item">
-                    <strong>Fonte da Denúncia</strong>
-                    <span>${conflito.fonteDenuncia || 'Não informada'}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Responsável</strong>
-                    <span>${conflito.usuarioResponsavel?.nome || 'Ninguém atribuído'}</span>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        modalBody.innerHTML = `<p style="color: red;">${error.message || 'Erro ao carregar detalhes.'}</p>`;
-    }
-}
-
-// ##################################################################
-// ##               LÓGICA DO MODAL (ADD CONFLITO)                 ##
-// ##################################################################
-
-function setupAddConflitoModal() {
+function setupModalAdd() {
     const modal = document.getElementById('modal-add-conflito');
-    const openButton = document.getElementById('addConflitoButton');
+    const btnOpen = document.getElementById('addConflitoButton');
     const form = document.getElementById('form-add-conflito');
-    
-    openButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        form.reset(); // Limpa o formulário
-        modal.classList.add('show');
-    });
 
-    modal.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => modal.classList.remove('show'));
-    });
+    if(btnOpen) {
+        const newBtn = btnOpen.cloneNode(true);
+        btnOpen.parentNode.replaceChild(newBtn, btnOpen);
+        newBtn.addEventListener('click', () => modal.classList.add('show'));
+    }
 
-    form.addEventListener('submit', handleAddConflitoSubmit);
-}
+    const closeModal = () => modal.classList.remove('show');
+    modal.querySelectorAll('[data-close-modal]').forEach(b => 
+        b.addEventListener('click', closeModal)
+    );
 
-async function handleAddConflitoSubmit(event) {
-    event.preventDefault();
-    const submitButton = document.getElementById('add-conflito-submit-button');
-    submitButton.disabled = true;
-    submitButton.textContent = 'Salvando...';
+    if(form) {
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
 
-    try {
-        const dataInicio = document.getElementById('conflito-data-inicio').value;
-        
-        const conflitoData = {
-            tituloConflito: document.getElementById('conflito-titulo').value,
-            tipoConflito: document.getElementById('conflito-tipo').value,
-            dataInicio: dataInicio ? `${dataInicio}T00:00:00` : null, // Formato LocalDateTime
-            status: document.getElementById('conflito-status').value,
-            prioridade: document.getElementById('conflito-prioridade').value,
-            descricaoConflito: document.getElementById('conflito-descricao').value,
-            parteReclamante: document.getElementById('conflito-reclamante').value,
-            parteReclamada: document.getElementById('conflito-reclamada').value,
-            gruposVulneraveis: document.getElementById('conflito-grupos').value,
-            fonteDenuncia: 'INTERNA' // Definido como interna, já que foi cadastro direto
-        };
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = newForm.querySelector('button[type="submit"]');
+            
+            const titulo = document.getElementById('new-conf-titulo').value;
+            const dataInicio = document.getElementById('new-conf-data').value;
+            
+            if(!titulo || !dataInicio) {
+                alert("Preencha os campos obrigatórios (*)");
+                return;
+            }
 
-        await cadastrarConflito(conflitoData);
-        
-        alert('Conflito registrado com sucesso!');
-        document.getElementById('modal-add-conflito').classList.remove('show');
-        loadConflitos(); // Recarrega a lista
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
 
-    } catch (error) {
-        console.error('Erro ao registrar conflito:', error);
-        alert(error.message || 'Erro ao salvar o conflito.');
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Salvar Conflito';
+            // Obter ID da Instituição do usuário logado
+            const userId = localStorage.getItem('userId');
+            let myInstObj = null;
+            try {
+                const user = await getUserData(userId);
+                if(user.instituicao) myInstObj = { id: user.instituicao.id };
+            } catch(e){}
+
+            const data = {
+                tituloConflito: titulo,
+                tipoConflito: document.getElementById('new-conf-tipo').value,
+                dataInicio: dataInicio + 'T00:00:00',
+                prioridade: document.getElementById('new-conf-prioridade').value,
+                parteReclamante: document.getElementById('new-conf-reclamante').value,
+                parteReclamada: document.getElementById('new-conf-reclamada').value,
+                gruposVulneraveis: document.getElementById('new-conf-grupos').value,
+                descricaoConflito: document.getElementById('new-conf-desc').value,
+                fonteDenuncia: 'USUARIO_INTERNO',
+                status: 'ATIVO',
+                instituicao: myInstObj // Vínculo
+            };
+
+            try {
+                await cadastrarConflito(data);
+                alert("✅ Conflito registrado com sucesso!");
+                closeModal();
+                newForm.reset();
+                loadConflitos();
+            } catch(err) {
+                console.error(err);
+                alert("Erro ao registrar conflito: " + (err.message || "Erro desconhecido"));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvar';
+            }
+        });
     }
 }

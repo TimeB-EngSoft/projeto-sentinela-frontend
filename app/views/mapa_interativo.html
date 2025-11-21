@@ -1,46 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Interativo - Painel Sentinela</title>
-    <link rel="stylesheet" href="../../../css/app/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-</head>
-
-<body>
-    <div class="dashboard-container">
-        <aside class="sidebar"
-               data-sidebar
-               data-logo-path="../../../assets/images/logo.png"
-               data-sidebar-title="SENTINELA"
-               data-sidebar-subtitle="Mapa Interativo"
-               data-active-nav="map">
-        </aside>
-
-        <main class="main-content">
-            <header class="main-header">
-                <button id="menu-toggle" class="menu-toggle"><i class="fas fa-bars"></i></button>
-                <div class="header-title">
-                    <h2>Mapa Interativo</h2>
-                    <p>Visualização geográfica dos conflitos e das instituições</p>
-                </div>
-                <div class="header-user">
-                    <button class="icon-button"><i class="fas fa-bell"></i><span class="notification-badge">3</span></button>
-                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder">
-                         <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-info">
-                        <span id="headerUserName" class="user-name">Carregando...</span>
-                        <!-- <span id="headerUserRole" class="user-role"></span> -->
-                    </div>
-                    
-                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
-                </div>
-            </header>
 
             <div class="map-layout-grid">
                 <section class="map-section card">
@@ -102,16 +59,3 @@
                     </div>
                 </aside>
             </div>
-
-            <footer class="main-footer">
-                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários. Todos os direitos reservados.</p>
-            </footer>
-        </main>
-    </div>
-
-    <script src="../../../js/components/navigation.js"></script>
-    <script src="../../../js/pages/mapa_interativo.js"></script>
-
-</body>
-
-</html>

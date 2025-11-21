@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Sentinela</title>
+    <link rel="stylesheet" href="../css/app/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Loader para transição de telas */
+        #page-loader { display: none; text-align: center; padding: 50px; color: var(--color-primary); font-size: 1.2rem; }
+        /* Correção para modais no SPA: garante que fiquem sobre tudo */
+        .modal { z-index: 9999; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="app-sidebar"
+               data-sidebar
+               data-logo-path="../assets/images/logo.png"
+               data-sidebar-title="SENTINELA"
+               data-sidebar-subtitle="Carregando...">
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h2 id="page-title">Visão Geral</h2>
+                    <p id="page-subtitle">Bem-vindo ao sistema</p>
+                </div>
+                <div class="header-user">
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button class="icon-button" id="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notif-count">0</span>
+                        </button>
+                        <div id="notification-dropdown" class="card" style="display: none; position: absolute; top: 40px; right: 0; width: 300px; z-index: 1100; padding: 0;">
+                            <div class="card-header" style="padding: 15px; border-bottom: 1px solid #eee; margin:0;">
+                                <h4 style="margin:0; font-size: 1rem;">Notificações</h4>
+                                <small id="mark-read" style="cursor: pointer; color: var(--color-primary);">Limpar</small>
+                            </div>
+                            <ul id="notif-list" style="max-height: 300px; overflow-y: auto; list-style: none;">
+                                </ul>
+                        </div>
+                    </div>
+                    <div id="headerUserAvatar" class="user-avatar avatar-placeholder"><i class="fas fa-user"></i></div>
+                    <div class="user-info"><span id="headerUserName" class="user-name">...</span></div>
+                    <button id="menu-toggle" class="icon-button mobile-only"><i class="fas fa-bars"></i></button>
+                </div>
+            </header>
+
+            <div id="app-content"></div>
+            
+            <div id="page-loader"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+
+            <footer class="main-footer">
+                <p>&copy; 2025 Sistema de Monitoramento de Conflitos Agrários.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+</html>

@@ -1,43 +1,39 @@
 import { logoutUser } from '../services/apiService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Seleciona os botões pelos novos IDs
     const confirmBtn = document.getElementById('confirm-logout-btn');
     const cancelBtn = document.getElementById('cancel-logout-btn');
 
-    if (!confirmBtn || !cancelBtn) {
-        console.error('Botões de confirmação de logout não encontrados na página.');
-        return;
-    }
+    if (!confirmBtn || !cancelBtn) return;
 
-    // Evento para o botão de confirmação de saída
+    // Botão Confirmar (Sair)
     confirmBtn.addEventListener('click', async () => {
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Saindo...';
 
         try {
-            // Chama a função da API para fazer logout
-            const message = await logoutUser();
-            alert(message); // Exibe a mensagem de sucesso (ex: "Logout efetuado com sucesso!")
-
-            // Limpa o armazenamento local e de sessão por segurança
+            // 1. Tenta avisar o backend (opcional)
+            await logoutUser();
+        } catch (error) {
+            console.warn('Erro de rede ao sair, continuando logout local:', error);
+        } finally {
+            // 2. Limpa dados locais
             localStorage.clear();
             sessionStorage.clear();
-            
-            // Redireciona o usuário para a página de login
-            window.location.href = './login.html'; 
 
-        } catch (error) {
-            console.error('Erro ao efetuar logout:', error);
-            alert(error.message || 'Não foi possível encerrar a sessão. Tente novamente.');
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Sim, Sair';
+            // 3. Redirecionamento Absoluto e Seguro
+            // Sai da pasta 'app/authentication' e vai para 'app/authentication/login.html'
+            // Usamos window.location.pathname para garantir o caminho correto
+            
+            // Se estiver rodando localmente ou em servidor, forçamos o caminho do login
+            window.location.href = 'login.html'; 
         }
     });
 
-    // Evento para o botão de cancelar
+    // Botão Cancelar (Voltar)
     cancelBtn.addEventListener('click', () => {
-        // Retorna para a página anterior no histórico do navegador (o painel)
-        window.history.back();
+        // Volta para o painel principal (../index.html)
+        // Se o arquivo logout.html está em /app/authentication, subir um nível leva para /app
+        window.location.href = '../index.html';
     });
 });

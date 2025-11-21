@@ -1,31 +1,8 @@
 /* ======================================== */
 /* PÁGINA: GERENCIAR GESTORES              */
 /* ======================================== */
-.search-bar {
-    position: relative;
-    min-width: 250px;
-}
 
-.search-bar i {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-light);
-    font-size: 0.9rem;
-}
-
-.search-bar input {
-    padding: 10px 15px 10px 40px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    background-color: var(--color-white);
-}
-
-.search-bar input::placeholder {
-    color: var(--color-text-light);
-}
+/* A estilização da .search-bar foi movida para _forms.css */
 
 .table-responsive {
     margin-top: 20px;
@@ -43,15 +20,4 @@
 
 .form-group.hidden {
     display: none;
-}
-
-@media (max-width: 768px) {
-    .search-bar {
-        width: 100%;
-    }
-
-    .search-bar input {
-        width: 100%;
-        min-width: 0;
-    }
 }

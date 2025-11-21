@@ -1,0 +1,159 @@
+<div class="page-header-controls">
+    <div class="page-actions-bar-left">
+        <button class="btn btn-primary" id="addInstitutionButton">
+            <i class="fas fa-plus"></i> Nova Instituição
+        </button>
+    </div>
+    
+    <div class="institution-search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" id="institution-search-input" placeholder="Buscar por nome, sigla ou tipo...">
+    </div>
+</div>
+
+<section class="institution-grid">
+    <div id="institutionsContainer" class="institution-grid__list"></div>
+    <div id="institutionsFeedback" class="empty-state" style="display: none; text-align: center; width: 100%; padding: 20px;">
+        <p>Nenhuma instituição encontrada.</p>
+    </div>
+</section>
+
+<div id="add-institution-modal" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-building"></i> Nova Instituição</h3>
+            <button class="close-button" id="modal-inst-close-button">&times;</button>
+        </div>
+        <form id="add-institution-form" style="display: contents;"> 
+            <div class="modal-body">
+                <div class="form-group form-grid-full">
+                    <label for="inst-nome">Nome da Instituição *</label>
+                    <input type="text" id="inst-nome" required placeholder="Ex: Secretaria de Meio Ambiente">
+                </div>
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label for="inst-sigla">Sigla</label>
+                        <input type="text" id="inst-sigla" placeholder="Ex: SEMA">
+                    </div>
+                    <div class="form-group">
+                        <label for="inst-cnpj">CNPJ</label>
+                        <input type="text" id="inst-cnpj" placeholder="00.000.000/0000-00">
+                    </div>
+                    <div class="form-group">
+                        <label for="inst-telefone">Telefone</label>
+                        <input type="tel" id="inst-telefone" placeholder="(81) 0000-0000">
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="inst-email">Email de Contato</label>
+                        <input type="email" id="inst-email" placeholder="contato@instituicao.gov.br">
+                    </div>
+                    <div class="form-group">
+                        <label for="inst-area">Área de Atuação</label>
+                        <input type="text" id="inst-area" placeholder="Ex: Meio Ambiente">
+                    </div>
+                </div>
+                <div class="form-group form-grid-full">
+                    <label for="inst-descricao">Descrição</label>
+                    <textarea id="inst-descricao" rows="2" placeholder="Breve descrição..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="modal-inst-cancel-button">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="modal-inst-submit-button">
+                    <i class="fas fa-check"></i> Salvar Instituição
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-institution-details" class="modal" style="z-index: 2050;">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 id="detail-inst-title">Detalhes da Instituição</h3>
+            <button class="close-button" id="modal-detail-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="detail-section">
+                <div class="detail-header-row">
+                    <span id="detail-inst-status" class="status-badge"></span>
+                    <span id="detail-inst-sigla" class="tag tag-neutral"></span>
+                </div>
+                <div class="form-grid-2" style="margin-top: 15px;">
+                    <div class="info-group"><small>CNPJ</small><p id="detail-inst-cnpj">-</p></div>
+                    <div class="info-group"><small>Área de Atuação</small><p id="detail-inst-area">-</p></div>
+                    <div class="info-group"><small>Email</small><p id="detail-inst-email">-</p></div>
+                    <div class="info-group"><small>Telefone</small><p id="detail-inst-phone">-</p></div>
+                </div>
+                <div class="info-group" style="margin-top: 10px;">
+                    <small>Descrição</small>
+                    <p id="detail-inst-desc" style="color: var(--color-text-light);">-</p>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 20px 0;">
+
+            <div class="detail-users-section">
+                <h4 style="margin-bottom: 15px; font-size: 1rem;">Usuários Vinculados</h4>
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="denuncias-table">
+                        <thead><tr><th>Nome</th><th>Cargo</th><th>Status</th><th>Ação</th></tr></thead>
+                        <tbody id="detail-inst-users-body"></tbody>
+                    </table>
+                </div>
+                <p id="detail-inst-no-users" style="display:none; color: #777; text-align: center; padding: 10px;">Nenhum usuário vinculado.</p>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="justify-content: space-between;">
+            <button type="button" class="btn" id="btn-toggle-status-inst">Ação</button>
+            <button type="button" class="btn btn-secondary" id="modal-detail-close-btn">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-user-details-overlay" class="modal" style="z-index: 2100; background-color: rgba(0,0,0,0.8);">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Dados do Usuário</h3>
+            <button class="close-button" id="modal-user-close">&times;</button>
+        </div>
+        <div class="modal-body" id="user-overlay-body"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modal-user-close-btn">Voltar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="page-header-controls">
+    </div>
+
+<section class="institution-grid">
+    </section>
+
+<div id="modal-institution-details" ... > </div>
+<div id="modal-user-details-overlay" ... > </div>
+
+<div id="modal-deactivate-inst" class="modal" style="z-index: 2200;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-ban" style="color: #dc3545;"></i> Desativar Instituição</h3>
+            <button class="close-button" id="modal-deact-inst-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Tem certeza que deseja desativar a instituição <strong id="deactivate-inst-name"></strong>?</p>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                Isso pode impedir que todos os usuários vinculados acessem o sistema.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modal-deact-inst-cancel">Cancelar</button>
+            <button class="btn btn-danger" id="modal-deact-inst-confirm">Sim, Desativar</button>
+        </div>
+    </div>
+</div>

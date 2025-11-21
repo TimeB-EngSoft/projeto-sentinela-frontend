@@ -1,457 +1,288 @@
-// Importa as funções de apiService.js
-import { 
-    listUsersByStatus, 
-    getUserData, 
-    updateUser,
-    cadastrarParcial,
-    approveOrRejectUser,
-    listarInstituicoes
-} from '../services/apiService.js';
+import { listUsersByStatus, getUserData, updateUser, cadastrarParcial, listarInstituicoes } from '../services/apiService.js';
 
-// Armazena todos os gestores carregados para filtragem
 let allManagers = [];
-// Cache para a lista de instituições (usado no modal 'Adicionar')
 let cachedInstitutions = null;
+let managerToDeactivate = null;
 
-// ##################################################################
-// ##                  INICIALIZAÇÃO DA PÁGINA                     ##
-// ##################################################################
-
-document.addEventListener('DOMContentLoaded', function() {
-    loadHeaderUserData();
-    setupMobileMenu();
-    loadAllManagers();
-    
-    // Configura os listeners dos modais
+export async function init() {
+    allManagers = [];
+    await loadAllManagers();
     setupAddManagerModal();
     setupDetailsModal();
-    
-    // Configura o filtro de busca
     setupSearchFilter();
-});
-
-// --- Funções Reutilizadas (Setup) ---
-function loadHeaderUserData() {
-    const userName = localStorage.getItem('userName');
-    if (userName) {
-        document.getElementById('headerUserName').textContent = userName;
-    } else {
-        document.getElementById('headerUserName').textContent = 'Usuário';
-    }
-    // Lógica do Avatar (se necessário)
+    setupDeactivateModal();
 }
 
-function setupMobileMenu() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-    }
-
-    document.addEventListener('click', (event) => {
-        if (sidebar && sidebar.classList.contains('open')) {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnMenuToggle = menuToggle && menuToggle.contains(event.target);
-
-            if (!isClickInsideSidebar && !isClickOnMenuToggle) {
-                sidebar.classList.remove('open');
-            }
-        }
-    });
+// --- TOAST ---
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    toast.innerHTML = `<i class="fas fa-${icon}"></i><div class="toast-content"><span class="toast-title">${type === 'success' ? 'Sucesso' : 'Erro'}</span><span class="toast-message">${message}</span></div>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
 }
 
-// ##################################################################
-// ##                 CARREGAR E RENDERIZAR GESTORES               ##
-// ##################################################################
-
-/**
- * Busca todos os usuários (ativos, pendentes, inativos) e filtra por gestores.
- */
+// --- CARREGAMENTO ---
 async function loadAllManagers() {
     const tableBody = document.getElementById('managers-table-body');
-    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Carregando gestores...</td></tr>';
+    if(!tableBody) return;
+    
+    // LIMPEZA CRÍTICA PARA EVITAR DUPLICAÇÃO
+    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Carregando...</td></tr>';
 
     try {
-        const activeUsers = await fetchUsersSafely('ATIVO');
-        const pendingUsers = await fetchUsersSafely('PENDENTE');
-        const inactiveUsers = await fetchUsersSafely('INATIVO');
+        const [active, pending, inactive] = await Promise.all([
+            fetchUsersSafely('ATIVO'),
+            fetchUsersSafely('PENDENTE'),
+            fetchUsersSafely('INATIVO')
+        ]);
 
-        const allUsers = [...activeUsers, ...pendingUsers, ...inactiveUsers];
-
-        // Filtra apenas usuários cujo cargo é de GESTOR
+        const allUsers = [...active, ...pending, ...inactive];
+        // Filtra apenas gestores
         allManagers = allUsers.filter(user => 
-            user.cargo === 'GESTOR_SECRETARIA' || 
-            user.cargo === 'GESTOR_INSTITUICAO'
+            user.cargo === 'GESTOR_SECRETARIA' || user.cargo === 'GESTOR_INSTITUICAO'
         );
-
+        
         renderManagersTable(allManagers);
-        updateStatsCards(allManagers);
-
+        updateStatsCards(active, pending, inactive);
     } catch (error) {
-        console.error('Erro ao carregar gestores:', error);
-        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: red;">${error.message || 'Erro ao carregar lista.'}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" style="color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 
-/**
- * Função auxiliar para buscar usuários por status, tratando o erro "Não há usuários" como lista vazia.
- */
 async function fetchUsersSafely(status) {
-    try {
-        return await listUsersByStatus(status);
-    } catch (error) {
-        if (error.message && error.message.includes("Não há usuários com este status")) {
-            return []; // Retorna lista vazia em vez de lançar erro
-        }
-        throw error; // Lança outros erros
-    }
+    try { return await listUsersByStatus(status); } catch (e) { return []; }
 }
 
-/**
- * Renderiza a lista de gestores na tabela.
- */
-function renderManagersTable(managersToRender) {
-    const tableBody = document.getElementById('managers-table-body');
-    tableBody.innerHTML = ''; // Limpa a tabela
+function renderManagersTable(managers) {
+    const tbody = document.getElementById('managers-table-body');
+    if(!tbody) return;
+    tbody.innerHTML = '';
 
-    if (managersToRender.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Nenhum gestor encontrado.</td></tr>';
+    if (managers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum gestor encontrado.</td></tr>';
         return;
     }
 
-    managersToRender.forEach(user => {
+    managers.forEach(user => {
         const row = document.createElement('tr');
-        
-        const tipoTag = getRoleTag(user.cargo);
-        const statusTag = getStatusTag(user.status);
-        
-        // O DTO de 'listUsersByStatus' pode ter 'instituicaoNome' ou 'instituicao' (objeto)
-        // O DTO de ATIVO tem 'instituicao' como objeto. Os outros têm 'instituicaoNome' como string.
-        let instituicaoNome = '—';
-        if (user.instituicao) {
-            instituicaoNome = user.instituicao.nome || '—';
-        } else if (user.instituicaoNome) {
-            instituicaoNome = user.instituicaoNome;
+        const statusClass = user.status === 'ATIVO' ? 'status-ativo' : (user.status === 'PENDENTE' ? 'status-pendente' : 'status-inativo');
+        const instName = user.instituicaoNome || (user.cargo === 'GESTOR_SECRETARIA' ? 'Secretaria' : '-');
+
+        // Botão de ação depende do status
+        let actionBtn;
+        if (user.status === 'ATIVO') {
+            actionBtn = `<button class="btn btn-sm btn-outline-danger" onclick="openDeactivateManager(${user.id}, '${user.nome}')" title="Desativar"><i class="fas fa-user-slash"></i></button>`;
+        } else if (user.status === 'INATIVO') {
+            actionBtn = `<button class="btn btn-sm btn-outline-success" onclick="reactivateManager(${user.id}, '${user.nome}')" title="Reativar"><i class="fas fa-user-check"></i></button>`;
+        } else {
+            actionBtn = '<small>Pendente</small>';
         }
-        
-        // Dados de Conflitos e Usuários não vêm da API, como observado
-        const conflitosCount = '—';
-        const usuariosCount = '—';
 
         row.innerHTML = `
             <td>${user.nome}</td>
             <td>${user.email}</td>
-            <td><span class="tag ${tipoTag.tagClass}">${tipoTag.text}</span></td>
-            <td>${instituicaoNome}</td>
-            <td><span class="status-badge ${statusTag.class}">${statusTag.text}</span></td>
-            <td>${conflitosCount}</td>
-            <td>${usuariosCount}</td>
-            <td><a href="#" class="action-link" data-action="details" data-user-id="${user.id}">Ver Detalhes</a></td>
+            <td>${formatCargo(user.cargo)}</td>
+            <td>${instName}</td>
+            <td><span class="status-badge ${statusClass}">${user.status}</span></td>
+            <td><div class="table-actions">
+                <a href="#" data-action="details" data-user-id="${user.id}">Detalhes</a>
+                ${actionBtn}
+            </div></td>
         `;
-        tableBody.appendChild(row);
+        tbody.appendChild(row);
     });
 }
 
-function getRoleTag(cargo) {
-    if (cargo === 'GESTOR_SECRETARIA') {
-        return { tagClass: 'tag-gestor-secretaria', text: 'Gestor Secretaria' };
+// --- AÇÕES ---
+window.openDeactivateManager = function(id, name) {
+    const modal = document.getElementById('modal-deactivate-manager');
+    managerToDeactivate = id;
+    document.getElementById('deactivate-manager-name').textContent = name;
+    modal.classList.add('show');
+};
+
+window.reactivateManager = async function(id, name) {
+    if(confirm(`Reativar o gestor ${name}?`)) { // Reativação pode ser confirmação simples
+        try {
+            await updateUser(id, { status: 'ATIVO' });
+            showToast('Gestor reativado com sucesso!');
+            loadAllManagers();
+        } catch (e) { showToast(e.message, 'error'); }
     }
-    if (cargo === 'GESTOR_INSTITUICAO') {
-        return { tagClass: 'tag-instituicao', text: 'Gestor Instituição' };
-    }
-    return { tagClass: 'tag-default', text: cargo };
+};
+
+function setupDeactivateModal() {
+    const modal = document.getElementById('modal-deactivate-manager');
+    if(!modal) return;
+    const btnConfirm = document.getElementById('modal-deactivate-confirm');
+    const close = () => { modal.classList.remove('show'); managerToDeactivate = null; };
+
+    document.getElementById('modal-deactivate-close').addEventListener('click', close);
+    document.getElementById('modal-deactivate-cancel').addEventListener('click', close);
+
+    // Clonar para limpar listeners
+    const newBtn = btnConfirm.cloneNode(true);
+    btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+
+    newBtn.addEventListener('click', async () => {
+        if(!managerToDeactivate) return;
+        newBtn.disabled = true; newBtn.textContent = 'Desativando...';
+        try {
+            await updateUser(managerToDeactivate, { status: 'INATIVO' });
+            showToast('Gestor desativado com sucesso!');
+            close();
+            loadAllManagers();
+        } catch(e) { showToast(e.message, 'error'); }
+        finally { newBtn.disabled = false; newBtn.textContent = 'Sim, Desativar'; }
+    });
 }
 
-function getStatusTag(status) {
-    switch(status) {
-        case 'ATIVO':
-            return { class: 'status-ativo', text: 'Ativo' };
-        case 'INATIVO':
-            return { class: 'status-inativo', text: 'Inativo' };
-        case 'PENDENTE':
-            return { class: 'status-pendente', text: 'Pendente' };
-        default:
-            return { class: '', text: status };
-    }
+// --- OUTRAS FUNÇÕES ---
+function updateStatsCards(active, pending, inactive) {
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+    // Filtra apenas gestores para as stats
+    const filterG = u => u.cargo.includes('GESTOR');
+    
+    const activeG = active.filter(filterG);
+    const pendingG = pending.filter(filterG);
+    const inactiveG = inactive.filter(filterG);
+    
+    setTxt('stat-total-gestores', activeG.length + pendingG.length + inactiveG.length);
+    setTxt('stat-gestores-ativos', activeG.length);
+    setTxt('stat-gestores-pendentes', pendingG.length);
+    setTxt('stat-gestores-inativos', inactiveG.length);
 }
-
-/**
- * Atualiza os cards de estatísticas no topo da página.
- */
-function updateStatsCards(managers) {
-    document.getElementById('stat-total-gestores').textContent = managers.length;
-    document.getElementById('stat-gestores-ativos').textContent = managers.filter(u => u.status === 'ATIVO').length;
-    document.getElementById('stat-gestores-pendentes').textContent = managers.filter(u => u.status === 'PENDENTE').length;
-    document.getElementById('stat-gestores-inativos').textContent = managers.filter(u => u.status === 'INATIVO').length;
-}
-
-// ##################################################################
-// ##                    FILTRO DE BUSCA                           ##
-// ##################################################################
 
 function setupSearchFilter() {
-    const searchInput = document.getElementById('manager-search-input');
-    
-    searchInput.addEventListener('keyup', () => {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        
-        const filteredManagers = allManagers.filter(user => {
-            const nome = user.nome.toLowerCase();
-            const email = (user.email || '').toLowerCase();
-            return nome.includes(searchTerm) || email.includes(searchTerm);
+    const input = document.getElementById('manager-search-input');
+    if(input) {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        newInput.addEventListener('keyup', () => {
+            const term = newInput.value.toLowerCase();
+            renderManagersTable(allManagers.filter(u => u.nome.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)));
         });
-        
-        renderManagersTable(filteredManagers);
-    });
+    }
 }
-
-// ##################################################################
-// ##               LÓGICA DO MODAL (ADICIONAR GESTOR)             ##
-// ##################################################################
 
 function setupAddManagerModal() {
     const modal = document.getElementById('modal-add-manager');
-    const openButton = document.getElementById('addManagerButton');
+    const btnOpen = document.getElementById('addManagerButton');
     const form = document.getElementById('form-add-manager');
     const cargoSelect = document.getElementById('add-cargo');
-    const instituicaoGroup = document.getElementById('add-instituicao-group');
-    const instituicaoSelect = document.getElementById('add-instituicao-select');
-
-    openButton.addEventListener('click', () => {
-        modal.classList.add('show');
-        // Popula as instituições (usará cache se disponível)
-        populateInstitutionsDropdown(instituicaoSelect);
-    });
     
-    // Fechar modal
-    modal.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => modal.classList.remove('show'));
-    });
-    
-    // Mostra/esconde o dropdown de instituições
-    cargoSelect.addEventListener('change', () => {
-        if (cargoSelect.value === 'GESTOR_INSTITUICAO') {
-            instituicaoGroup.style.display = 'block';
-            instituicaoSelect.setAttribute('required', 'required');
-        } else {
-            instituicaoGroup.style.display = 'none';
-            instituicaoSelect.removeAttribute('required');
-        }
-    });
-
-    // Envio do formulário
-    form.addEventListener('submit', handleAddManagerSubmit);
-}
-
-/**
- * Popula o dropdown de instituições (usando cache)
- */
-async function populateInstitutionsDropdown(selectElement) {
-    if (cachedInstitutions) {
-        renderInstitutionOptions(selectElement, cachedInstitutions);
-        return;
-    }
-    
-    selectElement.innerHTML = '<option value="">Carregando...</option>';
-    try {
-        const institutions = await listarInstituicoes();
-        cachedInstitutions = institutions || [];
-        renderInstitutionOptions(selectElement, cachedInstitutions);
-    } catch (error) {
-        selectElement.innerHTML = '<option value="">Erro ao carregar</option>';
-    }
-}
-
-function renderInstitutionOptions(select, institutions) {
-    select.innerHTML = '<option value="" disabled selected>Selecione uma instituição</option>';
-    institutions.forEach(inst => {
-        const option = document.createElement('option');
-        option.value = inst.nome; // O 'cadastrarParcial' espera o NOME da instituição
-        option.textContent = `${inst.nome} (${inst.sigla || 'Sem Sigla'})`;
-        select.appendChild(option);
-    });
-}
-
-/**
- * Lida com o envio do formulário de novo gestor (cadastro + aprovação).
- */
-async function handleAddManagerSubmit(event) {
-    event.preventDefault();
-    const submitButton = document.getElementById('add-manager-submit-button');
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-
-    const nome = document.getElementById('add-nome').value;
-    const email = document.getElementById('add-email').value;
-    const cargo = document.getElementById('add-cargo').value;
-    const instituicaoNome = (cargo === 'GESTOR_INSTITUICAO') 
-        ? document.getElementById('add-instituicao-select').value 
-        : 'Secretaria'; // Default para Gestor da Secretaria
-
-    if (cargo === 'GESTOR_INSTITUICAO' && !instituicaoNome) {
-        alert('Por favor, selecione uma instituição.');
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Convite';
-        return;
-    }
-    
-    try {
-        // ETAPA 1: Cadastrar o usuário (status PENDENTE)
-        await cadastrarParcial({
-            nome,
-            email,
-            cargo,
-            instituicao: instituicaoNome, // O DTO usa 'instituicao' para o nome
-            justificativa: 'Gestor adicionado pelo administrador.'
+    if(btnOpen) {
+        const newBtn = btnOpen.cloneNode(true);
+        btnOpen.parentNode.replaceChild(newBtn, btnOpen);
+        newBtn.addEventListener('click', () => {
+            modal.classList.add('show');
+            populateInstitutionsDropdown();
         });
+    }
 
-        // ETAPA 2: Buscar o ID do usuário recém-criado
-        const pendingUsers = await fetchUsersSafely('PENDENTE');
-        const newUser = pendingUsers.find(u => u.email === email);
+    const closeModal = () => modal.classList.remove('show');
+    modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', closeModal));
 
-        if (!newUser) {
-            throw new Error('Não foi possível encontrar o gestor recém-criado para aprovação.');
-        }
+    if(cargoSelect) {
+        cargoSelect.addEventListener('change', () => {
+            const group = document.getElementById('add-instituicao-group');
+            if(group) group.style.display = cargoSelect.value === 'GESTOR_INSTITUICAO' ? 'block' : 'none';
+        });
+    }
 
-        // ETAPA 3: Aprovar o usuário (isso dispara o e-mail de cadastro)
-        await approveOrRejectUser(newUser.id, true);
-
-        alert('Gestor adicionado com sucesso! Um e-mail de cadastro foi enviado para ' + email);
-        document.getElementById('form-add-manager').reset();
-        document.getElementById('add-instituicao-group').style.display = 'none';
-        document.getElementById('modal-add-manager').classList.remove('show');
+    if(form) {
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
         
-        loadAllManagers(); // Recarrega a lista
+        // Botão Cancelar do form
+        newForm.querySelector('.btn-secondary').addEventListener('click', closeModal);
 
-    } catch (error) {
-        console.error('Erro ao adicionar gestor:', error);
-        alert(error.message || 'Erro ao adicionar gestor. Verifique se o e-mail já está em uso.');
-    } finally {
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Convite';
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = newForm.querySelector('button[type="submit"]');
+            btn.disabled = true; btn.textContent = 'Enviando...';
+            
+            // Dados (adapte para usar cadastrarParcial se for o fluxo correto)
+            const data = {
+                nome: document.getElementById('add-nome').value,
+                email: document.getElementById('add-email').value,
+                cargo: document.getElementById('add-cargo').value,
+                instituicao: null,
+                justificativa: 'Cadastro pelo painel administrativo'
+            };
+
+            if (data.cargo === 'GESTOR_INSTITUICAO') {
+                const sel = document.getElementById('add-instituicao-select');
+                data.instituicao = sel.options[sel.selectedIndex].text;
+            } else {
+                data.instituicao = 'Secretaria';
+            }
+
+            try {
+                await cadastrarParcial(data);
+                showToast('Convite enviado com sucesso!');
+                closeModal();
+                loadAllManagers();
+            } catch(err) { showToast(err.message, 'error'); }
+            finally { btn.disabled = false; btn.textContent = 'Enviar Convite'; }
+        });
     }
 }
 
+async function populateInstitutionsDropdown() {
+    const select = document.getElementById('add-instituicao-select');
+    if(cachedInstitutions) { renderOpts(select, cachedInstitutions); return; }
+    try {
+        cachedInstitutions = await listarInstituicoes();
+        renderOpts(select, cachedInstitutions);
+    } catch(e) {}
+}
 
-// ##################################################################
-// ##            LÓGICA DO MODAL (DETALHES DO GESTOR)              ##
-// ##################################################################
+function renderOpts(select, list) {
+    select.innerHTML = '<option value="">Selecione...</option>';
+    list.forEach(i => {
+        const opt = document.createElement('option');
+        opt.value = i.id; opt.textContent = i.nome;
+        select.appendChild(opt);
+    });
+}
 
 function setupDetailsModal() {
-    const tableBody = document.getElementById('managers-table-body');
-    const modal = document.getElementById('modal-manager-details');
-
-    // Listener de clique na tabela (delegação de eventos)
-    tableBody.addEventListener('click', (event) => {
-        const link = event.target.closest('a[data-action="details"]');
-        if (link) {
-            event.preventDefault();
-            const userId = link.dataset.userId;
-            handleViewDetails(userId);
-        }
-    });
-
-    // Listeners para fechar o modal
-    modal.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => modal.classList.remove('show'));
-    });
-}
-
-/**
- * Busca dados do usuário e exibe o modal de detalhes.
- */
-async function handleViewDetails(userId) {
-    const modal = document.getElementById('modal-manager-details');
-    const modalBody = document.getElementById('detail-modal-body');
-    const modalTitle = document.getElementById('detail-modal-title');
-    const actionButton = document.getElementById('detail-action-button');
-
-    modal.classList.add('show');
-    modalTitle.textContent = 'Detalhes do Gestor';
-    modalBody.innerHTML = '<p>Carregando...</p>';
-    actionButton.style.display = 'none'; // Esconde o botão até ter os dados
-
-    try {
-        const user = await getUserData(userId);
-        
-        const cargoText = getRoleTag(user.cargo).text;
-        const statusTag = getStatusTag(user.status);
-        const instituicaoNome = user.instituicao ? user.instituicao.nome : (user.instituicaoNome || '—');
-
-        modalTitle.textContent = user.nome;
-        modalBody.innerHTML = `
-            <ul class="user-details-list">
-                <li><strong>Nome:</strong> <span>${user.nome}</span></li>
-                <li><strong>Email:</strong> <span>${user.email}</span></li>
-                <li><strong>Cargo:</strong> <span>${cargoText}</span></li>
-                <li><strong>Instituição:</strong> <span>${instituicaoNome}</span></li>
-                <li><strong>Telefone:</strong> <span>${user.telefone || 'Não informado'}</span></li>
-                <li><strong>CPF:</strong> <span>${user.cpf || 'Não informado'}</span></li>
-                <li><strong>Status:</strong> <span><div class="status-badge ${statusTag.class}">${statusTag.text}</div></span></li>
-            </ul>
-        `;
-
-        // Configura o botão de Ação (Ativar/Bloquear)
-        // Não mostramos o botão para usuários PENDENTES (devem ser aprovados na tela 'Usuários do Sistema')
-        if (user.status === 'ATIVO' || user.status === 'INATIVO') {
-            actionButton.dataset.userId = user.id;
-            if (user.status === 'ATIVO') {
-                actionButton.textContent = 'Bloquear Gestor';
-                actionButton.className = 'btn btn-danger'; // Vermelho para bloquear
-                actionButton.dataset.action = 'INATIVO';
-            } else {
-                actionButton.textContent = 'Ativar Gestor';
-                actionButton.className = 'btn btn-success'; // Verde para ativar
-                actionButton.dataset.action = 'ATIVO';
+    const tbody = document.getElementById('managers-table-body');
+    if(tbody) {
+        tbody.addEventListener('click', async e => {
+            if(e.target.closest('[data-action="details"]')) {
+                e.preventDefault();
+                const id = e.target.closest('a').dataset.userId;
+                handleViewDetails(id);
             }
-            
-            actionButton.style.display = 'block';
-            
-            // Remove listener antigo e adiciona novo para evitar duplicatas
-            actionButton.replaceWith(actionButton.cloneNode(true));
-            document.getElementById('detail-action-button').addEventListener('click', handleUpdateUserStatus);
-        } else {
-             actionButton.style.display = 'none';
-        }
-
-    } catch (error) {
-        console.error('Erro ao buscar detalhes do gestor:', error);
-        modalBody.innerHTML = `<p style="color: red;">${error.message || 'Erro ao carregar dados.'}</p>`;
+        });
     }
+    const modal = document.getElementById('modal-manager-details');
+    if(modal) modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => modal.classList.remove('show')));
 }
 
-/**
- * Lida com o clique do botão "Bloquear" ou "Ativar" no modal de detalhes.
- */
-async function handleUpdateUserStatus(event) {
-    const button = event.currentTarget;
-    const userId = button.dataset.userId;
-    const newStatus = button.dataset.action;
-    
-    const actionText = newStatus === 'ATIVO' ? 'ativar' : 'bloquear';
-    
-    if (!confirm(`Tem certeza de que deseja ${actionText} este gestor?`)) {
-        return;
-    }
-
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-
+async function handleViewDetails(id) {
+    const modal = document.getElementById('modal-manager-details');
+    const body = document.getElementById('detail-modal-body');
+    modal.classList.add('show');
+    body.innerHTML = 'Carregando...';
     try {
-        await updateUser(userId, { status: newStatus }); 
-        
-        alert(`Gestor ${actionText} com sucesso!`);
-        document.getElementById('modal-manager-details').classList.remove('show');
-        loadAllManagers(); // Recarrega a lista para refletir a mudança
-        
-    } catch (error) {
-        console.error(`Erro ao ${actionText} gestor:`, error);
-        alert(error.message || `Não foi possível ${actionText} o gestor.`);
-    } finally {
-        button.disabled = false;
-        // O texto do botão será redefinido na próxima vez que o modal abrir
-    }
+        const user = await getUserData(id);
+        body.innerHTML = `
+            <p><strong>Nome:</strong> ${user.nome}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Telefone:</strong> ${user.telefone || '-'}</p>
+            <p><strong>Cargo:</strong> ${formatCargo(user.cargo)}</p>
+        `;
+    } catch(e) { body.innerHTML = 'Erro ao carregar.'; }
+}
+
+function formatCargo(cargo) {
+    return cargo ? cargo.replace(/_/g, ' ') : '';
 }

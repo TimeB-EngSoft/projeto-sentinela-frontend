@@ -1,0 +1,141 @@
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Total</p>
+            <span id="stat-total-denuncias">0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Pendentes</p>
+            <span id="stat-pendentes">0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Aprovadas</p>
+            <span id="stat-aprovadas">0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <p>Arquivadas</p>
+            <span id="stat-rejeitadas">0</span>
+        </div>
+    </div>
+</section>
+
+<section class="card filters-card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-filter"></i> Filtros e Busca</h3>
+    </div>
+    <div class="filter-controls">
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input-denuncia" placeholder="Buscar por título ou denunciante...">
+        </div>
+        <select id="status-filter-denuncia">
+            <option value="">Todos os Status</option>
+            <option value="PENDENTE">Pendente</option>
+            <option value="APROVADA">Aprovada</option>
+            <option value="ARQUIVADA">Arquivada</option>
+        </select>
+        <select id="tipo-filter-denuncia">
+            <option value="">Todos os Tipos</option>
+            <option value="TERRA_INDIGENA">Terra Indígena</option>
+            <option value="DISPUTA_DE_POSSE">Disputa de Posse</option>
+            <option value="DESMATAMENTO">Desmatamento</option>
+            <option value="RECURSO_HIDRICO">Recurso Hídrico</option>
+            <option value="TERRITORIO_QUILOMBOLA">Quilombola</option>
+        </select>
+    </div>
+</section>
+
+<section class="card denuncias-list-card">
+    <h3 class="card-title">Lista de Denúncias</h3>
+    <div class="table-responsive-wrapper">
+        <table class="denuncias-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Título</th>
+                    <th>Denunciante</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="denunciasTableBody"></tbody>
+        </table>
+    </div>
+</section>
+
+<div id="modal-denuncia-details" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 id="detail-modal-title">Detalhes da Denúncia</h3>
+            <button type="button" class="close-button" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body" id="detail-modal-body">
+            </div>
+        <div class="modal-footer" id="detail-modal-footer">
+            <button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>
+            </div>
+    </div>
+</div>
+
+<div id="modal-convert-conflict" class="modal" style="z-index: 2100;">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-exchange-alt"></i> Converter em Conflito</h3>
+            <button type="button" class="close-button" id="btn-close-convert">&times;</button>
+        </div>
+        <form id="form-convert-conflict">
+            <div class="modal-body">
+                <p style="color: var(--color-text-light); margin-bottom: 15px;">
+                    Complemente as informações para registrar o conflito oficial.
+                </p>
+                
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label>Prioridade *</label>
+                        <select id="convert-prioridade" required>
+                            <option value="MEDIA">Média</option>
+                            <option value="ALTA">Alta</option>
+                            <option value="CRITICA">Crítica</option>
+                            <option value="BAIXA">Baixa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Início *</label>
+                        <input type="date" id="convert-data-inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status Inicial</label>
+                        <input type="text" value="ATIVO" disabled style="background-color: #eee;">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Parte Reclamante</label>
+                        <input type="text" id="convert-reclamante" placeholder="Quem reivindica?">
+                    </div>
+                    <div class="form-group">
+                        <label>Parte Reclamada</label>
+                        <input type="text" id="convert-reclamada" placeholder="Contra quem?">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Grupos Vulneráveis</label>
+                    <input type="text" id="convert-grupos" placeholder="Ex: Comunidade local, indígenas...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-convert">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Confirmar e Criar Conflito</button>
+            </div>
+        </form>
+    </div>
+</div>

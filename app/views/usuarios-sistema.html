@@ -1,0 +1,193 @@
+<div id="toast-container"></div>
+
+<div class="page-header-controls">
+    <div class="page-actions-bar-left">
+        <button class="btn btn-primary" id="inviteUserButton">
+            <i class="fas fa-user-plus"></i> Convidar Usuário
+        </button>
+    </div>
+    
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Buscar por nome ou email..." id="searchInput">
+    </div>
+</div>
+
+<div class="user-tabs">
+    <button class="tab-btn active" data-tab="pending">
+        <i class="fas fa-clock"></i> Pendentes 
+        <span class="badge-counter" id="badge-pending-count">0</span>
+    </button>
+    <button class="tab-btn" data-tab="active">
+        <i class="fas fa-user-check"></i> Ativos 
+        <span class="badge-counter badge-neutral" id="badge-active-count">0</span>
+    </button>
+    <button class="tab-btn" data-tab="inactive">
+        <i class="fas fa-user-slash"></i> Inativos 
+        <span class="badge-counter badge-neutral" id="badge-inactive-count">0</span>
+    </button>
+</div>
+
+<section id="view-pending" class="tab-content active">
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="denuncias-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Cargo Solicitado</th>
+                        <th>Instituição</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="pending-table-body"></tbody>
+            </table>
+        </div>
+        <div id="pending-empty-msg" class="empty-state" style="display: none;">
+            <p>Nenhuma aprovação pendente.</p>
+        </div>
+    </div>
+</section>
+
+<section id="view-active" class="tab-content" style="display: none;">
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="denuncias-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Cargo</th>
+                        <th>Instituição</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="active-table-body"></tbody>
+            </table>
+        </div>
+        <div id="active-empty-msg" class="empty-state" style="display: none;">
+            <p>Nenhum usuário ativo encontrado.</p>
+        </div>
+    </div>
+</section>
+
+<section id="view-inactive" class="tab-content" style="display: none;">
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="denuncias-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Cargo</th>
+                        <th>Instituição</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="inactive-table-body"></tbody>
+            </table>
+        </div>
+        <div id="inactive-empty-msg" class="empty-state" style="display: none;">
+            <p>Nenhum usuário inativo encontrado.</p>
+        </div>
+    </div>
+</section>
+
+<div id="invite-user-modal" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-paper-plane"></i> Convidar Usuário</h3>
+            <button class="close-button" id="modal-close-button">&times;</button>
+        </div>
+        
+        <form id="invite-form" style="display: contents;">
+            <div class="modal-body">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Nome Completo *</label>
+                        <input type="text" id="invite-name" required placeholder="Nome do usuário">
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="invite-email" required placeholder="email@exemplo.com">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Cargo *</label>
+                        <select id="invite-cargo" required>
+                            <option value="">Selecione...</option>
+                            <option value="GESTOR_SECRETARIA">Gestor Secretaria</option>
+                            <option value="GESTOR_INSTITUICAO">Gestor Instituição</option>
+                            <option value="USUARIO_SECRETARIA">Usuário Secretaria</option>
+                            <option value="USUARIO_INSTITUICAO">Usuário Instituição</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="invite-instituicao-group" style="display:none">
+                        <label>Instituição *</label>
+                        <select id="invite-instituicao-select">
+                            <option>Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label>Justificativa</label>
+                    <textarea id="invite-justificativa" rows="2" placeholder="Motivo do convite..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="modal-cancel-button">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="modal-submit-button">Enviar Convite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="link-institution-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Vincular Instituição</h3>
+            <button class="close-button" id="modal-link-close-button">&times;</button>
+        </div>
+        
+        <form id="link-institution-form" style="display: contents;">
+            <div class="modal-body">
+                <p id="link-institution-desc" style="margin-bottom: 15px; color: var(--color-text-light);"></p>
+                <div class="form-group">
+                    <label>Selecione a Instituição Oficial</label>
+                    <select id="link-inst-select" required></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="modal-link-cancel-button">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="modal-link-submit-button">Confirmar e Aprovar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-deactivate-user" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-slash" style="color: #dc3545;"></i> Desativar Usuário</h3>
+            <button class="close-button" id="modal-deactivate-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Tem certeza que deseja desativar o acesso de <strong id="deactivate-user-name"></strong>?</p>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                O usuário não poderá mais acessar o sistema até que seja reativado manualmente.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modal-deactivate-cancel">Cancelar</button>
+            <button class="btn btn-danger" id="modal-deactivate-confirm">Sim, Desativar</button>
+        </div>
+    </div>
+</div>
