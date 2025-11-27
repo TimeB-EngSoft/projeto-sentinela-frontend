@@ -12,7 +12,7 @@ const ENVIRONMENTS = {
     production: {
         name: 'production',
         // Troque pelo endpoint oficial assim que estiver disponível.
-        apiBaseUrl: 'http://sentinelabackend-env.eba-c8cukuyj.sa-east-1.elasticbeanstalk.com'
+        apiBaseUrl: 'https://projeto-sentinela-backend-production.up.railway.app'
     }
 };
 
