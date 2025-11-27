@@ -1,20 +1,22 @@
-# Etapa "build": só copia arquivos
+# Etapa de build: apenas copia os arquivos do projeto
 FROM alpine:3.18 AS build
 WORKDIR /app
 COPY . /app
 
-# Etapa final: nginx serve os arquivos
+# Etapa final: Nginx servindo os arquivos estáticos
 FROM nginx:alpine
+
+# Remove o conteúdo padrão do nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copia arquivos estáticos para o nginx
+# Copia os arquivos da etapa build
 COPY --from=build /app /usr/share/nginx/html
 
-# Script de startup que lista arquivos (útil para debug nos logs) e inicia nginx
-RUN printf '#!/bin/sh\n\necho "==== LISTANDO /usr/share/nginx/html ===="\nls -la /usr/share/nginx/html || true\n\necho "==== CONTEÚDO RECURSIVO (1 nível) ===="\nls -la /usr/share/nginx/html/* 2>/dev/null || true\n\nexec nginx -g \"daemon off;\"' > /start.sh && chmod +x /start.sh
-
+# Expor porta 80
 EXPOSE 80
 
-HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD wget -q --spider http://localhost:80/ || exit 1
+# Healthcheck (opcional, recomendado para Railway)
+HEALTHCHECK --interval=5s --timeout=3s --retries=5 CMD wget -q --spider http://localhost:80/ || exit 1
 
-CMD ["/start.sh"]
+# Comando padrão do nginx
+CMD ["nginx", "-g", "daemon off;"]
