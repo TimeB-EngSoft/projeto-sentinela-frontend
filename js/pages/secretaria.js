@@ -53,25 +53,38 @@ function setupEvolutionChart() {
 
 async function loadDashboardStats() {
     try {
-        const [users, institutions, conflicts, denuncias] = await Promise.all([
+        const [pendentes, ativos, institutions, conflicts, denuncias] = await Promise.all([
+            fetchUsersSafely('PENDENTE'), // Carrega pendentes explicitamente
             fetchUsersSafely('ATIVO'),
             listarInstituicoes(),
             listarConflitos(),
             listarDenuncias()
         ]);
 
-        const gestores = users.filter(u => 
-            u.cargo === 'GESTOR_SECRETARIA' || u.cargo === 'GESTOR_INSTITUICAO'
-        );
+        const gestores = ativos.filter(u => u.cargo.includes('GESTOR'));
 
+        // Atualiza Cards Superiores
         if(document.getElementById('stat-total-gestores')) 
             document.getElementById('stat-total-gestores').textContent = gestores.length;
-        if(document.getElementById('stat-instituicoes'))
-            document.getElementById('stat-instituicoes').textContent = (institutions || []).length;
-        if(document.getElementById('stat-conflitos'))
-            document.getElementById('stat-conflitos').textContent = (conflicts || []).length;
-        if(document.getElementById('stat-denuncias'))
-            document.getElementById('stat-denuncias').textContent = (denuncias || []).length;
+        
+        if(document.getElementById('stat-instituicoes')) {
+            const instAtivas = (institutions || []).filter(i => i.status === 'ATIVO');
+            document.getElementById('stat-instituicoes').textContent = instAtivas.length;
+        }
+
+        if(document.getElementById('stat-conflitos')) {
+            const confAtivos = (conflicts || []).filter(c => c.status === 'ATIVO');
+            document.getElementById('stat-conflitos').textContent = confAtivos.length;
+        }
+
+        if(document.getElementById('stat-denuncias')) {
+            const denValidadas = (denuncias || []).filter(d => d.status === 'APROVADA');
+            document.getElementById('stat-denuncias').textContent = denValidadas.length;
+        }
+
+        // Atualiza Badge de Pendentes na seção inferior
+        const pendingBadge = document.getElementById('pending-users-badge');
+        if(pendingBadge) pendingBadge.textContent = `${pendentes.length} Pendentes`;
 
     } catch (error) {
         console.error("Erro stats:", error);

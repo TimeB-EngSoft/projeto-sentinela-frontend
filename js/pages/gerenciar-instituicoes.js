@@ -7,7 +7,7 @@ let currentInstitutionId = null;
 export async function init() {
     container = document.getElementById('institutionsContainer');
     await loadInstitutions();
-    setupModalListeners();
+    setupModalListeners(); // Lógica de Cadastro e Edição
     setupDetailsModalListeners();
     setupInstitutionSearch();
     setupDeactivateModal();
@@ -75,9 +75,12 @@ function renderInstitutions(list) {
                     <span class="status-badge ${statusClass}">${inst.status}</span>
                 </div>
             </div>
-            <div class="inst-card-footer">
-                <button class="btn btn-secondary btn-sm w-100" data-action="details" data-id="${inst.id}">
-                    <i class="fas fa-eye"></i> Ver Detalhes
+            <div class="inst-card-footer" style="gap: 10px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;" data-action="details" data-id="${inst.id}">
+                    <i class="fas fa-eye"></i> Detalhes
+                </button>
+                <button class="btn btn-primary btn-sm" style="flex:1;" onclick="window.openEditModal(${inst.id})">
+                    <i class="fas fa-edit"></i> Editar
                 </button>
             </div>
         `;
@@ -122,7 +125,6 @@ function setupDetailsModalListeners() {
         });
     }
 
-    // Botão de Alternar Status (Ativar/Desativar)
     const btnToggleStatus = document.getElementById('btn-toggle-status-inst');
     if(btnToggleStatus) {
         const newBtn = btnToggleStatus.cloneNode(true);
@@ -132,10 +134,8 @@ function setupDetailsModalListeners() {
             const nextStatus = newBtn.dataset.nextStatus;
             
             if (nextStatus === 'INATIVO') {
-                // Abrir modal de confirmação para desativar
                 openDeactivateModal(currentInstitutionId);
             } else {
-                // Reativar direto (ou com confirm simples)
                 if(confirm("Deseja reativar esta instituição?")) {
                     try {
                         await atualizarInstituicao(currentInstitutionId, { status: 'ATIVO' });
@@ -178,10 +178,10 @@ function setupDeactivateModal() {
 
     newBtn.addEventListener('click', async () => {
         if(!currentInstitutionId) return;
-        newBtn.disabled = true; newBtn.textContent = 'Processando...';
+        newBtn.disabled = true; newBtn.textContent = 'Desativando tudo...'; // Feedback visual atualizado
         try {
             await atualizarInstituicao(currentInstitutionId, { status: 'INATIVO' });
-            showToast("Instituição desativada com sucesso.");
+            showToast("Instituição e usuários desativados com sucesso.");
             close();
             document.getElementById('modal-institution-details').classList.remove('show');
             loadInstitutions();
@@ -197,7 +197,6 @@ async function openInstitutionDetails(id) {
     const inst = allInstitutions.find(i => i.id == id);
     if(!inst) return;
 
-    // Preenche dados básicos
     document.getElementById('detail-inst-title').textContent = inst.nome;
     document.getElementById('detail-inst-sigla').textContent = inst.sigla || '';
     document.getElementById('detail-inst-cnpj').textContent = inst.cnpj || '-';
@@ -210,7 +209,6 @@ async function openInstitutionDetails(id) {
     statusBadge.className = `status-badge ${inst.status === 'ATIVO' ? 'status-ativo' : 'status-inativo'}`;
     statusBadge.textContent = inst.status;
 
-    // Configura o botão de ação baseado no status atual
     const btnToggle = document.getElementById('btn-toggle-status-inst');
     if (inst.status === 'INATIVO') {
         btnToggle.className = 'btn btn-success';
@@ -222,7 +220,6 @@ async function openInstitutionDetails(id) {
         btnToggle.dataset.nextStatus = 'INATIVO';
     }
 
-    // Carrega usuários
     const tbody = document.getElementById('detail-inst-users-body');
     const noUsersMsg = document.getElementById('detail-inst-no-users');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Carregando usuários...</td></tr>';
@@ -257,8 +254,6 @@ async function openInstitutionDetails(id) {
 async function openUserDetails(userId) {
     const overlay = document.getElementById('modal-user-details-overlay');
     const body = document.getElementById('user-overlay-body');
-    
-    // Adiciona a classe show. Graças ao z-index: 3000 no CSS, ele aparecerá na frente.
     overlay.classList.add('show'); 
     body.innerHTML = '<p style="text-align:center">Carregando...</p>';
 
@@ -285,18 +280,54 @@ async function openUserDetails(userId) {
 }
 
 // =========================================================================
-// CADASTRO (COM AUTO-ATIVAÇÃO)
+// CADASTRO E EDIÇÃO
 // =========================================================================
+
+// Função global para abrir o modal de edição
+window.openEditModal = function(id) {
+    const inst = allInstitutions.find(i => i.id == id);
+    if (!inst) return;
+
+    const modal = document.getElementById('add-institution-modal');
+    const form = document.getElementById('add-institution-form');
+    const title = document.getElementById('modal-inst-title');
+    const btn = document.getElementById('modal-inst-submit-button');
+
+    // Mudar Título e Botão
+    title.innerHTML = '<i class="fas fa-edit"></i> Editar Instituição';
+    btn.innerHTML = '<i class="fas fa-save"></i> Atualizar';
+
+    // Preencher dados
+    document.getElementById('inst-id').value = inst.id;
+    document.getElementById('inst-nome').value = inst.nome;
+    document.getElementById('inst-sigla').value = inst.sigla || '';
+    document.getElementById('inst-cnpj').value = inst.cnpj || '';
+    document.getElementById('inst-telefone').value = inst.telefone || '';
+    document.getElementById('inst-email').value = inst.email || '';
+    document.getElementById('inst-area').value = inst.areaAtuacao || '';
+    document.getElementById('inst-descricao').value = inst.descricao || '';
+
+    modal.classList.add('show');
+};
 
 function setupModalListeners() {
     const modal = document.getElementById('add-institution-modal');
     const btnOpen = document.getElementById('addInstitutionButton');
     const form = document.getElementById('add-institution-form');
+    const title = document.getElementById('modal-inst-title');
+    const btnSubmit = document.getElementById('modal-inst-submit-button');
 
+    // Botão "Nova Instituição" limpa o formulário
     if (btnOpen) {
         const newBtn = btnOpen.cloneNode(true);
         btnOpen.parentNode.replaceChild(newBtn, btnOpen);
-        newBtn.addEventListener('click', () => modal.classList.add('show'));
+        newBtn.addEventListener('click', () => {
+            form.reset();
+            document.getElementById('inst-id').value = ''; // Limpa ID
+            title.innerHTML = '<i class="fas fa-plus"></i> Nova Instituição';
+            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Salvar Instituição';
+            modal.classList.add('show');
+        });
     }
 
     const closeModal = () => { modal.classList.remove('show'); form.reset(); };
@@ -312,7 +343,9 @@ function setupModalListeners() {
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSave = newForm.querySelector('button[type="submit"]');
-            btnSave.disabled = true; btnSave.textContent = 'Salvando...';
+            btnSave.disabled = true; btnSave.textContent = 'Processando...';
+
+            const editId = document.getElementById('inst-id').value; // Pega ID se for edição
 
             try {
                 const data = {
@@ -325,21 +358,28 @@ function setupModalListeners() {
                     descricao: document.getElementById('inst-descricao').value
                 };
                 
-                const novaInstituicao = await cadastrarInstituicao(data);
-                
-                if (novaInstituicao && novaInstituicao.id) {
-                    await atualizarInstituicao(novaInstituicao.id, { status: 'ATIVO' });
+                if (editId) {
+                    // MODO EDIÇÃO
+                    await atualizarInstituicao(editId, data);
+                    showToast('Instituição atualizada com sucesso!');
+                } else {
+                    // MODO CADASTRO
+                    const novaInstituicao = await cadastrarInstituicao(data);
+                    if (novaInstituicao && novaInstituicao.id) {
+                        await atualizarInstituicao(novaInstituicao.id, { status: 'ATIVO' });
+                    }
+                    showToast('Instituição cadastrada com sucesso!');
                 }
 
-                alert('Instituição cadastrada e ativada com sucesso!');
                 closeModal();
                 loadInstitutions();
 
             } catch(err) { 
                 console.error(err);
-                alert('Erro: ' + (err.message || 'Falha na comunicação')); 
+                showToast('Erro: ' + (err.message || 'Falha na comunicação'), 'error'); 
             } finally { 
-                btnSave.disabled = false; btnSave.textContent = 'Salvar Instituição'; 
+                btnSave.disabled = false; 
+                btnSave.innerHTML = '<i class="fas fa-check"></i> Salvar'; 
             }
         });
     }

@@ -30,22 +30,19 @@ function showToast(message, type = 'success') {
 async function loadAllManagers() {
     const tableBody = document.getElementById('managers-table-body');
     if(!tableBody) return;
-    
-    // LIMPEZA CRÍTICA PARA EVITAR DUPLICAÇÃO
     tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Carregando...</td></tr>';
 
     try {
+        // [OTIMIZAÇÃO] Pede apenas gestores ao backend
+        // filtroEspecial='GESTORES' foi criado no Repository no passo 1.1
         const [active, pending, inactive] = await Promise.all([
-            fetchUsersSafely('ATIVO'),
-            fetchUsersSafely('PENDENTE'),
-            fetchUsersSafely('INATIVO')
+            listUsersByStatus({ status: 'ATIVO', filtroEspecial: 'GESTORES' }),
+            listUsersByStatus({ status: 'PENDENTE', filtroEspecial: 'GESTORES' }),
+            listUsersByStatus({ status: 'INATIVO', filtroEspecial: 'GESTORES' })
         ]);
 
-        const allUsers = [...active, ...pending, ...inactive];
-        // Filtra apenas gestores
-        allManagers = allUsers.filter(user => 
-            user.cargo === 'GESTOR_SECRETARIA' || user.cargo === 'GESTOR_INSTITUICAO'
-        );
+        // Não precisa mais de .filter() pesado no front
+        allManagers = [...active, ...pending, ...inactive];
         
         renderManagersTable(allManagers);
         updateStatsCards(active, pending, inactive);

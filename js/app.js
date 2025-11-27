@@ -1,5 +1,6 @@
 import { Router } from './router.js';
 import { initNavigation } from './components/navigation.js';
+import { listUsersByStatus, listarDenuncias } from './services/apiService.js'; // Importe os serviços
 
 const routes = [
     { 
@@ -149,63 +150,123 @@ function setupGlobalSidebar() {
     });
 }
 
-function setupNotifications() {
+async function setupNotifications() {
     const btn = document.getElementById('notification-btn');
-    const dropdown = document.getElementById('notification-dropdown');
-    const list = document.getElementById('notif-list');
     const badge = document.getElementById('notif-count');
+    const list = document.getElementById('notif-list');
+    const dropdown = document.getElementById('notification-dropdown');
     const markRead = document.getElementById('mark-read');
-
-    if(!btn || !dropdown) return;
-
-    // Dados Mockados
-    let notifications = [
-        { text: 'Nova denúncia registrada em Petrolina', time: '10 min atrás', icon: 'fa-file-alt', color: '#f0ad4e' },
-        { text: 'Novo gestor aguardando aprovação', time: '1 hora atrás', icon: 'fa-user-plus', color: '#0275d8' },
-        { text: 'Relatório mensal disponível', time: 'Ontem', icon: 'fa-chart-line', color: '#5cb85c' }
-    ];
-
-    // Renderiza
-    const render = () => {
-        badge.textContent = notifications.length;
-        if(notifications.length === 0) {
-            list.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">Nenhuma notificação</li>';
-            badge.style.display = 'none';
-        } else {
-            badge.style.display = 'inline-flex';
-            list.innerHTML = notifications.map(n => `
-                <li style="padding: 12px 15px; border-bottom: 1px solid #f5f5f5; display: flex; gap: 10px; align-items: start;">
-                    <div style="background:${n.color}20; color:${n.color}; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <i class="fas ${n.icon}" style="font-size:0.8rem;"></i>
-                    </div>
-                    <div>
-                        <p style="margin:0; font-size:0.85rem; font-weight:500;">${n.text}</p>
-                        <small style="color:#999; font-size:0.75rem;">${n.time}</small>
-                    </div>
-                </li>
-            `).join('');
-        }
-    };
     
-    render();
+    if(!btn || !list) return;
 
-    // Toggle
-    btn.addEventListener('click', (e) => {
+    // 1. Obter dados do usuário logado
+    const userCargo = localStorage.getItem('userCargo');
+    const userInstName = localStorage.getItem('userInstituicao');
+
+    // Se for usuário comum, geralmente não recebe notificações administrativas
+    if (userCargo === 'USUARIO_INSTITUICAO' || userCargo === 'USUARIO_SECRETARIA') {
+        badge.style.display = 'none';
+        list.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">Nenhuma notificação nova</li>';
+        return; 
+    }
+
+    let notifications = [];
+
+    try {
+        const [pendingUsers, denuncias] = await Promise.all([
+            listUsersByStatus('PENDENTE').catch(() => []),
+            listarDenuncias().catch(() => [])
+        ]);
+
+        // 2. Filtrar Usuários Pendentes
+        let myPendingUsers = [];
+        if (['SECRETARIA', 'GESTOR_SECRETARIA'].includes(userCargo)) {
+            // Secretaria vê todos (exceto talvez os da própria secretaria que já são internos, depende da regra)
+            myPendingUsers = pendingUsers;
+        } else if (userCargo === 'GESTOR_INSTITUICAO') {
+            // Gestor de Instituição vê apenas da sua instituição
+            myPendingUsers = pendingUsers.filter(u => u.instituicaoNome === userInstName);
+        }
+
+        if(myPendingUsers.length > 0) {
+            notifications.push({
+                text: `${myPendingUsers.length} usuários aguardando aprovação`,
+                time: 'Ação Necessária',
+                icon: 'fa-user-clock',
+                color: '#f0ad4e' // Laranja
+            });
+        }
+
+        // 3. Filtrar Denúncias Pendentes
+        let myPendingDenuncias = [];
+        const rawPendingDenuncias = denuncias.filter(d => d.status === 'PENDENTE');
+
+        if (['SECRETARIA', 'GESTOR_SECRETARIA'].includes(userCargo)) {
+            // Secretaria vê tudo
+            myPendingDenuncias = rawPendingDenuncias;
+        } else if (userCargo === 'GESTOR_INSTITUICAO') {
+            // Gestor vê denúncias vinculadas à sua instituição
+            // Verifica se a denúncia tem instituição e se o nome bate (ou ID se tivesse disponível no localStorage)
+            myPendingDenuncias = rawPendingDenuncias.filter(d => 
+                d.instituicao && d.instituicao.nome === userInstName
+            );
+        }
+
+        if(myPendingDenuncias.length > 0) {
+            notifications.push({
+                text: `${myPendingDenuncias.length} novas denúncias recebidas`,
+                time: 'Recente',
+                icon: 'fa-file-alt',
+                color: '#d9534f' // Vermelho
+            });
+        }
+
+    } catch(e) { console.log('Erro notif', e); }
+
+    // 4. Renderizar
+    badge.textContent = notifications.length;
+    badge.style.display = notifications.length > 0 ? 'inline-flex' : 'none';
+    
+    if (notifications.length === 0) {
+        list.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">Nenhuma notificação nova</li>';
+    } else {
+        list.innerHTML = notifications.map(n => `
+            <li style="padding: 12px 15px; border-bottom: 1px solid #f5f5f5; display: flex; gap: 10px; align-items: start;">
+                <div style="background:${n.color}20; color:${n.color}; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fas ${n.icon}" style="font-size:0.8rem"></i>
+                </div>
+                <div>
+                    <p style="margin:0; font-size:0.85rem; font-weight:500;">${n.text}</p>
+                    <small style="color:#999; font-size:0.75rem;">${n.time}</small>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    // Toggle Dropdown (Lógica visual)
+    const toggleDropdown = (e) => {
         e.stopPropagation();
         const isVisible = dropdown.style.display === 'block';
         dropdown.style.display = isVisible ? 'none' : 'block';
-    });
+    };
 
-    // Fechar ao clicar fora
+    // Remove event listeners antigos para evitar duplicação (se houver recarregamento)
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', toggleDropdown);
+
     document.addEventListener('click', (e) => {
-        if(!dropdown.contains(e.target) && !btn.contains(e.target)) {
+        if(dropdown && !dropdown.contains(e.target) && !newBtn.contains(e.target)) {
             dropdown.style.display = 'none';
         }
     });
-
-    // Limpar
-    markRead.addEventListener('click', () => {
-        notifications = [];
-        render();
-    });
+    
+    if(markRead) {
+        const newMark = markRead.cloneNode(true);
+        markRead.parentNode.replaceChild(newMark, markRead);
+        newMark.addEventListener('click', () => {
+            list.innerHTML = '<li style="padding:15px; text-align:center; color:#999;">Nenhuma notificação nova</li>';
+            badge.style.display = 'none';
+        });
+    }
 }

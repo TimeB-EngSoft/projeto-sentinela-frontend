@@ -1,4 +1,4 @@
-import { getUserData, updateUser } from '../services/apiService.js';
+import { getUserData, updateUser, updatePassword } from '../services/apiService.js'; 
 
 export async function init() {
     await loadProfileData();
@@ -67,24 +67,35 @@ function setupProfileForm() {
     newForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = newForm.querySelector('button[type="submit"]');
-        btn.disabled = true; btn.textContent = 'Salvando...';
-
+        btn.disabled = true; 
+        
         const userId = localStorage.getItem('userId');
-        const data = {
-            nome: document.getElementById('nome').value,
-            telefone: document.getElementById('telefone').value
-            // Não enviamos cargo nem email nem instituicao pois são travados
-        };
+        const nome = document.getElementById('nome').value;
+        const telefone = document.getElementById('telefone').value;
+        const senhaAtual = document.getElementById('senhaAtual').value;
+        const novaSenha = document.getElementById('novaSenha').value;
 
         try {
-            await updateUser(userId, data);
-            localStorage.setItem('userName', data.nome); // Atualiza cache local
-            document.getElementById('headerUserName').textContent = data.nome; // Atualiza header na hora
-            showToast('Perfil atualizado com sucesso!');
+            // 1. Atualiza Dados Básicos
+            await updateUser(userId, { nome, telefone });
+            localStorage.setItem('userName', nome);
+            document.getElementById('headerUserName').textContent = nome;
+
+            // 2. Atualiza Senha (se preenchida)
+            if (senhaAtual && novaSenha) {
+                await updatePassword(userId, senhaAtual, novaSenha);
+                showToast('Perfil e senha atualizados com sucesso!');
+                // Limpa campos de senha
+                document.getElementById('senhaAtual').value = '';
+                document.getElementById('novaSenha').value = '';
+            } else {
+                showToast('Dados de perfil atualizados!');
+            }
+
         } catch(err) {
-            showToast(err.message, 'error');
+            showToast(err.message || 'Erro ao atualizar.', 'error');
         } finally {
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+            btn.disabled = false;
         }
     });
 }

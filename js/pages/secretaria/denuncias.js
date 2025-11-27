@@ -1,7 +1,8 @@
-import { listarDenuncias, atualizarDenuncia, cadastrarConflito, getUserData } from '../../services/apiService.js';
+import { listarDenuncias, atualizarDenuncia, cadastrarConflito, getUserData, listarConflitos } from '../../services/apiService.js';
 
 let allDenuncias = [];
 let currentDenuncia = null;
+let denunciasComConflitoIds = new Set();
 
 export async function init() {
     await loadDenuncias();
@@ -12,50 +13,58 @@ export async function init() {
 async function loadDenuncias() {
     const tbody = document.getElementById('denunciasTableBody');
     if(!tbody) return;
-    
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Carregando...</td></tr>';
     
     try {
-        const data = await listarDenuncias();
-        let rawList = Array.isArray(data) ? data : [];
+        const [denunciasData, conflitosData] = await Promise.all([
+            listarDenuncias(),
+            listarConflitos().catch(() => []) 
+        ]);
 
+        const rawList = Array.isArray(denunciasData) ? denunciasData : [];
+        const listaConflitos = Array.isArray(conflitosData) ? conflitosData : [];
+
+        // Mapeia conflitos existentes para bloquear botão
+        denunciasComConflitoIds.clear();
+        listaConflitos.forEach(c => {
+            if (c.denunciaOrigem && c.denunciaOrigem.id) {
+                denunciasComConflitoIds.add(c.denunciaOrigem.id);
+            }
+        });
+
+        // Filtragem por perfil
         const userCargo = localStorage.getItem('userCargo');
         const userEmail = localStorage.getItem('userEmail');
         const userId = localStorage.getItem('userId');
 
         if (userCargo === 'GESTOR_INSTITUICAO') {
-            // Busca dados completos para pegar ID da instituição
             let myInstId = null;
             try {
                 const me = await getUserData(userId);
                 if (me.instituicao) myInstId = me.instituicao.id;
             } catch(e){}
-
-            if (myInstId) {
-                // Filtra apenas denúncias dessa instituição
-                allDenuncias = rawList.filter(d => d.instituicao && d.instituicao.id === myInstId);
-            } else {
-                allDenuncias = []; // Sem instituição, não vê nada
-            }
             
-            document.querySelector('.stats-grid').style.display = 'grid';
+            if (myInstId) allDenuncias = rawList.filter(d => d.instituicao && d.instituicao.id === myInstId);
+            else allDenuncias = [];
+            
+            if(document.querySelector('.stats-grid')) document.querySelector('.stats-grid').style.display = 'grid';
             updateStats(allDenuncias);
 
         } else if (userCargo === 'USUARIO_INSTITUICAO' || userCargo === 'USUARIO_SECRETARIA') {
-            // Usuários comuns veem apenas as suas
             allDenuncias = rawList.filter(d => d.emailDenunciante === userEmail);
-            document.querySelector('.stats-grid').style.display = 'none';
+            if(document.querySelector('.stats-grid')) document.querySelector('.stats-grid').style.display = 'none';
         } else {
-            // Secretaria e Gestor Secretaria veem tudo
+            // Secretaria e Gestor Secretaria
             allDenuncias = rawList;
-            document.querySelector('.stats-grid').style.display = 'grid';
+            if(document.querySelector('.stats-grid')) document.querySelector('.stats-grid').style.display = 'grid';
             updateStats(allDenuncias);
         }
-
+        
         renderTable(allDenuncias);
+
     } catch(e) {
         console.error(e);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red">Erro ao carregar denúncias.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: red;">Erro ao carregar dados.</td></tr>`;
     }
 }
 
@@ -80,29 +89,33 @@ function renderTable(list) {
         return;
     }
 
+    // Ordenar: Pendentes primeiro, depois data decrescente
+    list.sort((a, b) => {
+        if (a.status === 'PENDENTE' && b.status !== 'PENDENTE') return -1;
+        if (a.status !== 'PENDENTE' && b.status === 'PENDENTE') return 1;
+        return new Date(b.dataOcorrido) - new Date(a.dataOcorrido);
+    });
+
     list.forEach(d => {
-        const dataFmt = new Date(d.dataOcorrido).toLocaleDateString();
+        const dataFmt = d.dataOcorrido ? new Date(d.dataOcorrido).toLocaleDateString() : '-';
         const statusClass = d.status === 'PENDENTE' ? 'tag-status-pendente' : 
                             (d.status === 'APROVADA' ? 'tag-status-aprovada' : 'tag-status-rejeitada');
         const tipoLegivel = d.tipoDenuncia ? d.tipoDenuncia.replace(/_/g, ' ') : 'Outro';
-
+        
         const row = `
             <tr>
                 <td>${dataFmt}</td>
                 <td>${d.tituloDenuncia}</td>
-                <td>${d.nomeDenunciante || '<i style="color:#999">Anônimo</i>'}</td>
+                <td>${d.nomeDenunciante || 'Anônimo'}</td>
                 <td><span class="tag tag-neutral" style="font-size:0.75rem">${tipoLegivel}</span></td>
                 <td><span class="tag ${statusClass}">${d.status}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-secondary" onclick="window.openDenunciaDetails(${d.id})">
-                        <i class="fas fa-eye"></i> Detalhes
-                    </button>
-                </td>
+                <td><button class="btn btn-sm btn-secondary" onclick="window.openDenunciaDetails(${d.id})"><i class="fas fa-eye"></i> Detalhes</button></td>
             </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);
     });
 }
 
+// --- MODAL DE DETALHES ---
 window.openDenunciaDetails = function(id) {
     currentDenuncia = allDenuncias.find(d => d.id === id);
     if(!currentDenuncia) return;
@@ -110,34 +123,58 @@ window.openDenunciaDetails = function(id) {
     const modal = document.getElementById('modal-denuncia-details');
     const body = document.getElementById('detail-modal-body');
     const footer = document.getElementById('detail-modal-footer');
+    const disabledAttr = 'disabled'; 
     
-    // Exibe localização se existir
-    let locHtml = '';
-    if(currentDenuncia.localizacao) {
-        const l = currentDenuncia.localizacao;
-        locHtml = `<div class="form-group" style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:8px;">
-            <label>Localização</label>
-            <p style="font-size:0.9rem; color:#555;">
-                ${l.municipio} - ${l.estado}<br>
-                CEP: ${l.cep}<br>
-                ${l.complemento || ''}
-            </p>
-        </div>`;
-    }
+    // Lista de tipos disponíveis (para garantir que o select funcione)
+    const tiposDisponiveis = [
+        { val: 'TERRA_INDIGENA', label: 'Terra Indígena' },
+        { val: 'DISPUTA_DE_POSSE', label: 'Disputa de Posse' },
+        { val: 'TERRITORIO_QUILOMBOLA', label: 'Território Quilombola' },
+        { val: 'RECURSO_HIDRICO', label: 'Recursos Hídricos' },
+        { val: 'DESMATAMENTO', label: 'Desmatamento' },
+        { val: 'OUTRO', label: 'Outro' }
+    ];
 
-    body.innerHTML = `
-        <div class="form-grid-2">
-            <div class="form-group"><label>Título</label><input type="text" value="${currentDenuncia.tituloDenuncia}" disabled></div>
-            <div class="form-group"><label>Tipo</label><input type="text" value="${currentDenuncia.tipoDenuncia}" disabled></div>
-        </div>
-        <div class="form-group"><label>Descrição</label><textarea rows="3" disabled>${currentDenuncia.descricaoDenuncia}</textarea></div>
-        <div class="form-group"><label>Partes Envolvidas</label><textarea rows="2" disabled>${currentDenuncia.descricaoPartesEnvolvidas || ''}</textarea></div>
-        ${locHtml}
+    // Gera as opções do select marcando a correta
+    const optionsHtml = tiposDisponiveis.map(t => 
+        `<option value="${t.val}" ${currentDenuncia.tipoDenuncia === t.val ? 'selected' : ''}>${t.label}</option>`
+    ).join('');
+
+    let content = `
+        <form id="form-edit-denuncia">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="edit-titulo" value="${currentDenuncia.tituloDenuncia || ''}" ${disabledAttr}>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="edit-tipo" ${disabledAttr}>
+                        ${optionsHtml}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="edit-desc" rows="3" ${disabledAttr}>${currentDenuncia.descricaoDenuncia || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Partes Envolvidas</label>
+                <textarea id="edit-partes" rows="2" ${disabledAttr}>${currentDenuncia.descricaoPartesEnvolvidas || ''}</textarea>
+            </div>
+        </form>
     `;
 
+    if(currentDenuncia.localizacao) {
+        const l = currentDenuncia.localizacao;
+        content += `<div class="form-group" style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:8px;">
+            <label>Localização</label>
+            <p style="font-size:0.9rem; color:#555;">${l.municipio || '-'} - ${l.estado || '-'}<br>CEP: ${l.cep || '-'}<br>${l.complemento || ''}</p>
+        </div>`;
+    }
+    body.innerHTML = content;
+
     const userCargo = localStorage.getItem('userCargo');
-    
-    // Permissão para gerenciar: Secretaria e Gestores
     const canManage = ['SECRETARIA', 'GESTOR_SECRETARIA', 'GESTOR_INSTITUICAO'].includes(userCargo);
     
     let buttonsHtml = '<button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>';
@@ -145,16 +182,18 @@ window.openDenunciaDetails = function(id) {
     if (canManage) {
         if (currentDenuncia.status === 'PENDENTE') {
             buttonsHtml += `
+                <button class="btn btn-primary" id="btn-edit-mode" onclick="window.toggleEditMode()">Editar</button>
+                <button class="btn btn-success" id="btn-save-edit" style="display:none;" onclick="window.saveDenunciaEdit(${id})">Salvar</button>
                 <button class="btn btn-danger" onclick="window.updateStatusDenuncia(${id}, 'ARQUIVADA')">Arquivar</button>
                 <button class="btn btn-success" onclick="window.updateStatusDenuncia(${id}, 'APROVADA')">Aprovar</button>
             `;
         } else if (currentDenuncia.status === 'APROVADA') {
-            // Agora Gestor Instituição também pode gerar conflito
-            buttonsHtml += `
-                <button class="btn btn-primary" onclick="window.openConvertModal()">
-                    <i class="fas fa-exchange-alt"></i> Gerar Conflito
-                </button>
-            `;
+            const jaTemConflito = denunciasComConflitoIds.has(currentDenuncia.id);
+            if (jaTemConflito) {
+                buttonsHtml += `<button class="btn btn-secondary" disabled style="opacity: 0.7; cursor: not-allowed;" title="Esta denúncia já gerou um conflito"><i class="fas fa-check-circle"></i> Conflito Já Gerado</button>`;
+            } else {
+                buttonsHtml += `<button class="btn btn-primary" onclick="window.openConvertModal()"><i class="fas fa-exchange-alt"></i> Gerar Conflito</button>`;
+            }
         }
     }
 
@@ -163,17 +202,53 @@ window.openDenunciaDetails = function(id) {
     setupCloseButtons(modal);
 };
 
-window.updateStatusDenuncia = async function(id, newStatus) {
-    if(!confirm(`Deseja alterar o status para ${newStatus}?`)) return;
+// --- AÇÕES DO USUÁRIO ---
+
+window.toggleEditMode = function() {
+    const inputs = document.querySelectorAll('#form-edit-denuncia input, #form-edit-denuncia textarea, #form-edit-denuncia select');
+    inputs.forEach(el => el.disabled = false);
+    document.getElementById('btn-edit-mode').style.display = 'none';
+    document.getElementById('btn-save-edit').style.display = 'inline-block';
+};
+
+window.saveDenunciaEdit = async function(id) {
+    const data = {
+        tituloDenuncia: document.getElementById('edit-titulo').value,
+        tipoDenuncia: document.getElementById('edit-tipo').value,
+        descricaoDenuncia: document.getElementById('edit-desc').value,
+        descricaoPartesEnvolvidas: document.getElementById('edit-partes').value
+    };
     try {
-        // Aqui você pode criar um endpoint específico no backend ou usar o update
-        // Como simplificação, usando update:
-        await atualizarDenuncia(id, { statusDenuncia: newStatus });
-        alert("Status atualizado com sucesso!");
+        await atualizarDenuncia(id, data);
+        alert('Denúncia atualizada com sucesso!');
         document.getElementById('modal-denuncia-details').classList.remove('show');
         loadDenuncias();
+    } catch(e) { alert('Erro ao editar: ' + e.message); }
+};
+
+window.updateStatusDenuncia = async function(id, newStatus) {
+    if(!confirm(`Deseja alterar o status para ${newStatus}?`)) return;
+    
+    // Feedback visual imediato
+    const btnApprove = document.querySelector(`button[onclick*="APROVADA"]`);
+    const btnArchive = document.querySelector(`button[onclick*="ARQUIVADA"]`);
+    if(btnApprove) btnApprove.disabled = true;
+    if(btnArchive) btnArchive.disabled = true;
+
+    try {
+        // Envia para o backend. O backend deve estar preparado para receber "statusDenuncia" no DTO.
+        await atualizarDenuncia(id, { statusDenuncia: newStatus });
+        
+        alert(`Status atualizado para ${newStatus} com sucesso!`);
+        document.getElementById('modal-denuncia-details').classList.remove('show');
+        
+        // Recarrega a lista para refletir a mudança
+        await loadDenuncias();
     } catch(e) {
-        alert("Erro ao atualizar: " + e.message);
+        alert("Erro ao atualizar status: " + e.message);
+        // Reabilita em caso de erro
+        if(btnApprove) btnApprove.disabled = false;
+        if(btnArchive) btnArchive.disabled = false;
     }
 };
 
@@ -190,61 +265,68 @@ function setupModals() {
     const convertForm = document.getElementById('form-convert-conflict');
     const convertModal = document.getElementById('modal-convert-conflict');
     
+    // Fecha modais genéricos
     document.querySelectorAll('[data-close-modal]').forEach(b => 
         b.addEventListener('click', e => e.target.closest('.modal').classList.remove('show'))
     );
-    if(document.getElementById('btn-close-convert')) 
-        document.getElementById('btn-close-convert').addEventListener('click', () => convertModal.classList.remove('show'));
-    if(document.getElementById('btn-cancel-convert'))
-        document.getElementById('btn-cancel-convert').addEventListener('click', () => convertModal.classList.remove('show'));
 
-    convertForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = convertForm.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        
-        // Ao converter, enviamos a denúncia de origem.
-        // O backend deve herdar a localização se não mandarmos uma nova.
-        const conflitoData = {
-            tituloConflito: currentDenuncia.tituloDenuncia,
-            descricaoConflito: currentDenuncia.descricaoDenuncia,
-            tipoConflito: currentDenuncia.tipoDenuncia,
-            fonteDenuncia: 'USUARIO_INTERNO',
-            status: 'ATIVO',
-            prioridade: document.getElementById('convert-prioridade').value,
-            dataInicio: document.getElementById('convert-data-inicio').value + 'T00:00:00',
-            parteReclamante: document.getElementById('convert-reclamante').value,
-            parteReclamada: document.getElementById('convert-reclamada').value,
-            gruposVulneraveis: document.getElementById('convert-grupos').value,
-            denunciaOrigem: { id: currentDenuncia.id },
+    // Fecha modal de conversão
+    if(convertModal) {
+        const closeModal = () => convertModal.classList.remove('show');
+        const btnClose = document.getElementById('btn-close-convert');
+        const btnCancel = document.getElementById('btn-cancel-convert');
+        if(btnClose) btnClose.addEventListener('click', closeModal);
+        if(btnCancel) btnCancel.addEventListener('click', closeModal);
+    }
+
+    if(convertForm) {
+        // Remove listener antigo clonando
+        const newForm = convertForm.cloneNode(true);
+        convertForm.parentNode.replaceChild(newForm, convertForm);
+
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = newForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Criando...';
             
-            // Se o usuário logado for Gestor de Instituição, precisamos vincular a instituição ao conflito também?
-            // O backend ServicoConflito.cadastarConflitoDiretamente herda a instituição do DTO.
-            // Se a denúncia já tem instituição, o conflito não herda automaticamente no backend atual (ServicoConflito).
-            // Seria bom enviar aqui.
-        };
-        
-        // Se for gestor instituição, anexa a instituição
-        const userCargo = localStorage.getItem('userCargo');
-        if(userCargo === 'GESTOR_INSTITUICAO') {
-             try {
-                const userId = localStorage.getItem('userId');
-                const me = await getUserData(userId);
-                if(me.instituicao) conflitoData.instituicao = { id: me.instituicao.id };
-             } catch(e){}
-        }
+            const conflitoData = {
+                tituloConflito: currentDenuncia.tituloDenuncia,
+                descricaoConflito: currentDenuncia.descricaoDenuncia,
+                tipoConflito: currentDenuncia.tipoDenuncia,
+                fonteDenuncia: 'USUARIO_INTERNO',
+                status: 'ATIVO',
+                prioridade: document.getElementById('convert-prioridade').value,
+                dataInicio: document.getElementById('convert-data-inicio').value + 'T00:00:00',
+                parteReclamante: document.getElementById('convert-reclamante').value,
+                parteReclamada: document.getElementById('convert-reclamada').value,
+                gruposVulneraveis: document.getElementById('convert-grupos').value,
+                denunciaOrigem: { id: currentDenuncia.id }
+            };
+            
+            // Se for gestor de instituição, vincula automaticamente
+            const userCargo = localStorage.getItem('userCargo');
+            if(userCargo === 'GESTOR_INSTITUICAO') {
+                 try {
+                    const userId = localStorage.getItem('userId');
+                    const me = await getUserData(userId);
+                    if(me.instituicao) conflitoData.instituicao = { id: me.instituicao.id };
+                 } catch(e){}
+            }
 
-        try {
-            await cadastrarConflito(conflitoData);
-            alert("Conflito gerado com sucesso!");
-            convertModal.classList.remove('show');
-            loadDenuncias();
-        } catch(err) {
-            alert("Erro ao gerar conflito: " + err.message);
-        } finally {
-            btn.disabled = false;
-        }
-    });
+            try {
+                await cadastrarConflito(conflitoData);
+                alert("Conflito gerado com sucesso!");
+                convertModal.classList.remove('show');
+                await loadDenuncias(); // Recarrega para atualizar o botão "Conflito Já Gerado"
+            } catch(err) {
+                alert("Erro ao gerar conflito: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirmar e Criar Conflito';
+            }
+        });
+    }
 }
 
 function setupFilters() {
@@ -256,7 +338,7 @@ function setupFilters() {
         const term = input.value.toLowerCase();
         const st = selectStatus.value;
         const tp = selectTipo.value;
-
+        
         const filtered = allDenuncias.filter(d => {
             const matchText = d.tituloDenuncia.toLowerCase().includes(term) || (d.nomeDenunciante && d.nomeDenunciante.toLowerCase().includes(term));
             const matchStatus = st ? d.status === st : true;

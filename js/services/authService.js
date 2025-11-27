@@ -1,73 +1,80 @@
-// Importa as funções necessárias do serviço de API
 import { loginUser, recoverPassword, validateToken, resetPassword } from './apiService.js';
+
+// --- FUNÇÃO AUXILIAR PARA EXIBIR TOAST ---
+function showToast(message, type = 'success', title = null) {
+    const container = document.getElementById('toast-container');
+    if (!container) return; // Se não houver container (ex: página errada), não faz nada
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const titleText = title ? title : (type === 'success' ? 'Sucesso' : 'Erro');
+
+    toast.innerHTML = `
+        <i class="fas ${icon}" style="font-size: 1.2rem;"></i>
+        <div class="toast-content">
+            <span class="toast-title">${titleText}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Remove o toast após 3 segundos
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 
     // --- LÓGICA DE LOGIN ---
     const loginForm = document.getElementById('form-login');
 
-/**
- * Retorna a página de destino correta com base no cargo do usuário.
- */
-function getRedirectPageByCargo(cargo) {
-    const basePath = '../../app/users/';
-    
-    // Mapeia os cargos para suas respectivas páginas
-    const rolePages = {
-        'SECRETARIA': 'secretaria/secretaria.html',
-        'GESTOR_SECRETARIA': 'gestor-secretaria/gestor-secretaria.html',
-        'GESTOR_INSTITUICAO': 'gestor-instituicao/gestor-instituicao.html',
-        'USUARIO_SECRETARIA': 'usuario-secretaria/usuario-secretaria.html',
-        'USUARIO_INSTITUICAO': 'usuario-instituicao/usuario-instituicao.html' // Exemplo: redireciona para a mesma tela de usuário
-        // Adicione outros cargos e páginas conforme necessário
-    };
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-    // Retorna a página do cargo ou uma página padrão (ex: secretaria.html) se o cargo não for encontrado
-    return basePath + (rolePages[cargo] || 'secretaria.html');
-}
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('password').value;
+            const submitButton = loginForm.querySelector('button[type="submit"]');
 
-if (loginForm) {
-    loginForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
+            if (!email.trim() || !senha.trim()) {
+                showToast('Por favor, preencha todos os campos.', 'error', 'Atenção');
+                return;
+            }
 
-        const email = document.getElementById('email').value;
-        const senha = document.getElementById('password').value;
-        const submitButton = loginForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
 
-        if (!email.trim() || !senha.trim()) {
-            alert('Por favor, preencha todos os campos.');
-            return;
-        }
+            try {
+                const usuario = await loginUser(email, senha);
 
-        submitButton.disabled = true;
-        submitButton.textContent = 'Entrando...';
+                localStorage.setItem('userId', usuario.id);
+                localStorage.setItem('userName', usuario.nome);
+                localStorage.setItem('userEmail', usuario.email);
+                localStorage.setItem('userCargo', usuario.cargo);
+                localStorage.setItem('userInstituicao', usuario.instituicao?.nome || '');
 
-        try {
-            // A função loginUser agora retorna o objeto do usuário diretamente
-            const usuario = await loginUser(email, senha);
+                // SUCESSO: Mostra Toast e redireciona após um breve delay
+                showToast(`Bem-vindo, ${usuario.nome}!`, 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '../../app/index.html';
+                }, 1500); // 1.5 segundos para o usuário ver a mensagem
+                
+            } catch (error) {
+                // ERRO: Mostra Toast e reabilita o botão
+                showToast(error.message || 'Credenciais inválidas.', 'error');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Entrar no Sistema';
+            }
+        });
+    }
 
-            // Salva os dados do usuário logado no localStorage
-            localStorage.setItem('userId', usuario.id);
-            localStorage.setItem('userName', usuario.nome);
-            localStorage.setItem('userEmail', usuario.email);
-            localStorage.setItem('userCargo', usuario.cargo);
-            localStorage.setItem('userInstituicao', usuario.instituicao?.nome || '');
-
-            alert('Login efetuado com sucesso! Bem-vindo, ' + usuario.nome);
-            
-            window.location.href = '../../app/index.html';
-            
-        } catch (error) {
-            // A mensagem de erro agora vem da propriedade 'message' do JSON
-            alert(error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Entrar no Sistema';
-        }
-    });
-}
-
-    // --- LÓGICA DE RECUPERAÇÃO DE SENHA (SOLICITAÇÃO) ---
+    // --- LÓGICA DE RECUPERAÇÃO DE SENHA ---
     const recoveryForm = document.getElementById('recovery-form');
     if (recoveryForm) {
         recoveryForm.addEventListener('submit', async function(event) {
@@ -76,7 +83,7 @@ if (loginForm) {
             const submitButton = recoveryForm.querySelector('button[type="submit"]');
 
             if (!email.trim()) {
-                alert('Por favor, digite seu e-mail.');
+                showToast('Por favor, digite seu e-mail.', 'error');
                 return;
             }
 
@@ -85,12 +92,10 @@ if (loginForm) {
 
             try {
                 const resultMessage = await recoverPassword(email);
-                alert(resultMessage); // Ex: "Instruções enviadas para seu e-mail!"
-                // Após o sucesso, redireciona para a tela de inserir o token
-                window.location.href = 'inserir_token.html';
+                showToast(resultMessage, 'success');
+                setTimeout(() => window.location.href = 'inserir_token.html', 2000);
             } catch (error) {
-                alert(error.message || 'Não foi possível processar sua solicitação. Verifique o e-mail digitado.');
-            } finally {
+                showToast(error.message || 'Erro ao processar solicitação.', 'error');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enviar Instruções';
             }
@@ -105,8 +110,8 @@ if (loginForm) {
             const token = document.getElementById('token').value;
             const submitButton = tokenForm.querySelector('button[type="submit"]');
 
-            if (token.trim().length < 6) { // Validação básica do tamanho do token
-                alert('Por favor, insira um token válido.');
+            if (token.trim().length < 6) {
+                showToast('Insira um token válido.', 'error');
                 return;
             }
 
@@ -115,46 +120,36 @@ if (loginForm) {
 
             try {
                 await validateToken(token);
-                // Em caso de sucesso, redireciona para a redefinição de senha, passando o token na URL
-                window.location.href = `redefinir_senha.html?token=${token}`;
+                showToast('Código verificado!', 'success');
+                setTimeout(() => window.location.href = `redefinir_senha.html?token=${token}`, 1000);
             } catch (error) {
-                alert(error.message || 'Token inválido ou expirado. Por favor, tente novamente.');
-            } finally {
-                // Garante que o botão seja reativado se a validação falhar
+                showToast(error.message || 'Token inválido.', 'error');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Verificar Código';
             }
         });
     }
 
-    // --- LÓGICA DE REDEFINIÇÃO DE SENHA (FINAL) ---
+    // --- LÓGICA DE REDEFINIÇÃO DE SENHA ---
     const resetPasswordForm = document.getElementById('reset-password-form');
     if (resetPasswordForm) {
-        // 1. Extrai o token da URL assim que a página carregar
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
 
-        // 2. Medida de segurança: se não houver token, redireciona para o início do processo
         if (!token) {
-            alert('Token de redefinição não encontrado. Por favor, inicie o processo novamente.');
-            window.location.href = 'recuperar_senha.html';
-            return; // Interrompe a execução do script
+            showToast('Token não encontrado.', 'error');
+            setTimeout(() => window.location.href = 'recuperar_senha.html', 2000);
+            return;
         }
 
-        // 3. Adiciona o listener para o envio do formulário
         resetPasswordForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             const newPassword = document.getElementById('nova-senha').value;
             const confirmPassword = document.getElementById('confirmar-senha').value;
             const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
 
-            if (!newPassword.trim() || !confirmPassword.trim()) {
-                alert('Por favor, preencha os dois campos de senha.');
-                return;
-            }
-
             if (newPassword !== confirmPassword) {
-                alert('As senhas não coincidem. Tente novamente.');
+                showToast('As senhas não coincidem.', 'error');
                 return;
             }
 
@@ -162,14 +157,11 @@ if (loginForm) {
             submitButton.textContent = 'Salvando...';
 
             try {
-                // Usa o token da URL e a nova senha para chamar a API
                 const resultMessage = await resetPassword(token, newPassword);
-                alert(resultMessage); // Ex: "Senha redefinida com sucesso!"
-                // Redireciona para o login após o sucesso
-                window.location.href = 'login.html';
+                showToast(resultMessage, 'success');
+                setTimeout(() => window.location.href = 'login.html', 2000);
             } catch (error) {
-                alert(error.message || 'Não foi possível redefinir sua senha. O token pode ter expirado.');
-                // Apenas reabilita o botão em caso de erro
+                showToast(error.message || 'Erro ao redefinir senha.', 'error');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Nova Senha';
             }

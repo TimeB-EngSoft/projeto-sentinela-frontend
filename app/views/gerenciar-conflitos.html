@@ -93,6 +93,38 @@
                     </div>
                 </div>
 
+                <fieldset style="border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <legend style="font-size: 0.9rem; font-weight: 600; color: var(--color-primary); padding: 0 5px;">Localização</legend>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="new-conf-cep" placeholder="00000-000">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select id="new-conf-estado">
+                                <option value="PE">Pernambuco</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="AL">Alagoas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Município</label>
+                            <input type="text" id="new-conf-municipio">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Bairro/Localidade</label>
+                            <input type="text" id="new-conf-bairro">
+                        </div>
+                        <div class="form-group">
+                            <label>Logradouro</label>
+                            <input type="text" id="new-conf-rua">
+                        </div>
+                    </div>
+                </fieldset>
+
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label>Parte Reclamante</label>
@@ -103,12 +135,10 @@
                         <input type="text" id="new-conf-reclamada">
                     </div>
                 </div>
-
                 <div class="form-group form-grid-full">
                     <label>Grupos Vulneráveis</label>
                     <input type="text" id="new-conf-grupos">
                 </div>
-
                 <div class="form-group form-grid-full">
                     <label>Descrição</label>
                     <textarea id="new-conf-desc" rows="3"></textarea>

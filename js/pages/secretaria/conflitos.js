@@ -1,17 +1,17 @@
 import { listarConflitos, cadastrarConflito, atualizarConflito, getUserData } from '../../services/apiService.js';
 
 let allConflitos = [];
+let currentConflictId = null;
 
 export async function init() {
     checkPermissions();
     await loadConflitos();
     setupFilters();
-    setupModalAdd();
+    setupModalAddAndEdit();
 }
 
 function checkPermissions() {
     const userCargo = localStorage.getItem('userCargo');
-    // ADICIONADO: GESTOR_INSTITUICAO na lista de permitidos
     if (['SECRETARIA', 'GESTOR_SECRETARIA', 'GESTOR_INSTITUICAO'].includes(userCargo)) {
         const btn = document.getElementById('addConflitoButton');
         if(btn) btn.style.display = 'inline-flex';
@@ -27,7 +27,6 @@ async function loadConflitos() {
         const data = await listarConflitos();
         allConflitos = Array.isArray(data) ? data : [];
         
-        // Filtra se for Gestor de Instituição (opcional, mas recomendado)
         const userCargo = localStorage.getItem('userCargo');
         if (userCargo === 'GESTOR_INSTITUICAO') {
              const userId = localStorage.getItem('userId');
@@ -59,7 +58,7 @@ function renderTable(list) {
     tbody.innerHTML = '';
 
     if(list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum conflito registrado.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">Nenhum conflito registrado.</td></tr>`;
         return;
     }
 
@@ -85,10 +84,9 @@ function renderTable(list) {
                 <td><span class="tag ${prioridadeClass}">${c.prioridade}</span></td>
                 <td><span class="status-tag">${statusIcon} ${c.status}</span></td>
                 <td class="table-actions">
-                    ${c.status === 'ATIVO' ? 
-                        `<button class="btn btn-sm btn-success" onclick="window.resolveConflict(${c.id})" title="Resolver"><i class="fas fa-check"></i></button>` : 
-                        '<span style="color:#ccc">-</span>'
-                    }
+                    <button class="btn btn-sm btn-primary" onclick="window.openEditConflito(${c.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
                 </td>
             </tr>
         `;
@@ -96,16 +94,168 @@ function renderTable(list) {
     });
 }
 
-window.resolveConflict = async function(id) {
-    if(!confirm("Marcar este conflito como RESOLVIDO?")) return;
-    try {
-        await atualizarConflito(id, { status: 'RESOLVIDO' });
-        alert("Conflito resolvido com sucesso!");
-        loadConflitos();
-    } catch(e) {
-        alert("Erro ao resolver conflito: " + e.message);
+// --- LÓGICA DE EDIÇÃO ---
+
+window.openEditConflito = function(id) {
+    const conflito = allConflitos.find(c => c.id === id);
+    if(!conflito) return;
+
+    currentConflictId = id;
+    const modal = document.getElementById('modal-add-conflito');
+    const form = document.getElementById('form-add-conflito');
+    const title = modal.querySelector('.modal-header h3');
+    
+    title.innerHTML = '<i class="fas fa-edit"></i> Editar Conflito';
+    
+    // Preenche campos
+    document.getElementById('new-conf-titulo').value = conflito.tituloConflito;
+    document.getElementById('new-conf-tipo').value = conflito.tipoConflito;
+    document.getElementById('new-conf-data').value = conflito.dataInicio ? conflito.dataInicio.split('T')[0] : '';
+    document.getElementById('new-conf-prioridade').value = conflito.prioridade;
+    document.getElementById('new-conf-reclamante').value = conflito.parteReclamante || '';
+    document.getElementById('new-conf-reclamada').value = conflito.parteReclamada || '';
+    document.getElementById('new-conf-grupos').value = conflito.gruposVulneraveis || '';
+    document.getElementById('new-conf-desc').value = conflito.descricaoConflito || '';
+
+    // Preenche Localização
+    if(conflito.localizacao) {
+        document.getElementById('new-conf-cep').value = conflito.localizacao.cep || '';
+        document.getElementById('new-conf-estado').value = conflito.localizacao.estado || '';
+        document.getElementById('new-conf-municipio').value = conflito.localizacao.municipio || '';
+        const match = (conflito.localizacao.complemento || '').match(/Bairro: (.*?), Rua: (.*)/);
+        if(match) {
+            document.getElementById('new-conf-bairro').value = match[1] || '';
+            document.getElementById('new-conf-rua').value = match[2] || '';
+        }
     }
+
+    // INJEÇÃO DO CAMPO DE STATUS PARA EDIÇÃO
+    let statusContainer = document.getElementById('edit-status-container');
+    if(!statusContainer) {
+        // Se não existe, cria dinamicamente após a prioridade
+        const prioGroup = document.getElementById('new-conf-prioridade').closest('.form-group');
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.id = 'edit-status-container';
+        div.innerHTML = `
+            <label>Status *</label>
+            <select id="new-conf-status" required>
+                <option value="ATIVO">Ativo</option>
+                <option value="RESOLVIDO">Resolvido</option>
+                <option value="CANCELADO">Cancelado</option>
+            </select>
+        `;
+        prioGroup.parentNode.appendChild(div);
+    } else {
+        statusContainer.style.display = 'block';
+    }
+    document.getElementById('new-conf-status').value = conflito.status;
+
+    modal.classList.add('show');
 };
+
+function setupModalAddAndEdit() {
+    const modal = document.getElementById('modal-add-conflito');
+    const btnOpen = document.getElementById('addConflitoButton');
+    const form = document.getElementById('form-add-conflito');
+
+    // Botão "Novo"
+    if(btnOpen) {
+        const newBtn = btnOpen.cloneNode(true);
+        btnOpen.parentNode.replaceChild(newBtn, btnOpen);
+        newBtn.addEventListener('click', () => {
+            currentConflictId = null;
+            form.reset();
+            modal.querySelector('.modal-header h3').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Registrar Conflito';
+            
+            // Esconde o select de status na criação (assume ATIVO)
+            const statusContainer = document.getElementById('edit-status-container');
+            if(statusContainer) statusContainer.style.display = 'none';
+            
+            modal.classList.add('show');
+        });
+    }
+
+    // Fechar modal
+    const closeModal = () => modal.classList.remove('show');
+    modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', closeModal));
+
+    // Submit
+    if(form) {
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = newForm.querySelector('button[type="submit"]');
+            
+            const titulo = document.getElementById('new-conf-titulo').value;
+            const dataInicio = document.getElementById('new-conf-data').value;
+            
+            if(!titulo || !dataInicio) {
+                alert("Preencha os campos obrigatórios (*)");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+
+            const userId = localStorage.getItem('userId');
+            let myInstObj = null;
+            try {
+                const user = await getUserData(userId);
+                if(user.instituicao) myInstObj = { id: user.instituicao.id };
+            } catch(e){}
+
+            const data = {
+                tituloConflito: titulo,
+                tipoConflito: document.getElementById('new-conf-tipo').value,
+                dataInicio: dataInicio + 'T00:00:00',
+                prioridade: document.getElementById('new-conf-prioridade').value,
+                parteReclamante: document.getElementById('new-conf-reclamante').value,
+                parteReclamada: document.getElementById('new-conf-reclamada').value,
+                gruposVulneraveis: document.getElementById('new-conf-grupos').value,
+                descricaoConflito: document.getElementById('new-conf-desc').value,
+                fonteDenuncia: 'USUARIO_INTERNO',
+                instituicao: myInstObj,
+                
+                // Campos de endereço
+                cep: document.getElementById('new-conf-cep').value,
+                estado: document.getElementById('new-conf-estado').value,
+                municipio: document.getElementById('new-conf-municipio').value,
+                bairro: document.getElementById('new-conf-bairro').value,
+                rua: document.getElementById('new-conf-rua').value
+            };
+
+            // Se for edição, pega o status do select. Se novo, fixa ATIVO.
+            if(currentConflictId) {
+                data.status = document.getElementById('new-conf-status').value;
+            } else {
+                data.status = 'ATIVO';
+            }
+
+            try {
+                if(currentConflictId) {
+                    await atualizarConflito(currentConflictId, data);
+                    alert("✅ Conflito atualizado com sucesso!");
+                } else {
+                    await cadastrarConflito(data);
+                    alert("✅ Conflito registrado com sucesso!");
+                }
+                
+                closeModal();
+                newForm.reset();
+                loadConflitos();
+            } catch(err) {
+                console.error(err);
+                alert("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvar';
+            }
+        });
+    }
+}
 
 function setupFilters() {
     const input = document.getElementById('search-conflito');
@@ -126,78 +276,4 @@ function setupFilters() {
 
     if(input) input.addEventListener('keyup', filter);
     if(select) select.addEventListener('change', filter);
-}
-
-function setupModalAdd() {
-    const modal = document.getElementById('modal-add-conflito');
-    const btnOpen = document.getElementById('addConflitoButton');
-    const form = document.getElementById('form-add-conflito');
-
-    if(btnOpen) {
-        const newBtn = btnOpen.cloneNode(true);
-        btnOpen.parentNode.replaceChild(newBtn, btnOpen);
-        newBtn.addEventListener('click', () => modal.classList.add('show'));
-    }
-
-    const closeModal = () => modal.classList.remove('show');
-    modal.querySelectorAll('[data-close-modal]').forEach(b => 
-        b.addEventListener('click', closeModal)
-    );
-
-    if(form) {
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-
-        newForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = newForm.querySelector('button[type="submit"]');
-            
-            const titulo = document.getElementById('new-conf-titulo').value;
-            const dataInicio = document.getElementById('new-conf-data').value;
-            
-            if(!titulo || !dataInicio) {
-                alert("Preencha os campos obrigatórios (*)");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Salvando...';
-
-            // Obter ID da Instituição do usuário logado
-            const userId = localStorage.getItem('userId');
-            let myInstObj = null;
-            try {
-                const user = await getUserData(userId);
-                if(user.instituicao) myInstObj = { id: user.instituicao.id };
-            } catch(e){}
-
-            const data = {
-                tituloConflito: titulo,
-                tipoConflito: document.getElementById('new-conf-tipo').value,
-                dataInicio: dataInicio + 'T00:00:00',
-                prioridade: document.getElementById('new-conf-prioridade').value,
-                parteReclamante: document.getElementById('new-conf-reclamante').value,
-                parteReclamada: document.getElementById('new-conf-reclamada').value,
-                gruposVulneraveis: document.getElementById('new-conf-grupos').value,
-                descricaoConflito: document.getElementById('new-conf-desc').value,
-                fonteDenuncia: 'USUARIO_INTERNO',
-                status: 'ATIVO',
-                instituicao: myInstObj // Vínculo
-            };
-
-            try {
-                await cadastrarConflito(data);
-                alert("✅ Conflito registrado com sucesso!");
-                closeModal();
-                newForm.reset();
-                loadConflitos();
-            } catch(err) {
-                console.error(err);
-                alert("Erro ao registrar conflito: " + (err.message || "Erro desconhecido"));
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Salvar';
-            }
-        });
-    }
 }

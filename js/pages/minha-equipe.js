@@ -1,4 +1,4 @@
-import { listUsersByStatus, updateUser } from '../services/apiService.js';
+import { listUsersByStatus, updateUser, getUserData } from '../services/apiService.js';
 
 let allTeamMembers = [];
 let gridContainer = null;
@@ -6,7 +6,6 @@ let memberActionTarget = null;
 
 const currentUserId = localStorage.getItem('userId');
 const currentUserCargo = localStorage.getItem('userCargo');
-const currentUserInst = localStorage.getItem('userInstituicao');
 
 export async function init() {
     gridContainer = document.getElementById('team-grid-container');
@@ -34,16 +33,27 @@ async function loadTeamMembers() {
     gridContainer.innerHTML = '<p class="col-span-full text-center">Carregando equipe...</p>';
 
     try {
+        let filterInstId = null;
+
+        // Se for gestor de instituição, busca o ID para filtrar no backend
+        if (currentUserCargo === 'GESTOR_INSTITUICAO' || currentUserCargo === 'USUARIO_INSTITUICAO') {
+            try {
+                const me = await getUserData(currentUserId);
+                if (me.instituicao) filterInstId = me.instituicao.id;
+            } catch(e) { console.warn('Não foi possível obter ID da instituição'); }
+        }
+
+        // [OTIMIZAÇÃO] Envia o ID da instituição para o backend filtrar
         const [activeUsers, inactiveUsers] = await Promise.all([
-            fetchUsersSafely('ATIVO'),
-            fetchUsersSafely('INATIVO')
+            listUsersByStatus({ status: 'ATIVO', instituicaoId: filterInstId }),
+            listUsersByStatus({ status: 'INATIVO', instituicaoId: filterInstId })
         ]);
+        
         let rawList = [...activeUsers, ...inactiveUsers];
 
+        // Filtros residuais de segurança
         if (['SECRETARIA', 'GESTOR_SECRETARIA', 'USUARIO_SECRETARIA'].includes(currentUserCargo)) {
             allTeamMembers = rawList.filter(u => ['SECRETARIA', 'GESTOR_SECRETARIA', 'USUARIO_SECRETARIA'].includes(u.cargo));
-        } else if (['GESTOR_INSTITUICAO', 'USUARIO_INSTITUICAO'].includes(currentUserCargo)) {
-            allTeamMembers = rawList.filter(u => u.instituicaoNome === currentUserInst);
         } else {
             allTeamMembers = rawList;
         }
@@ -52,12 +62,9 @@ async function loadTeamMembers() {
         renderTeamCards(allTeamMembers);
 
     } catch(e) {
+        console.error(e);
         gridContainer.innerHTML = '<p class="is-error" style="grid-column: 1/-1; text-align: center;">Erro ao carregar equipe.</p>';
     }
-}
-
-async function fetchUsersSafely(status) {
-    try { return await listUsersByStatus(status); } catch (e) { return []; }
 }
 
 function updateStats(users) {
@@ -85,29 +92,26 @@ function renderTeamCards(list) {
         
         let canEdit = !isMe && (currentUserCargo.includes('GESTOR') || currentUserCargo === 'SECRETARIA');
 
-        // --- LÓGICA DE PROTEÇÃO DE HIERARQUIA ---
-        // Gestor Secretaria não pode editar/desativar Secretaria
+        // Proteção de Hierarquia
         if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'SECRETARIA') {
             canEdit = false;
         }
-        // ----------------------------------------
 
         let actionButton = '';
 
         if (canEdit) {
             if (isActive) {
-                actionButton = `<button class="btn btn-outline-danger btn-sm w-100" onclick="triggerMemberAction(${u.id}, '${u.nome}', 'INATIVO')">
+                actionButton = `<button class="btn btn-outline-danger btn-sm w-100" onclick="window.triggerMemberAction(${u.id}, '${u.nome}', 'INATIVO')">
                                     <i class="fas fa-user-slash"></i> Desativar
                                 </button>`;
             } else {
-                actionButton = `<button class="btn btn-outline-success btn-sm w-100" onclick="triggerMemberAction(${u.id}, '${u.nome}', 'ATIVO')">
+                actionButton = `<button class="btn btn-outline-success btn-sm w-100" onclick="window.triggerMemberAction(${u.id}, '${u.nome}', 'ATIVO')">
                                     <i class="fas fa-user-check"></i> Reativar
                                 </button>`;
             }
         } else if (isMe) {
              actionButton = `<button class="btn btn-secondary btn-sm w-100" disabled>Você</button>`;
         } else {
-             // Se não pode editar, apenas mostra o status
              const badgeColor = isActive ? 'status-ativo' : 'status-inativo';
              const icon = !canEdit && !isMe ? '<i class="fas fa-lock" style="margin-left:5px; font-size:0.7rem;"></i>' : '';
              actionButton = `<span class="status-badge ${badgeColor}" style="display:block; width:100%; text-align:center;">${u.status} ${icon}</span>`;
@@ -140,7 +144,6 @@ function renderTeamCards(list) {
     });
 }
 
-// --- MODAIS ---
 window.triggerMemberAction = function(id, name, action) {
     memberActionTarget = { id, name, action };
     const modal = document.getElementById('modal-confirm-member-action');
@@ -172,7 +175,6 @@ function setupConfirmationModal() {
     document.getElementById('close-confirm-modal').addEventListener('click', close);
 
     const btnConfirm = document.getElementById('btn-confirm-action');
-    // Clone para limpar listeners
     const newBtn = btnConfirm.cloneNode(true);
     btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
 

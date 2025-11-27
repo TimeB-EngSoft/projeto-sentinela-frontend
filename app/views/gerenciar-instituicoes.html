@@ -21,11 +21,11 @@
 <div id="add-institution-modal" class="modal">
     <div class="modal-content modal-lg">
         <div class="modal-header">
-            <h3><i class="fas fa-building"></i> Nova Instituição</h3>
+            <h3 id="modal-inst-title"><i class="fas fa-building"></i> Nova Instituição</h3>
             <button class="close-button" id="modal-inst-close-button">&times;</button>
         </div>
         <form id="add-institution-form" style="display: contents;"> 
-            <div class="modal-body">
+            <input type="hidden" id="inst-id"> <div class="modal-body">
                 <div class="form-group form-grid-full">
                     <label for="inst-nome">Nome da Instituição *</label>
                     <input type="text" id="inst-nome" required placeholder="Ex: Secretaria de Meio Ambiente">
@@ -62,7 +62,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="modal-inst-cancel-button">Cancelar</button>
                 <button type="submit" class="btn btn-primary" id="modal-inst-submit-button">
-                    <i class="fas fa-check"></i> Salvar Instituição
+                    <i class="fas fa-check"></i> Salvar
                 </button>
             </div>
         </form>
@@ -130,15 +130,6 @@
 
 <div id="toast-container"></div>
 
-<div class="page-header-controls">
-    </div>
-
-<section class="institution-grid">
-    </section>
-
-<div id="modal-institution-details" ... > </div>
-<div id="modal-user-details-overlay" ... > </div>
-
 <div id="modal-deactivate-inst" class="modal" style="z-index: 2200;">
     <div class="modal-content">
         <div class="modal-header">
@@ -147,8 +138,8 @@
         </div>
         <div class="modal-body">
             <p>Tem certeza que deseja desativar a instituição <strong id="deactivate-inst-name"></strong>?</p>
-            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
-                Isso pode impedir que todos os usuários vinculados acessem o sistema.
+            <p style="font-size: 0.9rem; color: #b71c1c; margin-top: 15px; background: #fdecea; padding: 10px; border-radius: 6px;">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Atenção:</strong> Isso irá <u>desativar automaticamente todos os usuários</u> vinculados a esta instituição.
             </p>
         </div>
         <div class="modal-footer">

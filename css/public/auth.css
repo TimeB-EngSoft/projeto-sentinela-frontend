@@ -279,3 +279,71 @@
         flex-basis: auto;
     }
 }
+
+/* ======================================== */
+/* NOTIFICAÇÕES (TOASTS) PARA LOGIN         */
+/* ======================================== */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: #fff;
+    color: #333;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    border-left: 5px solid #ccc;
+    
+    /* Animação de entrada */
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideIn 0.3s forwards;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Tipos de Toast */
+.toast.success { border-left-color: #28a745; }
+.toast.success i { color: #28a745; }
+
+.toast.error { border-left-color: #dc3545; }
+.toast.error i { color: #dc3545; }
+
+.toast-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+@keyframes slideIn {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(100%); }
+}
