@@ -7,7 +7,7 @@
 const ENVIRONMENTS = {
     development: {
         name: 'development',
-        apiBaseUrl: 'https://projeto-sentinela-backend-production.up.railway.app'
+        apiBaseUrl: 'http://localhost:5000'
     },
     production: {
         name: 'production',
