@@ -1,234 +1,168 @@
-/* ======================================== */
-/* PÁGINA: MAPA INTERATIVO                 */
-/* ======================================== */
-.breadcrumb {
-    font-size: 0.85rem;
-    margin-bottom: 5px;
+/* --- Variáveis --- */
+:root {
+    --map-bg-light: #f4f7f9;
+    --map-card-bg: #ffffff;
+    --map-text-primary: #2c3e50;
+    --map-text-secondary: #7f8c8d;
+    --map-primary-color: #0d6efd;
+    --map-danger-color: #e74c3c;
+    --map-warning-color: #f39c12;
+    --map-border-radius: 12px;
+    --map-shadow-md: 0 4px 12px rgba(0,0,0,0.08);
 }
 
+/* --- Layout Principal (Alterado para Vertical) --- */
 .map-layout-grid {
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column; /* Mapa em cima, info em baixo */
+    gap: 20px;
+    padding: 20px;
+    background-color: var(--map-bg-light);
+    min-height: calc(100vh - 70px);
 }
 
+/* --- Seção do Mapa (Agora Full Width) --- */
 .map-section {
-    padding: 25px;
-    min-height: 600px;
+    width: 100%;
+    height: 65vh; /* Ocupa 65% da altura da tela */
+    min-height: 500px;
     display: flex;
     flex-direction: column;
 }
 
+#map {
+    flex-grow: 1;
+    width: 100%;
+    border-radius: var(--map-border-radius);
+    border: 1px solid #e9ecef;
+    z-index: 1; /* Garante que o mapa fique abaixo de modais, mas visível */
+}
+
+/* --- Sidebar/Info (Agora Horizontal em Baixo) --- */
+.info-sidebar {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Painel de Estatísticas (Esquerda, Largura Fixa) */
+.stats-panel {
+    flex: 0 0 300px; /* Largura fixa */
+}
+
+/* Painel de Lista (Direita, Flexível) */
+.institutions-panel {
+    flex: 1; /* Ocupa o resto do espaço */
+}
+
+/* --- Estilos Gerais de Card --- */
+.card {
+    background: var(--map-card-bg);
+    border-radius: var(--map-border-radius);
+    box-shadow: var(--map-shadow-md);
+    padding: 20px;
+    border: none;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--map-text-primary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* --- Legenda e Controles --- */
 .map-toolbar {
     display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.map-toolbar .card-title {
-    margin: 0;
-    margin-right: auto;
-}
-
-.map-filter-select {
-    padding: 8px 15px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    background-color: var(--color-off-white);
-    font-size: 0.9rem;
-    color: var(--color-text);
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-}
-
-.map-toolbar .filter-icon {
-    font-size: 1rem;
-    padding: 5px;
-}
-
-.map-container-placeholder {
-    flex-grow: 1;
-    background-color: var(--color-light-beige);
-    border-radius: var(--border-radius);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: var(--color-dark-brown);
-    text-align: center;
-    gap: 8px;
-    position: relative;
-}
-
-.map-icon-large {
-    font-size: 4rem;
-    color: var(--color-dark-brown);
-}
-
-.map-container-placeholder p {
-    font-weight: 600;
-    font-size: 1.5rem;
-}
-
-.map-container-placeholder small {
-    color: rgba(52, 32, 16, 0.7);
-    font-size: 0.9rem;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
 .map-legend-bottom {
-    position: absolute;
-    bottom: 25px;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px 20px;
-    border-radius: 5px;
-}
-
-.map-legend-bottom ul {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
     display: flex;
     gap: 20px;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--map-text-secondary);
 }
 
-.map-legend-bottom ul li {
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.legend-dot.conflito { background: var(--map-danger-color); }
+.legend-dot.denuncia { background: var(--map-warning-color); }
+
+/* --- Lista de Ocorrências --- */
+.institution-list {
+    max-height: 250px; /* Altura controlada para não esticar demais */
+    overflow-y: auto;
+}
+
+.list-item-row {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.info-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
-.institution-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.institution-item {
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.institution-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.institution-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.institution-details p {
-    font-weight: 600;
-    margin-bottom: 2px;
-}
-
-.institution-details small {
-    color: var(--color-text-light);
-    font-size: 0.85rem;
-}
-
-.conflict-count {
-    font-size: 0.9rem;
-    color: var(--color-text);
-    margin-top: 5px;
-}
-
-.institution-status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-top: 5px;
-}
-
-.status-dot-low { background-color: var(--color-priority-low); }
-.status-dot-medium { background-color: var(--color-priority-medium); }
-.status-dot-high { background-color: var(--color-priority-high); }
-
-.stats-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.stats-list .stat-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1rem;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed var(--color-border);
-}
-
-.stats-list .stat-item:last-child {
-    border-bottom: none;
-}
-
-.stats-list .stat-item p {
-    font-weight: 500;
-}
-
-.stats-list .stat-item span {
-    font-weight: 600;
-    color: var(--color-dark-brown);
-}
-
-.badge-high {
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    padding: 2px 8px;
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-.export-btn {
-    width: 100%;
     padding: 10px;
+    border-bottom: 1px solid #f1f3f5;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.list-item-row:hover { background-color: #f8f9fa; }
+
+.list-indicator { width: 4px; height: 30px; border-radius: 4px; margin-right: 12px; }
+.list-indicator.conflito { background: var(--map-danger-color); }
+.list-indicator.denuncia { background: var(--map-warning-color); }
+
+.item-details h4 { margin: 0; font-size: 0.95rem; font-weight: 600; color: #333; }
+.item-details p { margin: 0; font-size: 0.85rem; color: #777; }
+
+/* --- Estatísticas --- */
+.stats-list { display: flex; flex-direction: column; gap: 15px; }
+.stat-item { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+.stat-value { font-size: 1.8rem; font-weight: 700; display: block; }
+.stat-value.danger { color: var(--map-danger-color); }
+.stat-value.warning { color: var(--map-warning-color); }
+
+/* --- CORREÇÃO DO MARCADOR (IMPORTANTE) --- */
+/* Isso garante que o ícone personalizado do Leaflet não tenha fundo/borda padrão que atrapalhe */
+.custom-map-marker-modern {
+    background: transparent;
+    border: none;
 }
 
-@media (max-width: 1200px) {
-    .map-layout-grid {
-        grid-template-columns: 1fr;
-    }
+/* Responsividade Mobile */
+@media (max-width: 992px) {
+    .info-sidebar { flex-direction: column; }
+    .stats-panel { flex: auto; }
+}
+/* --- ADICIONE ISTO AO FINAL DO ARQUIVO SE NÃO TIVER --- */
+.custom-map-marker-modern {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* --- EFEITO DE DESTAQUE (SPOTLIGHT) --- */
 
-    .map-section {
-        min-height: 400px;
-    }
-
-    .map-toolbar {
-        flex-wrap: wrap;
-    }
-
-    .map-toolbar .card-title {
-        width: 100%;
-        margin-bottom: 15px;
-    }
-
-    .map-filter-select,
-    .map-toolbar .filter-icon {
-        margin-right: 5px;
-    }
-
-    .info-sidebar {
-        flex-direction: row;
-    }
+/* Deixa o mapa de fundo (ruas e cidades) em escala de cinza e com menos contraste */
+.map-tiles-grayscale {
+    filter: grayscale(100%) contrast(0.9) brightness(1.1);
+    opacity: 0.8;
 }
 
-@media (max-width: 768px) {
-    .info-sidebar {
-        flex-direction: column;
-    }
+/* Garante que os marcadores e a borda de PE continuem coloridos */
+.leaflet-overlay-pane, 
+.leaflet-marker-icon, 
+.leaflet-popup {
+    filter: none !important;
+}
+
+/* Ajuste no fundo do container para combinar com o cinza */
+#map {
+    background-color: #f0f2f5;
 }

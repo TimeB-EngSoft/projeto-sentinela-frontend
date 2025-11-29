@@ -1,113 +1,76 @@
 /* ======================================== */
 /* PÁGINA: GERENCIAR CONFLITOS             */
 /* ======================================== */
+
 .card + .card {
     margin-top: 30px;
 }
 
-.stat-card {
-    align-items: center;
-}
-
-.stat-card__info span {
-    font-size: 2.2rem;
-    font-weight: 700;
-}
-
+/* --- ESTATÍSTICAS (Mantido original) --- */
+.stat-card { align-items: center; }
+.stat-card__info span { font-size: 2.2rem; font-weight: 700; }
 .stat-card__icon-bg {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 50px; height: 50px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.stat-card__icon-bg.icon-bg-danger { background-color: #fdeeee; color: var(--color-priority-high); }
+.stat-card__icon-bg.icon-bg-success { background-color: #eef7ee; color: var(--color-priority-low); }
+
+/* --- FILTROS --- */
+.conflitos-list-card .card-header { margin-bottom: 25px; }
+.conflitos-filter-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+
+/* ============================================================ */
+/* ESTILO DA TABELA (Igual Usuários Ativos)                     */
+/* ============================================================ */
+
+/* 1. Alinhamento Padrão */
+.conflitos-table th,
+.conflitos-table td {
+    vertical-align: middle !important; /* O segredo do alinhamento */
+    padding: 12px 15px; /* Padding confortável */
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* 2. Coluna de Ações Centralizada */
+.conflitos-table td:last-child {
+    text-align: center;
+    white-space: nowrap;
+    width: 1%; /* Força a coluna a ter o tamanho mínimo do conteúdo */
+}
+
+.conflitos-table .table-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
+    justify-content: center; /* Centraliza o botão horizontalmente */
+    gap: 10px;
 }
 
-.stat-card__icon-bg.icon-bg-danger {
-    background-color: #fdeeee;
-    color: var(--color-priority-high);
-}
-
-.stat-card__icon-bg.icon-bg-success {
-    background-color: #eef7ee;
-    color: var(--color-priority-low);
-}
-
-.conflitos-list-card .card-header {
-    margin-bottom: 25px;
-}
-
-.conflitos-list-card .card-title {
-    margin-bottom: 0;
-}
-
-.conflitos-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.conflitos-filter-bar .search-bar {
-    min-width: 300px;
-}
-
-.status-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.status-tag i {
-    font-size: 0.9rem;
-}
-
-.status-tag.status-pendente,
-.status-tag.status-analise {
-    color: var(--color-priority-medium);
-}
-
-.status-tag.status-resolvido {
-    color: var(--color-priority-low);
+/* 3. Coluna de Envolvidos (Texto longo) */
+/* Garante que o texto longo não quebre o layout */
+.envolvidos-cell {
+    max-width: 300px; 
 }
 
 .envolvidos-cell div {
     display: block;
     line-height: 1.4;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
 }
 
-.envolvidos-cell div:first-child {
-    font-weight: 500;
-}
-
-.table-actions {
-    gap: 20px;
-}
-
-.table-actions a {
-    font-size: 1.1rem;
+.envolvidos-cell small {
+    font-weight: 700;
     color: var(--color-text-light);
-    transition: color 0.2s ease;
+    margin-right: 4px;
+    text-transform: uppercase;
+    font-size: 0.7rem;
 }
 
-.table-actions a:hover {
-    color: var(--color-primary);
-}
-
-@media (max-width: 768px) {
-    .conflitos-filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .conflitos-filter-bar .search-bar {
-        min-width: 100%;
-    }
-
-    .conflitos-filter-bar .btn-filter {
-        justify-content: space-between;
-    }
+/* 4. Estilo do Botão igual ao de Usuários */
+.btn-acao-clean {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    white-space: nowrap;
 }

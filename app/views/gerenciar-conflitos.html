@@ -1,56 +1,67 @@
-<section class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-card__info">
-            <p>Conflitos Ativos</p>
-            <span id="stat-conf-ativos">0</span>
+<div class="content-wrapper">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card__icon-bg icon-bg-danger">
+                <i class="fas fa-fire"></i>
+            </div>
+            <div class="stat-card__info">
+                <h3 id="stat-conf-ativos">0</h3>
+                <p>Conflitos Ativos</p>
+            </div>
         </div>
-        <div class="stat-card__icon-bg icon-bg-danger"><i class="fas fa-fire"></i></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card__info">
-            <p>Resolvidos</p>
-            <span id="stat-conf-resolvidos">0</span>
+        <div class="stat-card">
+            <div class="stat-card__icon-bg icon-bg-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-card__info">
+                <h3 id="stat-conf-resolvidos">0</h3>
+                <p>Resolvidos</p>
+            </div>
         </div>
-        <div class="stat-card__icon-bg icon-bg-success"><i class="fas fa-handshake"></i></div>
     </div>
-</section>
 
-<section class="card conflitos-list-card">
-   <div class="card-header">
-        <h3 class="card-title">Lista de Conflitos</h3>
-        <button class="btn btn-primary" id="addConflitoButton" style="display: none;">
-            <i class="fas fa-plus"></i> Registrar Conflito (Direto)
-        </button>
+    <div class="card conflitos-list-card">
+        <div class="card-header">
+            <div class="filter-controls" style="justify-content: space-between; width: 100%;">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-conflito" placeholder="Buscar por título ou envolvidos...">
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="filter-prioridade">
+                        <option value="">Todas Prioridades</option>
+                        <option value="CRITICA">Crítica</option>
+                        <option value="ALTA">Alta</option>
+                        <option value="MEDIA">Média</option>
+                        <option value="BAIXA">Baixa</option>
+                    </select>
+                    
+                    <button id="addConflitoButton" class="btn btn-primary" style="display: none;">
+                        <i class="fas fa-plus"></i> Novo Conflito
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive-wrapper">
+            <table class="conflitos-table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Envolvidos</th>
+                        <th>Prioridade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="conflitosTableBody">
+                    </tbody>
+            </table>
+        </div>
     </div>
-    <div class="conflitos-filter-bar">
-         <div class="search-bar">
-             <i class="fas fa-search"></i>
-             <input type="text" id="search-conflito" placeholder="Buscar por título ou partes...">
-         </div>
-         <select id="filter-prioridade" class="filter-dropdown">
-             <option value="">Todas Prioridades</option>
-             <option value="CRITICA">Crítica</option>
-             <option value="ALTA">Alta</option>
-             <option value="MEDIA">Média</option>
-             <option value="BAIXA">Baixa</option>
-         </select>
-    </div>
-    <div class="table-responsive-wrapper">
-        <table class="denuncias-table">
-            <thead>
-                <tr>
-                    <th>Título</th>
-                    <th>Tipo</th>
-                    <th>Envolvidos</th>
-                    <th>Prioridade</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="conflitosTableBody"></tbody>
-        </table>
-    </div>
-</section>
+</div>
 
 <div id="modal-add-conflito" class="modal">
     <div class="modal-content modal-lg">
@@ -93,11 +104,14 @@
                     </div>
                 </div>
 
-                <fieldset style="border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <legend style="font-size: 0.9rem; font-weight: 600; color: var(--color-primary); padding: 0 5px;">Localização</legend>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee;">
+                    <h4 style="margin-top:0; margin-bottom:15px; font-size: 0.95rem; color: var(--color-primary);">
+                        <i class="fas fa-map-marker-alt"></i> Localização
+                    </h4>
+                    
                     <div class="form-grid-3">
                         <div class="form-group">
-                            <label>CEP</label>
+                            <label>CEP (Busca Automática)</label>
                             <input type="text" id="new-conf-cep" placeholder="00000-000">
                         </div>
                         <div class="form-group">
@@ -113,6 +127,7 @@
                             <input type="text" id="new-conf-municipio">
                         </div>
                     </div>
+                    
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Bairro/Localidade</label>
@@ -123,7 +138,18 @@
                             <input type="text" id="new-conf-rua">
                         </div>
                     </div>
-                </fieldset>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Latitude <small class="text-muted">(Gerado Autom.)</small></label>
+                            <input type="text" id="new-conf-lat" placeholder="-8.000..." >
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude <small class="text-muted">(Gerado Autom.)</small></label>
+                            <input type="text" id="new-conf-long" placeholder="-35.000..." >
+                        </div>
+                    </div>
+                </div>
 
                 <div class="form-grid-2">
                     <div class="form-group">
@@ -135,12 +161,14 @@
                         <input type="text" id="new-conf-reclamada">
                     </div>
                 </div>
+
                 <div class="form-group form-grid-full">
                     <label>Grupos Vulneráveis</label>
                     <input type="text" id="new-conf-grupos">
                 </div>
+
                 <div class="form-group form-grid-full">
-                    <label>Descrição</label>
+                    <label>Descrição Detalhada</label>
                     <textarea id="new-conf-desc" rows="3"></textarea>
                 </div>
             </div>
@@ -152,3 +180,5 @@
         </form>
     </div>
 </div>
+
+<div id="toast-container"></div>

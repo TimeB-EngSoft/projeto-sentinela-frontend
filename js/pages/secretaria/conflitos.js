@@ -10,6 +10,36 @@ export async function init() {
     setupModalAddAndEdit();
 }
 
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    const title = type === 'success' ? 'Sucesso' : 'Atenção';
+    
+    toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <div class="toast-content">
+            <span class="toast-title">${title}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Animação de entrada
+    requestAnimationFrame(() => toast.classList.add('show'));
+    
+    // Remove após 3.5 segundos
+    setTimeout(() => { 
+        toast.classList.remove('show'); 
+        setTimeout(() => toast.remove(), 300); 
+    }, 3500);
+}
+
 function checkPermissions() {
     const userCargo = localStorage.getItem('userCargo');
     if (['SECRETARIA', 'GESTOR_SECRETARIA', 'GESTOR_INSTITUICAO'].includes(userCargo)) {
@@ -58,16 +88,27 @@ function renderTable(list) {
     tbody.innerHTML = '';
 
     if(list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">Nenhum conflito registrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #666;">Nenhum conflito registrado.</td></tr>`;
         return;
     }
 
     list.forEach(c => {
-        const prioridadeClass = c.prioridade === 'CRITICA' ? 'tag-prioridade-alta' : 
-                                (c.prioridade === 'ALTA' ? 'tag-prioridade-media' : 'tag-prioridade-baixa');
+        let prioridadeClass = 'tag-neutral';
+        if (c.prioridade === 'CRITICA') prioridadeClass = 'tag-prioridade-alta';
+        else if (c.prioridade === 'ALTA') prioridadeClass = 'tag-prioridade-media';
+        else if (c.prioridade === 'MEDIA') prioridadeClass = 'tag-prioridade-baixa';
+        else if (c.prioridade === 'BAIXA') prioridadeClass = 'tag-neutral';
+
+        let statusClass = 'status-pendente';
+        let statusLabel = c.status;
         
-        const statusIcon = c.status === 'RESOLVIDO' ? '<i class="fas fa-check"></i>' : 
-                           (c.status === 'CANCELADO' ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-fire"></i>');
+        if (c.status === 'RESOLVIDO') {
+            statusClass = 'status-ativo';
+        } else if (c.status === 'CANCELADO' || c.status === 'INATIVO') {
+            statusClass = 'status-inativo';
+        } else if (c.status === 'ATIVO') {
+            statusClass = 'status-pendente';
+        }
 
         const reclamante = c.parteReclamante || '-';
         const reclamada = c.parteReclamada || '-';
@@ -76,22 +117,50 @@ function renderTable(list) {
         const row = `
             <tr>
                 <td><strong>${c.tituloConflito}</strong></td>
-                <td>${tipo}</td>
+                <td><span class="tag tag-neutral" style="font-size: 0.75rem;">${tipo}</span></td>
                 <td class="envolvidos-cell">
-                    <div><small>Rec:</small> ${reclamante}</div>
-                    <div><small>Vs:</small> ${reclamada}</div>
+                    <div><small>REC:</small> ${reclamante}</div>
+                    <div><small>VS:</small> ${reclamada}</div>
                 </td>
                 <td><span class="tag ${prioridadeClass}">${c.prioridade}</span></td>
-                <td><span class="status-tag">${statusIcon} ${c.status}</span></td>
-                <td class="table-actions">
-                    <button class="btn btn-sm btn-primary" onclick="window.openEditConflito(${c.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td>
+                    <div class="table-actions">
+                        <button class="btn btn-sm btn-secondary btn-acao-clean" onclick="window.openEditConflito(${c.id})" title="Ver Detalhes">
+                            <i class="fas fa-edit"></i> Detalhes
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
         tbody.insertAdjacentHTML('beforeend', row);
     });
+}
+
+// --- Função para buscar coordenadas (BrasilAPI V2) ---
+async function fetchCoordinates(cep) {
+    try {
+        const cleanCep = cep.replace(/\D/g, '');
+        if (cleanCep.length !== 8) return null;
+        
+        const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
+        if (!res.ok) return null;
+        
+        const data = await res.json();
+        if (data.location && data.location.coordinates) {
+            const lat = data.location.coordinates.latitude;
+            const long = data.location.coordinates.longitude;
+
+            // Verifica se as coordenadas são válidas (não undefined)
+            if (lat !== undefined && long !== undefined) {
+                return { latitude: lat, longitude: long };
+            }
+        }
+        return null;
+    } catch (e) {
+        console.warn('Erro ao buscar coordenadas:', e);
+        return null;
+    }
 }
 
 // --- LÓGICA DE EDIÇÃO ---
@@ -102,12 +171,10 @@ window.openEditConflito = function(id) {
 
     currentConflictId = id;
     const modal = document.getElementById('modal-add-conflito');
-    const form = document.getElementById('form-add-conflito');
     const title = modal.querySelector('.modal-header h3');
     
     title.innerHTML = '<i class="fas fa-edit"></i> Editar Conflito';
     
-    // Preenche campos
     document.getElementById('new-conf-titulo').value = conflito.tituloConflito;
     document.getElementById('new-conf-tipo').value = conflito.tipoConflito;
     document.getElementById('new-conf-data').value = conflito.dataInicio ? conflito.dataInicio.split('T')[0] : '';
@@ -117,11 +184,16 @@ window.openEditConflito = function(id) {
     document.getElementById('new-conf-grupos').value = conflito.gruposVulneraveis || '';
     document.getElementById('new-conf-desc').value = conflito.descricaoConflito || '';
 
-    // Preenche Localização
     if(conflito.localizacao) {
         document.getElementById('new-conf-cep').value = conflito.localizacao.cep || '';
         document.getElementById('new-conf-estado').value = conflito.localizacao.estado || '';
         document.getElementById('new-conf-municipio').value = conflito.localizacao.municipio || '';
+        
+        const latInput = document.getElementById('new-conf-lat');
+        const longInput = document.getElementById('new-conf-long');
+        if(latInput) latInput.value = conflito.localizacao.latitude || '';
+        if(longInput) longInput.value = conflito.localizacao.longitude || '';
+
         const match = (conflito.localizacao.complemento || '').match(/Bairro: (.*?), Rua: (.*)/);
         if(match) {
             document.getElementById('new-conf-bairro').value = match[1] || '';
@@ -129,10 +201,8 @@ window.openEditConflito = function(id) {
         }
     }
 
-    // INJEÇÃO DO CAMPO DE STATUS PARA EDIÇÃO
     let statusContainer = document.getElementById('edit-status-container');
     if(!statusContainer) {
-        // Se não existe, cria dinamicamente após a prioridade
         const prioGroup = document.getElementById('new-conf-prioridade').closest('.form-group');
         const div = document.createElement('div');
         div.className = 'form-group';
@@ -159,16 +229,20 @@ function setupModalAddAndEdit() {
     const btnOpen = document.getElementById('addConflitoButton');
     const form = document.getElementById('form-add-conflito');
 
-    // Botão "Novo"
     if(btnOpen) {
         const newBtn = btnOpen.cloneNode(true);
         btnOpen.parentNode.replaceChild(newBtn, btnOpen);
         newBtn.addEventListener('click', () => {
             currentConflictId = null;
             form.reset();
+            
+            const latInput = document.getElementById('new-conf-lat');
+            const longInput = document.getElementById('new-conf-long');
+            if(latInput) { latInput.value = ''; latInput.placeholder = "Automático ou manual"; }
+            if(longInput) { longInput.value = ''; longInput.placeholder = "Automático ou manual"; }
+
             modal.querySelector('.modal-header h3').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Registrar Conflito';
             
-            // Esconde o select de status na criação (assume ATIVO)
             const statusContainer = document.getElementById('edit-status-container');
             if(statusContainer) statusContainer.style.display = 'none';
             
@@ -176,11 +250,42 @@ function setupModalAddAndEdit() {
         });
     }
 
-    // Fechar modal
     const closeModal = () => modal.classList.remove('show');
     modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', closeModal));
 
-    // Submit
+    // --- Busca Automática no BLUR ---
+    const cepInput = document.getElementById('new-conf-cep');
+    const latInput = document.getElementById('new-conf-lat');
+    const longInput = document.getElementById('new-conf-long');
+
+    if (cepInput && latInput && longInput) {
+        const newCepInput = cepInput.cloneNode(true);
+        cepInput.parentNode.replaceChild(newCepInput, cepInput);
+
+        newCepInput.addEventListener('blur', async () => {
+            const cep = newCepInput.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                latInput.placeholder = "Buscando...";
+                longInput.placeholder = "Buscando...";
+                
+                const coords = await fetchCoordinates(cep);
+                
+                if (coords) {
+                    latInput.value = coords.latitude;
+                    longInput.value = coords.longitude;
+                    latInput.placeholder = ""; 
+                    longInput.placeholder = "";
+                } else {
+                    latInput.value = "";
+                    longInput.value = "";
+                    latInput.placeholder = "Não encontrado";
+                    longInput.placeholder = "Não encontrado";
+                }
+            }
+        });
+    }
+
+    // --- SUBMIT DO FORMULÁRIO ---
     if(form) {
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
@@ -188,9 +293,14 @@ function setupModalAddAndEdit() {
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = newForm.querySelector('button[type="submit"]');
+            const originalBtnText = btn.textContent; // Salva texto original
             
             const titulo = document.getElementById('new-conf-titulo').value;
             const dataInicio = document.getElementById('new-conf-data').value;
+            
+            // 1. Limpa o CEP
+            let cepRaw = document.getElementById('new-conf-cep').value;
+            const cepClean = cepRaw ? cepRaw.replace(/\D/g, '') : ''; 
             
             if(!titulo || !dataInicio) {
                 alert("Preencha os campos obrigatórios (*)");
@@ -198,7 +308,53 @@ function setupModalAddAndEdit() {
             }
 
             btn.disabled = true;
-            btn.textContent = 'Salvando...';
+            
+            // 2. Captura os valores atuais
+            let latVal = document.getElementById('new-conf-lat').value;
+            let longVal = document.getElementById('new-conf-long').value;
+
+            // Limpeza de segurança
+            if (latVal === "undefined") latVal = "";
+            if (longVal === "undefined") longVal = "";
+
+            // 3. Tenta buscar novamente se tiver CEP mas não tiver coordenadas
+            if ((!latVal || !longVal) && cepClean.length === 8) {
+                btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Geolocalizando...';
+                try {
+                    const coords = await fetchCoordinates(cepClean);
+                    if (coords && coords.latitude) {
+                        latVal = coords.latitude;
+                        longVal = coords.longitude;
+                        document.getElementById('new-conf-lat').value = latVal;
+                        document.getElementById('new-conf-long').value = longVal;
+                    }
+                } catch (err) {
+                    console.warn("API de CEP falhou no submit.");
+                }
+            }
+
+            // 4. Prepara valores finais
+            const finalLat = (latVal && latVal !== "undefined") ? parseFloat(latVal) : null;
+            const finalLong = (longVal && longVal !== "undefined") ? parseFloat(longVal) : null;
+
+            // === VALIDAÇÃO COM POP-UP DE SEGURANÇA ===
+            if (finalLat === null || finalLong === null) {
+                const confirmarSemCoords = confirm(
+                    "⚠️ Atenção: Coordenadas não identificadas!\n\n" +
+                    "O sistema não conseguiu obter a Latitude/Longitude automaticamente para este local.\n" +
+                    "Sem esses dados, o conflito NÃO aparecerá no mapa interativo.\n\n" +
+                    "Deseja salvar mesmo assim?"
+                );
+
+                if (!confirmarSemCoords) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnText; // Restaura texto original
+                    return; 
+                }
+            }
+            // ==========================================
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
             const userId = localStorage.getItem('userId');
             let myInstObj = null;
@@ -219,15 +375,17 @@ function setupModalAddAndEdit() {
                 fonteDenuncia: 'USUARIO_INTERNO',
                 instituicao: myInstObj,
                 
-                // Campos de endereço
-                cep: document.getElementById('new-conf-cep').value,
+                cep: cepClean, 
                 estado: document.getElementById('new-conf-estado').value,
                 municipio: document.getElementById('new-conf-municipio').value,
                 bairro: document.getElementById('new-conf-bairro').value,
-                rua: document.getElementById('new-conf-rua').value
+                rua: document.getElementById('new-conf-rua').value,
+                
+                // Envia valores limpos
+                latitude: finalLat,
+                longitude: finalLong
             };
 
-            // Se for edição, pega o status do select. Se novo, fixa ATIVO.
             if(currentConflictId) {
                 data.status = document.getElementById('new-conf-status').value;
             } else {
@@ -237,10 +395,10 @@ function setupModalAddAndEdit() {
             try {
                 if(currentConflictId) {
                     await atualizarConflito(currentConflictId, data);
-                    alert("✅ Conflito atualizado com sucesso!");
+                    showToast("Conflito atualizado com sucesso!");
                 } else {
                     await cadastrarConflito(data);
-                    alert("✅ Conflito registrado com sucesso!");
+                    showToast("Conflito registrado com sucesso!");
                 }
                 
                 closeModal();

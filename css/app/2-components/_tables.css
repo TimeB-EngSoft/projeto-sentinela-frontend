@@ -5,69 +5,87 @@
 .table-responsive-wrapper {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Rolagem suave em mobile */
 }
 
+/* Adicionado .conflitos-table à lista */
 .table-responsive table,
 .table-responsive-wrapper table,
 .denuncias-table,
 .managers-table,
-.logs-table {
+.logs-table,
+.conflitos-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 800px; /* Garante que não esmague em telas pequenas */
 }
 
+/* Estilo das Células */
 .denuncias-table th,
 .denuncias-table td,
 .managers-table th,
 .managers-table td,
 .logs-table th,
-.logs-table td {
-    padding: 12px 15px;
+.logs-table td,
+.conflitos-table th,
+.conflitos-table td {
+    padding: 15px 20px; /* Mais espaçamento para respirar */
     text-align: left;
     border-bottom: 1px solid var(--color-border);
     vertical-align: middle;
-    white-space: nowrap;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
 }
 
+/* Cabeçalho */
 .denuncias-table th,
 .managers-table th,
-.logs-table th {
+.logs-table th,
+.conflitos-table th {
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     color: var(--color-text-light);
-    background-color: var(--color-background);
+    background-color: #f9f9f9; /* Fundo leve no cabeçalho */
+    letter-spacing: 0.5px;
 }
 
+/* Hover na linha */
 .denuncias-table tbody tr:hover,
 .managers-table tbody tr:hover,
-.logs-table tbody tr:hover {
+.logs-table tbody tr:hover,
+.conflitos-table tbody tr:hover {
     background-color: #fdfdfa;
 }
 
+/* Ações e Links */
 .table-actions {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.table-actions a {
-    color: var(--color-primary);
-    font-weight: 600;
-    font-size: 0.9rem;
+.table-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
 }
 
-.table-actions a:hover {
-    text-decoration: underline;
-}
-
+.table-actions a,
 .action-link {
     color: var(--color-primary);
     font-weight: 600;
     font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
 }
 
+.table-actions a:hover,
 .action-link:hover {
     text-decoration: underline;
+}
+
+/* Ajuste específico para células de texto longo */
+.conflitos-table td strong {
+    color: var(--color-dark-brown);
+    font-weight: 600;
 }
