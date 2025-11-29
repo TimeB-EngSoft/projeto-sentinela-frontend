@@ -1,64 +1,91 @@
-// Dados Mockados (agora no escopo global do módulo)
-const mockLogs = [
-    { dateTime: '2024-03-20<br>14:35:22', user: 'maria.silva', action: 'Login', module: 'Autenticação', details: 'Sucesso', level: 'info', ip: '192.168.1.100' },
-    { dateTime: '2024-03-20<br>13:22:15', user: 'joao.santos', action: 'Acesso negado', module: 'Autorização', details: 'Sem permissão', level: 'aviso', ip: '192.168.1.105' },
-    { dateTime: '2024-03-19<br>11:20:45', user: 'carlos.admin', action: 'Erro sistema', module: 'Relatórios', details: 'Timeout', level: 'erro', ip: '192.168.1.95' },
-];
-
-const mockActionsFrequency = [
-    { action: 'Login no sistema', count: 156 },
-    { action: 'Aprovação de usuários', count: 83 },
-    { action: 'Consulta de relatórios', count: 38 }
-];
-
-const mockUsersActivity = [
-    { user: 'maria.silva', count: 89 },
-    { user: 'joao.santos', count: 57 }
-];
+import { listarLogsAuditoria, obterStatsAuditoria } from '../services/apiService.js';
 
 export async function init() {
-    renderLogsTable(mockLogs);
-    renderFrequencyList('actionsFrequencyList', mockActionsFrequency);
-    renderFrequencyList('usersActivityList', mockUsersActivity);
+    await loadStats();
+    await loadLogs();
 }
 
-function renderLogsTable(logs) {
-    const tableBody = document.getElementById('logsTableBody');
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
+async function loadStats() {
+    try {
+        const stats = await obterStatsAuditoria();
+        
+        // Atualiza os cards superiores (ajuste os seletores conforme seu HTML)
+        updateCard(0, stats.totalLogs);
+        updateCard(1, stats.acoesHoje);
+        updateCard(2, stats.avisos);
+        updateCard(3, stats.erros);
 
-    logs.forEach(log => {
-        const levelTag = `<span class="level-tag ${log.level}">${log.level.toUpperCase()}</span>`;
-        const moduleTag = `<span class="module-tag">${log.module}</span>`;
-        const row = tableBody.insertRow();
-        row.innerHTML = `
-            <td>${log.dateTime}</td>
-            <td>${log.user}</td>
-            <td>${log.action}</td>
-            <td>${moduleTag}</td>
-            <td>${log.details}</td>
-            <td>${levelTag}</td>
-            <td>${log.ip}</td>
-        `;
-    });
+        // Atualiza listas de frequência
+        renderFrequencyList('usersActivityList', stats.topUsuarios, false);
+        renderFrequencyList('actionsFrequencyList', stats.topAcoes, true);
+
+    } catch (e) {
+        console.error("Erro ao carregar estatísticas:", e);
+    }
 }
 
-function renderFrequencyList(listId, data) {
-    const listContainer = document.getElementById(listId);
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
+function updateCard(index, value) {
+    const cards = document.querySelectorAll('.audit-card .stat-card__info span');
+    if (cards[index]) cards[index].textContent = value;
+}
+
+async function loadLogs() {
+    const tbody = document.getElementById('logsTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Carregando logs...</td></tr>';
+
+    try {
+        const logs = await listarLogsAuditoria();
+        tbody.innerHTML = '';
+        
+        if(logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Nenhum log encontrado.</td></tr>';
+            return;
+        }
+
+        logs.forEach(log => {
+            const date = new Date(log.dataHora).toLocaleString();
+            const levelClass = log.nivel.toLowerCase(); // INFO, AVISO, ERRO
+            
+            const row = `
+                <tr>
+                    <td>${date}</td>
+                    <td>${log.usuario || '-'}</td>
+                    <td>${log.acao}</td>
+                    <td><span class="module-tag">${log.modulo}</span></td>
+                    <td>${log.detalhes || ''}</td>
+                    <td><span class="level-tag ${levelClass}">${log.nivel}</span></td>
+                    <td>${log.ip || '-'}</td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red">Erro de conexão.</td></tr>';
+    }
+}
+
+function renderFrequencyList(containerId, data, isAction) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#999">Sem dados</p>';
+        return;
+    }
 
     data.forEach(item => {
-        const isActionList = !!item.action;
-        const textContent = isActionList ? item.action : item.user;
-        const badgeLabel = isActionList ? 'ações' : 'acessos';
-
+        // O backend retorna array de objetos [nome, contagem]
+        const name = item[0];
+        const count = item[1];
+        
         const html = `
             <div class="frequency-item">
-                <p>${textContent}</p>
-                <span class="frequency-badge">${item.count} ${badgeLabel}</span>
+                <p>${name}</p>
+                <span class="frequency-badge">${count}</span>
             </div>
         `;
-        listContainer.insertAdjacentHTML('beforeend', html);
+        container.insertAdjacentHTML('beforeend', html);
     });
 }

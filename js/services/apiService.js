@@ -1,5 +1,38 @@
+// ... (Importações existentes)
 import { httpClient, toFormData } from './httpClient.js';
-import { API_ENDPOINTS } from './config.js';
+import { API_ENDPOINTS, API_CONFIG } from './config.js';
+
+// ... (Códigos existentes de User, Instituicao, etc)
+
+// ######################################################################
+// ##                      SERVIÇOS DE AUDITORIA                       ##
+// ######################################################################
+
+export function listarLogsAuditoria() {
+    return httpClient.get('/auditoria/logs');
+}
+
+export function obterStatsAuditoria() {
+    return httpClient.get('/auditoria/stats');
+}
+
+// ######################################################################
+// ##                      SERVIÇOS DE RELATÓRIOS                      ##
+// ######################################################################
+
+export async function gerarRelatorio(filtros) {
+    // A chamada de arquivo precisa ser tratada diferente para download
+    const response = await fetch(`${API_CONFIG.baseUrl}/relatorios/gerar`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(filtros)
+    });
+
+    if (!response.ok) throw new Error('Erro ao gerar relatório');
+    return await response.blob();
+}
 
 // ######################################################################
 // ##                       SERVIÇOS DE USUÁRIO                        ##
