@@ -3,14 +3,15 @@ import { listUsersByStatus, listarInstituicoes, listarConflitos, listarDenuncias
 export async function init() {
     console.log('Inicializando Dashboard...');
     
-    // Funções de setup movidas para dentro do init
+    // Funcoes de setup
     setupEvolutionChart();
     loadDashboardStats();
     loadPendingUsers();
     setupApprovalEventListeners();
+    setupStatsClickListeners();
 }
 
-// --- Funções Auxiliares ---
+// --- Funcoes Auxiliares ---
 
 function setupEvolutionChart() {
     const ctx = document.getElementById('evolutionChart');
@@ -51,6 +52,53 @@ function setupEvolutionChart() {
     }
 }
 
+function setupStatsClickListeners() {
+    // Mapeamento dos IDs de estatísticas para suas rotas (Hashs)
+    const statRoutes = {
+        'stat-total-gestores': '#/gestores',
+        'stat-instituicoes': '#/instituicoes',
+        'stat-conflitos': '#/conflitos',
+        'stat-denuncias': '#/denuncias'
+    };
+
+    Object.entries(statRoutes).forEach(([id, route]) => {
+        const spanElement = document.getElementById(id);
+        if (spanElement) {
+            // No HTML fornecido, o elemento pai imediato (div.stat-card) é o card completo.
+            const cardElement = spanElement.closest('.stat-card');
+            
+            if (cardElement) {
+                // Indicativo visual de clicável
+                cardElement.style.cursor = 'pointer'; 
+                
+                // Anexa o listener ao card
+                cardElement.addEventListener('click', () => {
+                    // Redireciona para a rota do SPA, ativando o Router do app.js
+                    window.location.hash = route;
+                });
+            }
+        }
+    });
+    
+    // Tornar o cabeçalho da seção de Aprovações Pendentes clicável para ir para '#/usuarios'
+    const pendingBadge = document.getElementById('pending-users-badge');
+    if (pendingBadge) {
+        // O elemento 'card-header' (pai do badge) contém o título e o badge
+        const approvalHeader = pendingBadge.closest('.card-header');
+        
+        if (approvalHeader) {
+             approvalHeader.style.cursor = 'pointer';
+             approvalHeader.addEventListener('click', (event) => {
+                 // Previne o clique nos botões internos caso a função 'setupApprovalEventListeners' 
+                 // esteja sendo chamada novamente e a lista de aprovação tenha botões.
+                 if (event.target.tagName !== 'BUTTON') { 
+                     window.location.hash = '#/usuarios';
+                 }
+             });
+        }
+    }
+}
+
 async function loadDashboardStats() {
     try {
         const [pendentes, ativos, institutions, conflicts, denuncias] = await Promise.all([
@@ -82,7 +130,7 @@ async function loadDashboardStats() {
             document.getElementById('stat-denuncias').textContent = denValidadas.length;
         }
 
-        // Atualiza Badge de Pendentes na seção inferior
+        // Atualiza Badge de Pendentes na secao inferior
         const pendingBadge = document.getElementById('pending-users-badge');
         if(pendingBadge) pendingBadge.textContent = `${pendentes.length} Pendentes`;
 
