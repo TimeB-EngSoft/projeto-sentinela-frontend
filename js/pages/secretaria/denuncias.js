@@ -4,6 +4,28 @@ let allDenuncias = [];
 let currentDenuncia = null;
 let denunciasComConflitoIds = new Set();
 
+// --- Função auxiliar para exibir toast ---
+function showToast(message, type = 'success', title = null) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const titleText = title || (type === 'success' ? 'Sucesso' : 'Atenção');
+    toast.innerHTML = `
+        <i class="fas ${icon}" style="font-size: 1.2rem;"></i>
+        <div class="toast-content">
+            <span class="toast-title">${titleText}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 export async function init() {
     await loadDenuncias();
     setupFilters();
@@ -18,12 +40,12 @@ async function loadDenuncias() {
     try {
         const [denunciasData, conflitosData] = await Promise.all([
             listarDenuncias(),
-            listarConflitos().catch(() => []) 
+            listarConflitos().catch(() => [])
         ]);
-
+        
         const rawList = Array.isArray(denunciasData) ? denunciasData : [];
         const listaConflitos = Array.isArray(conflitosData) ? conflitosData : [];
-
+        
         // Mapeia conflitos existentes para bloquear botão
         denunciasComConflitoIds.clear();
         listaConflitos.forEach(c => {
@@ -31,12 +53,12 @@ async function loadDenuncias() {
                 denunciasComConflitoIds.add(c.denunciaOrigem.id);
             }
         });
-
+        
         // Filtragem por perfil
         const userCargo = localStorage.getItem('userCargo');
         const userEmail = localStorage.getItem('userEmail');
         const userId = localStorage.getItem('userId');
-
+        
         if (userCargo === 'GESTOR_INSTITUICAO') {
             let myInstId = null;
             try {
@@ -49,7 +71,7 @@ async function loadDenuncias() {
             
             if(document.querySelector('.stats-grid')) document.querySelector('.stats-grid').style.display = 'grid';
             updateStats(allDenuncias);
-
+        
         } else if (userCargo === 'USUARIO_INSTITUICAO' || userCargo === 'USUARIO_SECRETARIA') {
             allDenuncias = rawList.filter(d => d.emailDenunciante === userEmail);
             if(document.querySelector('.stats-grid')) document.querySelector('.stats-grid').style.display = 'none';
@@ -61,7 +83,6 @@ async function loadDenuncias() {
         }
         
         renderTable(allDenuncias);
-
     } catch(e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: red;">Erro ao carregar dados.</td></tr>`;
@@ -69,9 +90,9 @@ async function loadDenuncias() {
 }
 
 function updateStats(list) {
-    const setTxt = (id, txt) => { 
-        const el = document.getElementById(id); 
-        if(el) el.textContent = txt; 
+    const setTxt = (id, txt) => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = txt;
     };
     setTxt('stat-total-denuncias', list.length);
     setTxt('stat-pendentes', list.filter(d => d.status === 'PENDENTE').length);
@@ -88,14 +109,14 @@ function renderTable(list) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhuma denúncia encontrada.</td></tr>';
         return;
     }
-
+    
     // Ordenar: Pendentes primeiro, depois data decrescente
     list.sort((a, b) => {
         if (a.status === 'PENDENTE' && b.status !== 'PENDENTE') return -1;
         if (a.status !== 'PENDENTE' && b.status === 'PENDENTE') return 1;
         return new Date(b.dataOcorrido) - new Date(a.dataOcorrido);
     });
-
+    
     list.forEach(d => {
         const dataFmt = d.dataOcorrido ? new Date(d.dataOcorrido).toLocaleDateString() : '-';
         const statusClass = d.status === 'PENDENTE' ? 'tag-status-pendente' : 
@@ -119,7 +140,7 @@ function renderTable(list) {
 window.openDenunciaDetails = function(id) {
     currentDenuncia = allDenuncias.find(d => d.id === id);
     if(!currentDenuncia) return;
-
+    
     const modal = document.getElementById('modal-denuncia-details');
     const body = document.getElementById('detail-modal-body');
     const footer = document.getElementById('detail-modal-footer');
@@ -134,12 +155,12 @@ window.openDenunciaDetails = function(id) {
         { val: 'DESMATAMENTO', label: 'Desmatamento' },
         { val: 'OUTRO', label: 'Outro' }
     ];
-
+    
     // Gera as opções do select marcando a correta
     const optionsHtml = tiposDisponiveis.map(t => 
         `<option value="${t.val}" ${currentDenuncia.tipoDenuncia === t.val ? 'selected' : ''}>${t.label}</option>`
     ).join('');
-
+    
     let content = `
         <form id="form-edit-denuncia">
             <div class="form-grid-2">
@@ -164,7 +185,7 @@ window.openDenunciaDetails = function(id) {
             </div>
         </form>
     `;
-
+    
     if(currentDenuncia.localizacao) {
         const l = currentDenuncia.localizacao;
         content += `<div class="form-group" style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:8px;">
@@ -173,12 +194,12 @@ window.openDenunciaDetails = function(id) {
         </div>`;
     }
     body.innerHTML = content;
-
+    
     const userCargo = localStorage.getItem('userCargo');
     const canManage = ['SECRETARIA', 'GESTOR_SECRETARIA', 'GESTOR_INSTITUICAO'].includes(userCargo);
     
     let buttonsHtml = '<button type="button" class="btn btn-secondary" data-close-modal>Fechar</button>';
-
+    
     if (canManage) {
         if (currentDenuncia.status === 'PENDENTE') {
             buttonsHtml += `
@@ -196,14 +217,13 @@ window.openDenunciaDetails = function(id) {
             }
         }
     }
-
+    
     footer.innerHTML = buttonsHtml;
     modal.classList.add('show');
     setupCloseButtons(modal);
 };
 
 // --- AÇÕES DO USUÁRIO ---
-
 window.toggleEditMode = function() {
     const inputs = document.querySelectorAll('#form-edit-denuncia input, #form-edit-denuncia textarea, #form-edit-denuncia select');
     inputs.forEach(el => el.disabled = false);
@@ -220,10 +240,13 @@ window.saveDenunciaEdit = async function(id) {
     };
     try {
         await atualizarDenuncia(id, data);
-        alert('Denúncia atualizada com sucesso!');
+        // Usa toast para indicar sucesso
+        showToast('Denúncia atualizada com sucesso!', 'success');
         document.getElementById('modal-denuncia-details').classList.remove('show');
         loadDenuncias();
-    } catch(e) { alert('Erro ao editar: ' + e.message); }
+    } catch(e) {
+        showToast('Erro ao editar: ' + e.message, 'error');
+    }
 };
 
 window.updateStatusDenuncia = async function(id, newStatus) {
@@ -234,18 +257,18 @@ window.updateStatusDenuncia = async function(id, newStatus) {
     const btnArchive = document.querySelector(`button[onclick*="ARQUIVADA"]`);
     if(btnApprove) btnApprove.disabled = true;
     if(btnArchive) btnArchive.disabled = true;
-
+    
     try {
         // Envia para o backend. O backend deve estar preparado para receber "statusDenuncia" no DTO.
         await atualizarDenuncia(id, { statusDenuncia: newStatus });
         
-        alert(`Status atualizado para ${newStatus} com sucesso!`);
+        showToast(`Status atualizado para ${newStatus} com sucesso!`, 'success');
         document.getElementById('modal-denuncia-details').classList.remove('show');
         
         // Recarrega a lista para refletir a mudança
         await loadDenuncias();
     } catch(e) {
-        alert("Erro ao atualizar status: " + e.message);
+        showToast('Erro ao atualizar status: ' + e.message, 'error');
         // Reabilita em caso de erro
         if(btnApprove) btnApprove.disabled = false;
         if(btnArchive) btnArchive.disabled = false;
@@ -269,7 +292,7 @@ function setupModals() {
     document.querySelectorAll('[data-close-modal]').forEach(b => 
         b.addEventListener('click', e => e.target.closest('.modal').classList.remove('show'))
     );
-
+    
     // Fecha modal de conversão
     if(convertModal) {
         const closeModal = () => convertModal.classList.remove('show');
@@ -278,12 +301,12 @@ function setupModals() {
         if(btnClose) btnClose.addEventListener('click', closeModal);
         if(btnCancel) btnCancel.addEventListener('click', closeModal);
     }
-
+    
     if(convertForm) {
         // Remove listener antigo clonando
         const newForm = convertForm.cloneNode(true);
         convertForm.parentNode.replaceChild(newForm, convertForm);
-
+        
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = newForm.querySelector('button[type="submit"]');
@@ -313,14 +336,14 @@ function setupModals() {
                     if(me.instituicao) conflitoData.instituicao = { id: me.instituicao.id };
                  } catch(e){}
             }
-
+            
             try {
                 await cadastrarConflito(conflitoData);
-                alert("Conflito gerado com sucesso!");
+                showToast('Conflito gerado com sucesso!', 'success');
                 convertModal.classList.remove('show');
                 await loadDenuncias(); // Recarrega para atualizar o botão "Conflito Já Gerado"
             } catch(err) {
-                alert("Erro ao gerar conflito: " + err.message);
+                showToast('Erro ao gerar conflito: ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Confirmar e Criar Conflito';
@@ -333,7 +356,7 @@ function setupFilters() {
     const input = document.getElementById('search-input-denuncia');
     const selectStatus = document.getElementById('status-filter-denuncia');
     const selectTipo = document.getElementById('tipo-filter-denuncia');
-
+    
     const filter = () => {
         const term = input.value.toLowerCase();
         const st = selectStatus.value;
@@ -347,7 +370,7 @@ function setupFilters() {
         });
         renderTable(filtered);
     };
-
+    
     if(input) input.addEventListener('keyup', filter);
     if(selectStatus) selectStatus.addEventListener('change', filter);
     if(selectTipo) selectTipo.addEventListener('change', filter);

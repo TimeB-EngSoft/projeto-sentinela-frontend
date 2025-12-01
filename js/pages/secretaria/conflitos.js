@@ -10,16 +10,14 @@ export async function init() {
     setupModalAddAndEdit();
 }
 
+// Função de toast já existente nesta página
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
-    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
     const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
     const title = type === 'success' ? 'Sucesso' : 'Atenção';
-    
     toast.innerHTML = `
         <i class="fas fa-${icon}"></i>
         <div class="toast-content">
@@ -27,12 +25,9 @@ function showToast(message, type = 'success') {
             <span class="toast-message">${message}</span>
         </div>
     `;
-    
     container.appendChild(toast);
-    
     // Animação de entrada
     requestAnimationFrame(() => toast.classList.add('show'));
-    
     // Remove após 3.5 segundos
     setTimeout(() => { 
         toast.classList.remove('show'); 
@@ -59,15 +54,15 @@ async function loadConflitos() {
         
         const userCargo = localStorage.getItem('userCargo');
         if (userCargo === 'GESTOR_INSTITUICAO') {
-             const userId = localStorage.getItem('userId');
-             try {
-                 const me = await getUserData(userId);
-                 if(me.instituicao) {
-                     allConflitos = allConflitos.filter(c => c.instituicao && c.instituicao.id === me.instituicao.id);
-                 }
-             } catch(e){}
+            const userId = localStorage.getItem('userId');
+            try {
+                const me = await getUserData(userId);
+                if(me.instituicao) {
+                    allConflitos = allConflitos.filter(c => c.instituicao && c.instituicao.id === me.instituicao.id);
+                }
+            } catch(e){}
         }
-
+        
         updateStats(allConflitos);
         renderTable(allConflitos);
     } catch(e) {
@@ -86,19 +81,19 @@ function renderTable(list) {
     const tbody = document.getElementById('conflitosTableBody');
     if(!tbody) return;
     tbody.innerHTML = '';
-
+    
     if(list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #666;">Nenhum conflito registrado.</td></tr>`;
         return;
     }
-
+    
     list.forEach(c => {
         let prioridadeClass = 'tag-neutral';
         if (c.prioridade === 'CRITICA') prioridadeClass = 'tag-prioridade-alta';
         else if (c.prioridade === 'ALTA') prioridadeClass = 'tag-prioridade-media';
         else if (c.prioridade === 'MEDIA') prioridadeClass = 'tag-prioridade-baixa';
         else if (c.prioridade === 'BAIXA') prioridadeClass = 'tag-neutral';
-
+        
         let statusClass = 'status-pendente';
         let statusLabel = c.status;
         
@@ -109,11 +104,11 @@ function renderTable(list) {
         } else if (c.status === 'ATIVO') {
             statusClass = 'status-pendente';
         }
-
+        
         const reclamante = c.parteReclamante || '-';
         const reclamada = c.parteReclamada || '-';
         const tipo = c.tipoConflito ? c.tipoConflito.replace(/_/g, ' ') : 'Não informado';
-
+        
         const row = `
             <tr>
                 <td><strong>${c.tituloConflito}</strong></td>
@@ -150,7 +145,7 @@ async function fetchCoordinates(cep) {
         if (data.location && data.location.coordinates) {
             const lat = data.location.coordinates.latitude;
             const long = data.location.coordinates.longitude;
-
+            
             // Verifica se as coordenadas são válidas (não undefined)
             if (lat !== undefined && long !== undefined) {
                 return { latitude: lat, longitude: long };
@@ -168,7 +163,7 @@ async function fetchCoordinates(cep) {
 window.openEditConflito = function(id) {
     const conflito = allConflitos.find(c => c.id === id);
     if(!conflito) return;
-
+    
     currentConflictId = id;
     const modal = document.getElementById('modal-add-conflito');
     const title = modal.querySelector('.modal-header h3');
@@ -183,7 +178,7 @@ window.openEditConflito = function(id) {
     document.getElementById('new-conf-reclamada').value = conflito.parteReclamada || '';
     document.getElementById('new-conf-grupos').value = conflito.gruposVulneraveis || '';
     document.getElementById('new-conf-desc').value = conflito.descricaoConflito || '';
-
+    
     if(conflito.localizacao) {
         document.getElementById('new-conf-cep').value = conflito.localizacao.cep || '';
         document.getElementById('new-conf-estado').value = conflito.localizacao.estado || '';
@@ -193,14 +188,14 @@ window.openEditConflito = function(id) {
         const longInput = document.getElementById('new-conf-long');
         if(latInput) latInput.value = conflito.localizacao.latitude || '';
         if(longInput) longInput.value = conflito.localizacao.longitude || '';
-
+        
         const match = (conflito.localizacao.complemento || '').match(/Bairro: (.*?), Rua: (.*)/);
         if(match) {
             document.getElementById('new-conf-bairro').value = match[1] || '';
             document.getElementById('new-conf-rua').value = match[2] || '';
         }
     }
-
+    
     let statusContainer = document.getElementById('edit-status-container');
     if(!statusContainer) {
         const prioGroup = document.getElementById('new-conf-prioridade').closest('.form-group');
@@ -220,7 +215,7 @@ window.openEditConflito = function(id) {
         statusContainer.style.display = 'block';
     }
     document.getElementById('new-conf-status').value = conflito.status;
-
+    
     modal.classList.add('show');
 };
 
@@ -228,7 +223,7 @@ function setupModalAddAndEdit() {
     const modal = document.getElementById('modal-add-conflito');
     const btnOpen = document.getElementById('addConflitoButton');
     const form = document.getElementById('form-add-conflito');
-
+    
     if(btnOpen) {
         const newBtn = btnOpen.cloneNode(true);
         btnOpen.parentNode.replaceChild(newBtn, btnOpen);
@@ -240,7 +235,7 @@ function setupModalAddAndEdit() {
             const longInput = document.getElementById('new-conf-long');
             if(latInput) { latInput.value = ''; latInput.placeholder = "Automático ou manual"; }
             if(longInput) { longInput.value = ''; longInput.placeholder = "Automático ou manual"; }
-
+            
             modal.querySelector('.modal-header h3').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Registrar Conflito';
             
             const statusContainer = document.getElementById('edit-status-container');
@@ -249,19 +244,19 @@ function setupModalAddAndEdit() {
             modal.classList.add('show');
         });
     }
-
+    
     const closeModal = () => modal.classList.remove('show');
     modal.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', closeModal));
-
+    
     // --- Busca Automática no BLUR ---
     const cepInput = document.getElementById('new-conf-cep');
     const latInput = document.getElementById('new-conf-lat');
     const longInput = document.getElementById('new-conf-long');
-
+    
     if (cepInput && latInput && longInput) {
         const newCepInput = cepInput.cloneNode(true);
         cepInput.parentNode.replaceChild(newCepInput, cepInput);
-
+        
         newCepInput.addEventListener('blur', async () => {
             const cep = newCepInput.value.replace(/\D/g, '');
             if (cep.length === 8) {
@@ -273,7 +268,7 @@ function setupModalAddAndEdit() {
                 if (coords) {
                     latInput.value = coords.latitude;
                     longInput.value = coords.longitude;
-                    latInput.placeholder = ""; 
+                    latInput.placeholder = "";
                     longInput.placeholder = "";
                 } else {
                     latInput.value = "";
@@ -284,12 +279,12 @@ function setupModalAddAndEdit() {
             }
         });
     }
-
+    
     // --- SUBMIT DO FORMULÁRIO ---
     if(form) {
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
-
+        
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = newForm.querySelector('button[type="submit"]');
@@ -303,20 +298,21 @@ function setupModalAddAndEdit() {
             const cepClean = cepRaw ? cepRaw.replace(/\D/g, '') : ''; 
             
             if(!titulo || !dataInicio) {
-                alert("Preencha os campos obrigatórios (*)");
+                // Usa toast em vez de alert para validação
+                showToast("Preencha os campos obrigatórios (*)", 'error');
                 return;
             }
-
+            
             btn.disabled = true;
             
             // 2. Captura os valores atuais
             let latVal = document.getElementById('new-conf-lat').value;
             let longVal = document.getElementById('new-conf-long').value;
-
+            
             // Limpeza de segurança
             if (latVal === "undefined") latVal = "";
             if (longVal === "undefined") longVal = "";
-
+            
             // 3. Tenta buscar novamente se tiver CEP mas não tiver coordenadas
             if ((!latVal || !longVal) && cepClean.length === 8) {
                 btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Geolocalizando...';
@@ -332,11 +328,11 @@ function setupModalAddAndEdit() {
                     console.warn("API de CEP falhou no submit.");
                 }
             }
-
+            
             // 4. Prepara valores finais
             const finalLat = (latVal && latVal !== "undefined") ? parseFloat(latVal) : null;
             const finalLong = (longVal && longVal !== "undefined") ? parseFloat(longVal) : null;
-
+            
             // === VALIDAÇÃO COM POP-UP DE SEGURANÇA ===
             if (finalLat === null || finalLong === null) {
                 const confirmarSemCoords = confirm(
@@ -345,24 +341,24 @@ function setupModalAddAndEdit() {
                     "Sem esses dados, o conflito NÃO aparecerá no mapa interativo.\n\n" +
                     "Deseja salvar mesmo assim?"
                 );
-
+                
                 if (!confirmarSemCoords) {
                     btn.disabled = false;
                     btn.innerHTML = originalBtnText; // Restaura texto original
-                    return; 
+                    return;
                 }
             }
             // ==========================================
-
+            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-
+            
             const userId = localStorage.getItem('userId');
             let myInstObj = null;
             try {
                 const user = await getUserData(userId);
                 if(user.instituicao) myInstObj = { id: user.instituicao.id };
             } catch(e){}
-
+            
             const data = {
                 tituloConflito: titulo,
                 tipoConflito: document.getElementById('new-conf-tipo').value,
@@ -385,13 +381,13 @@ function setupModalAddAndEdit() {
                 latitude: finalLat,
                 longitude: finalLong
             };
-
+            
             if(currentConflictId) {
                 data.status = document.getElementById('new-conf-status').value;
             } else {
                 data.status = 'ATIVO';
             }
-
+            
             try {
                 if(currentConflictId) {
                     await atualizarConflito(currentConflictId, data);
@@ -406,7 +402,8 @@ function setupModalAddAndEdit() {
                 loadConflitos();
             } catch(err) {
                 console.error(err);
-                alert("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+                // Usa toast para exibir erro ao salvar
+                showToast("Erro ao salvar: " + (err.message || "Erro desconhecido"), 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Salvar';
@@ -425,13 +422,13 @@ function setupFilters() {
         
         const filtered = allConflitos.filter(c => {
             const matchText = c.tituloConflito.toLowerCase().includes(term) || 
-                              (c.parteReclamante && c.parteReclamante.toLowerCase().includes(term));
+                            (c.parteReclamante && c.parteReclamante.toLowerCase().includes(term));
             const matchPrio = prio ? c.prioridade === prio : true;
             return matchText && matchPrio;
         });
         renderTable(filtered);
     };
-
+    
     if(input) input.addEventListener('keyup', filter);
     if(select) select.addEventListener('change', filter);
 }

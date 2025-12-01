@@ -1,5 +1,30 @@
-// Importa as funções de serviço necessárias
 import { cadastrarParcial, listarInstituicoes } from './services/apiService.js';
+
+// --- Função auxiliar para exibir toast de notificação ---
+function showToast(message, type = 'success', title = null) {
+    const container = document.getElementById('toast-container');
+    if (!container) return; // Se não houver container (ex: página errada), não faz nada
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const titleText = title ? title : (type === 'success' ? 'Sucesso' : 'Erro');
+
+    toast.innerHTML = `
+        <i class="fas ${icon}" style="font-size: 1.2rem;"></i>
+        <div class="toast-content">
+            <span class="toast-title">${titleText}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    // Remove o toast após 3 segundos
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const accessForm = document.getElementById('accessForm');
@@ -63,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adiciona o listener para mudanças no cargo
     accessLevelSelect.addEventListener('change', toggleInstitutionField);
 
-
     // --- ENVIO DO FORMULÁRIO ---
     if (accessForm) {
         accessForm.addEventListener('submit', async function(event) {
@@ -81,13 +105,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validação simples
             if (!partialData.nome || !partialData.email || !partialData.justificativa || !partialData.cargo) {
-                alert('Por favor, preencha todos os campos obrigatórios (*).');
+                showToast('Por favor, preencha todos os campos obrigatórios (*).', 'error', 'Atenção');
                 return;
             }
 
             // Validação extra para instituição
             if (institutionSelect.required && !partialData.instituicao) {
-                alert('Por favor, selecione uma instituição.');
+                showToast('Por favor, selecione uma instituição.', 'error', 'Atenção');
                 return;
             }
 
@@ -97,12 +121,14 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Chama a função da API
                 const result = await cadastrarParcial(partialData);
-                alert(result); // Exibe a mensagem de sucesso (ex: "Solicitação enviada")
+                // Exibe a mensagem de sucesso usando toast
+                showToast(result, 'success');
                 accessForm.reset();
                 toggleInstitutionField(); // Reseta o campo de instituição para escondido
             } catch (error) {
                 console.error('Erro ao solicitar acesso:', error);
-                alert(error.message || 'Ocorreu um erro ao enviar sua solicitação. Tente novamente.');
+                // Mostra erro via toast
+                showToast(error.message || 'Ocorreu um erro ao enviar sua solicitação. Tente novamente.', 'error');
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enviar Solicitação';
