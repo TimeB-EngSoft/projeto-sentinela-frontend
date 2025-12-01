@@ -128,7 +128,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="cpf">CPF</label>
-                                <input type="text" id="cpf" name="cpf">
+                                <input type="text" id="cpf" name="cpf" pattern="\d{11}" title="Informe 11 dígitos sem pontos nem traços">
                             </div>
                         </div>
                         <div class="form-row">
@@ -138,7 +138,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="telefone">Telefone</label>
-                                <input type="tel" id="telefone" name="telefone">
+                                <input type="tel" id="telefone" name="telefone" pattern="\(\d{2}\) \d{4,5}-\d{4}" title="Formato (DD) 12345-6789">
                             </div>
                         </div>
                     </fieldset>
@@ -269,5 +269,38 @@
     </footer>
 
     <script type='module' src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // Detecta ambiente de execução para selecionar a base da API
+            const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+            const baseUrl = isLocal
+            ? 'http://localhost:5000'
+            : 'https://projeto-sentinela-backend-production.up.railway.app';
+
+            // Faz as requisições em paralelo
+            const [denunciasRes, conflitosRes] = await Promise.all([
+            fetch(`${baseUrl}/denuncias/listarDenuncias`).then(r => r.json()),
+            fetch(`${baseUrl}/conflito/listarConflitos`).then(r => r.json()),
+            ]);
+
+            const denuncias = Array.isArray(denunciasRes) ? denunciasRes : [];
+            const conflitos  = Array.isArray(conflitosRes) ? conflitosRes : [];
+
+            // Calcula totais
+            const totalDenuncias  = denuncias.length;
+            const totalConflitos  = conflitos.length;
+            const pendentes       = denuncias.filter(d => d.status === 'PENDENTE').length;
+
+            // Atualiza o conteúdo dos spans
+            const cards = document.querySelectorAll('#stats .stat-card .stat-number');
+            if (cards[0]) cards[0].textContent = totalDenuncias;
+            if (cards[1]) cards[1].textContent = totalConflitos;
+            if (cards[2]) cards[2].textContent = pendentes;
+        } catch (err) {
+            console.error('Erro ao buscar estatísticas:', err);
+        }
+        });
+        </script>
 </body>
 </html>

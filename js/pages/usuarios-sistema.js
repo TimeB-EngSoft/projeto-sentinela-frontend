@@ -8,7 +8,15 @@ import {
 } from '../services/apiService.js';
 
 const currentUserCargo = localStorage.getItem('userCargo');
-const userId = localStorage.getItem('userId');
+const currentUserId = localStorage.getItem('userId');
+
+// Hierarquia de permissões (quanto maior o número, mais poder)
+const ROLE_WEIGHT = {
+    'GESTOR_SECRETARIA': 10,
+    'USUARIO_SECRETARIA': 5, // Dependendo da regra, pode ser menor
+    'GESTOR_INSTITUICAO': 4,
+    'USUARIO_INSTITUICAO': 1
+};
 
 let state = {
     allPending: [],
@@ -37,9 +45,10 @@ export async function init() {
 }
 
 async function loadMyInstitutionId() {
-    if (currentUserCargo === 'GESTOR_INSTITUICAO') {
+    // Se for Gestor de Instituição, precisa saber o ID da sua instituição para validar edições
+    if (currentUserCargo === 'GESTOR_INSTITUICAO' || currentUserCargo === 'USUARIO_INSTITUICAO') {
         try {
-            const me = await getUserData(userId);
+            const me = await getUserData(currentUserId);
             if (me.instituicao) state.myInstId = me.instituicao.id;
         } catch (e) {
             console.warn("Não foi possível carregar ID da instituição");
@@ -72,10 +81,12 @@ async function loadPendingUsers() {
     try {
         const users = await listUsersByStatus({ status: 'PENDENTE', instituicaoId: state.myInstId });
         state.allPending = users;
-        document.getElementById('badge-pending-count').textContent = state.allPending.length;
+        const badge = document.getElementById('badge-pending-count');
+        if(badge) badge.textContent = state.allPending.length;
         renderPendingTable(state.allPending);
     } catch (e) { 
-        document.getElementById('pending-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red">Erro ao carregar.</td></tr>';
+        const tbody = document.getElementById('pending-table-body');
+        if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -83,7 +94,8 @@ async function loadActiveUsers() {
     try {
         const users = await listUsersByStatus({ status: 'ATIVO', instituicaoId: state.myInstId });
         state.allActive = users;
-        document.getElementById('badge-active-count').textContent = state.allActive.length;
+        const badge = document.getElementById('badge-active-count');
+        if(badge) badge.textContent = state.allActive.length;
         renderActiveTable(state.allActive);
     } catch (e) { console.error(e); }
 }
@@ -92,13 +104,14 @@ async function loadInactiveUsers() {
     try {
         const users = await listUsersByStatus({ status: 'INATIVO', instituicaoId: state.myInstId });
         state.allInactive = users;
-        document.getElementById('badge-inactive-count').textContent = state.allInactive.length;
+        const badge = document.getElementById('badge-inactive-count');
+        if(badge) badge.textContent = state.allInactive.length;
         renderInactiveTable(state.allInactive);
     } catch (e) { console.error(e); }
 }
 
 // =============================================================================
-// RENDERIZAÇÃO DAS TABELAS (CORRIGIDO)
+// RENDERIZAÇÃO DAS TABELAS
 // =============================================================================
 
 function renderActiveTable(users) {
@@ -113,17 +126,16 @@ function renderActiveTable(users) {
     }
     if(emptyMsg) emptyMsg.style.display = 'none';
 
-    const currentUserIdLocal = localStorage.getItem('userId');
-
     users.forEach(u => {
         const tr = document.createElement('tr');
         const role = getRoleDisplay(u.cargo);
         const inst = u.instituicaoNome || (u.cargo.includes('SECRETARIA') ? 'Interno' : '-');
-        const isMe = u.id == currentUserIdLocal;
+        const isMe = u.id == currentUserId;
 
         let canDeactivate = true;
         if (isMe) canDeactivate = false;
-        if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'SECRETARIA') canDeactivate = false;
+        // Gestor Secretaria não deve desativar outros Gestores Secretaria (regra de negócio opcional)
+        if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'GESTOR_SECRETARIA') canDeactivate = false;
 
         let actionBtn;
         if (isMe) {
@@ -134,7 +146,6 @@ function renderActiveTable(users) {
             actionBtn = `<button class="btn btn-sm btn-outline-danger" onclick="window.openDeactivateModal(${u.id}, '${u.nome}')" title="Desativar"><i class="fas fa-user-slash"></i></button>`;
         }
 
-        // Link Detalhes (Texto)
         const detailsLink = `<a href="javascript:void(0)" onclick="window.viewUserDetails(${u.id})" class="action-link" style="margin-right: 10px;">Detalhes</a>`;
 
         tr.innerHTML = `
@@ -171,7 +182,6 @@ function renderPendingTable(users) {
         const inst = u.instituicaoNome || '-';
         const tr = document.createElement('tr');
         
-        // Link Detalhes (Texto)
         const detailsLink = `<a href="javascript:void(0)" class="action-link action-details" style="margin-right: 10px;">Detalhes</a>`;
 
         tr.innerHTML = `
@@ -211,8 +221,8 @@ function renderInactiveTable(users) {
     users.forEach(u => {
         const role = getRoleDisplay(u.cargo);
         let canReactivate = true;
-        if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'SECRETARIA') canReactivate = false;
-
+        
+        // Verifica se a instituição está inativa
         let instInactive = false;
         if (u.instituicaoNome && u.instituicaoNome !== '-') {
             const instMatch = state.allInstitutions.find(i => i.nome === u.instituicaoNome);
@@ -231,7 +241,6 @@ function renderInactiveTable(users) {
             actionBtn = `<span style="font-size:0.8rem; color:#ccc;"><i class="fas fa-ban"></i></span>`;
         }
 
-        // Link Detalhes (Texto)
         const detailsLink = `<a href="javascript:void(0)" onclick="window.viewUserDetails(${u.id})" class="action-link" style="margin-right: 10px;">Detalhes</a>`;
 
         tbody.insertAdjacentHTML('beforeend', `
@@ -252,39 +261,161 @@ function renderInactiveTable(users) {
     });
 }
 
-// FUNÇÃO GLOBAL PARA VER DETALHES
+// =============================================================================
+// FUNÇÃO DE DETALHES COM EDIÇÃO (ATUALIZADA)
+// =============================================================================
+
 window.viewUserDetails = async function(id) {
     const modal = document.getElementById('modal-user-full-details');
     const body = document.getElementById('user-full-details-body');
+    
+    if(!modal || !body) return;
+
     modal.classList.add('show');
     body.innerHTML = '<p style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
     
     try {
         const user = await getUserData(id);
         const inst = user.instituicaoNome || (user.instituicao ? user.instituicao.nome : 'N/A');
-        const dataNasc = user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString() : '-';
-        const dataCad = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString() : '-';
+        const dataNasc = user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString('pt-BR') : '-';
+        const dataCad = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
 
+        // LÓGICA DE PERMISSÃO DE EDIÇÃO
+        const myWeight = ROLE_WEIGHT[currentUserCargo] || 0;
+        const targetWeight = ROLE_WEIGHT[user.cargo] || 0;
+        const isMe = (user.id == currentUserId);
+
+        let canEdit = false;
+
+        // Regra 1: Não pode editar a si mesmo por aqui (usa o perfil)
+        if (!isMe) {
+            // Regra 2: Gestor Secretaria (Nível 10) pode editar qualquer um abaixo dele
+            if (currentUserCargo === 'GESTOR_SECRETARIA') {
+                canEdit = true; 
+            }
+            // Regra 3: Gestor Instituição (Nível 4) pode editar níveis abaixo (Nível 1) DA MESMA instituição
+            else if (currentUserCargo === 'GESTOR_INSTITUICAO') {
+                const targetInstId = user.instituicao ? user.instituicao.id : null;
+                // Verifica hierarquia E se pertence à mesma instituição
+                if (targetWeight < myWeight && state.myInstId && targetInstId === state.myInstId) {
+                    canEdit = true;
+                }
+            }
+        }
+
+        // Renderiza Formulário
         body.innerHTML = `
-            <div class="form-grid-2">
-                <div class="form-group"><label>Nome</label><input type="text" value="${user.nome}" disabled></div>
-                <div class="form-group"><label>Cargo</label><input type="text" value="${user.cargo}" disabled></div>
-                <div class="form-group"><label>E-mail</label><input type="text" value="${user.email}" disabled></div>
-                <div class="form-group"><label>Telefone</label><input type="text" value="${user.telefone || '-'}" disabled></div>
-                <div class="form-group"><label>CPF</label><input type="text" value="${user.cpf || '-'}" disabled></div>
-                <div class="form-group"><label>Data Nasc.</label><input type="text" value="${dataNasc}" disabled></div>
-                <div class="form-group"><label>Instituição</label><input type="text" value="${inst}" disabled></div>
-                <div class="form-group"><label>Status</label><input type="text" value="${user.status}" disabled></div>
-            </div>
-            <div class="form-group" style="margin-top:15px"><label>Data Cadastro</label><input type="text" value="${dataCad}" disabled></div>
-            <div class="form-group"><label>Justificativa</label><textarea rows="2" disabled>${user.justificativa || '-'}</textarea></div>
+            <form id="details-user-form">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="det-nome" value="${user.nome}" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo</label>
+                        <input type="text" value="${getRoleDisplay(user.cargo).text}" disabled class="form-control" style="background-color: #f9f9f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="text" id="det-email" value="${user.email}" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" id="det-telefone" value="${user.telefone || ''}" placeholder="-" disabled class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" value="${user.cpf || '-'}" disabled class="form-control" style="background-color: #f9f9f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Nasc.</label>
+                        <input type="text" value="${dataNasc}" disabled class="form-control" style="background-color: #f9f9f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Instituição</label>
+                        <input type="text" value="${inst}" disabled class="form-control" style="background-color: #f9f9f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <input type="text" value="${user.status}" disabled class="form-control" style="background-color: #f9f9f9;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:15px">
+                    <label>Data Cadastro</label>
+                    <input type="text" value="${dataCad}" disabled class="form-control" style="background-color: #f9f9f9;">
+                </div>
+                <div class="form-group">
+                    <label>Justificativa de Cadastro</label>
+                    <textarea rows="2" disabled class="form-control" style="background-color: #f9f9f9;">${user.justificativa || '-'}</textarea>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-user-full-details').classList.remove('show')">Fechar</button>
+                    ${canEdit ? `<button type="button" id="btn-enable-edit" class="btn btn-primary"><i class="fas fa-pencil-alt"></i> Editar</button>` : ''}
+                    <button type="submit" id="btn-save-edit" class="btn btn-success" style="display:none;"><i class="fas fa-save"></i> Salvar Alterações</button>
+                </div>
+            </form>
         `;
+
+        // Eventos de Edição
+        if (canEdit) {
+            const btnEnable = document.getElementById('btn-enable-edit');
+            const btnSave = document.getElementById('btn-save-edit');
+            const form = document.getElementById('details-user-form');
+            
+            // Inputs editáveis
+            const inpNome = document.getElementById('det-nome');
+            const inpTelefone = document.getElementById('det-telefone');
+            // Email geralmente é chave de login, cuidado ao editar. Mantive editável mas pode ser removido.
+            const inpEmail = document.getElementById('det-email'); 
+
+            btnEnable.addEventListener('click', () => {
+                inpNome.disabled = false;
+                inpTelefone.disabled = false;
+                // inpEmail.disabled = false; // Descomente se quiser permitir editar email
+                
+                inpNome.focus();
+                
+                btnEnable.style.display = 'none';
+                btnSave.style.display = 'inline-block';
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+                const payload = {
+                    nome: inpNome.value,
+                    telefone: inpTelefone.value
+                    // email: inpEmail.value 
+                };
+
+                try {
+                    await updateUser(user.id, payload);
+                    showToast('Dados atualizados com sucesso!');
+                    
+                    // Recarrega as tabelas para refletir mudanças
+                    loadActiveUsers();
+                    loadInactiveUsers();
+                    
+                    // Fecha modal
+                    modal.classList.remove('show');
+                } catch (err) {
+                    showToast('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'), 'error');
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+                }
+            });
+        }
+
     } catch (e) {
-        body.innerHTML = '<p class="is-error">Erro ao carregar dados do usuário.</p>';
+        console.error(e);
+        body.innerHTML = '<p class="is-error">Erro ao carregar dados do usuário.</p><div style="text-align:center"><button class="btn btn-secondary" onclick="document.getElementById(\'modal-user-full-details\').classList.remove(\'show\')">Fechar</button></div>';
     }
 };
 
-// ... (Resto do código: showConfirmModal, handleApproval, reactivateUser, setupInviteUserModalListeners, etc. mantido igual)
+// ... (Funções auxiliares de Modal de Confirmação e Toast mantidas)
 
 function showConfirmModal(title, message, onConfirm) {
     const existing = document.getElementById('dynamic-confirm-modal');
@@ -375,13 +506,15 @@ function setupInviteUserModalListeners() {
         newBtn.addEventListener('click', async () => {
             modal.classList.add('show');
             
-            // LÓGICA DE TRAVAMENTO DE INSTITUIÇÃO
+            // TRAVAMENTO DE INSTITUIÇÃO PARA GESTORES LOCAIS
             const userInstName = localStorage.getItem('userInstituicao');
             
             if (currentUserCargo === 'GESTOR_INSTITUICAO' || currentUserCargo === 'USUARIO_INSTITUICAO') {
                 instGroup.style.display = 'block';
+                // Cria opção única e trava
                 instSelect.innerHTML = `<option value="${userInstName}" selected>${userInstName}</option>`;
                 instSelect.disabled = true; 
+                // Guarda valor para envio (pois disabled não envia em forms nativos, mas aqui pegamos via JS)
                 instSelect.setAttribute('data-locked-value', userInstName);
             } else {
                 instSelect.disabled = false;
@@ -463,31 +596,41 @@ function showToast(msg, type='success') {
 
 window.openDeactivateModal = function(id, name) {
     state.userToDeactivate = id;
-    document.getElementById('deactivate-user-name').textContent = name;
+    const nameSpan = document.getElementById('deactivate-user-name');
+    if(nameSpan) nameSpan.textContent = name;
     document.getElementById('modal-deactivate-user').classList.add('show');
 };
 
 function setupDeactivateModalListeners() {
     const modal = document.getElementById('modal-deactivate-user');
+    if(!modal) return;
+    
     const btnConfirm = document.getElementById('modal-deactivate-confirm');
     const closeModal = () => modal.classList.remove('show');
     
-    document.getElementById('modal-deactivate-close').addEventListener('click', closeModal);
-    document.getElementById('modal-deactivate-cancel').addEventListener('click', closeModal);
+    const btnClose = document.getElementById('modal-deactivate-close');
+    const btnCancel = document.getElementById('modal-deactivate-cancel');
     
-    const newBtn = btnConfirm.cloneNode(true);
-    btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+    if(btnClose) btnClose.addEventListener('click', closeModal);
+    if(btnCancel) btnCancel.addEventListener('click', closeModal);
     
-    newBtn.addEventListener('click', async () => {
-        if(!state.userToDeactivate) return;
-        try {
-            await updateUser(state.userToDeactivate, { status: 'INATIVO' });
-            showToast('Usuário desativado.');
-            closeModal();
-            loadActiveUsers();
-            loadInactiveUsers();
-        } catch(e) { showToast(e.message, 'error'); }
-    });
+    if(btnConfirm) {
+        const newBtn = btnConfirm.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+        
+        newBtn.addEventListener('click', async () => {
+            if(!state.userToDeactivate) return;
+            newBtn.disabled = true; newBtn.textContent = 'Processando...';
+            try {
+                await updateUser(state.userToDeactivate, { status: 'INATIVO' });
+                showToast('Usuário desativado.');
+                closeModal();
+                loadActiveUsers();
+                loadInactiveUsers();
+            } catch(e) { showToast(e.message, 'error'); }
+            finally { newBtn.disabled = false; newBtn.textContent = 'Desativar Usuário'; }
+        });
+    }
 }
 
 function setupSearchListeners() {

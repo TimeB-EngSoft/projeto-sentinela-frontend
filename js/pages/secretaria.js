@@ -3,7 +3,7 @@ import { listUsersByStatus, listarInstituicoes, listarConflitos, listarDenuncias
 // --- Função auxiliar para exibir toast ---
 function showToast(message, type = 'success', title = null) {
     const container = document.getElementById('toast-container');
-    if (!container) return; // Se não houver container, não faz nada
+    if (!container) return;
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -40,7 +40,6 @@ export async function init() {
 
 function setupEvolutionChart() {
     const ctx = document.getElementById('evolutionChart');
-    // Verifica se o Chart.js está carregado e se o canvas existe
     if (ctx && typeof Chart !== 'undefined') {
         const chartStatus = Chart.getChart(ctx);
         if (chartStatus) chartStatus.destroy();
@@ -74,8 +73,6 @@ function setupEvolutionChart() {
                 scales: { x: { grid: { display: false } } }
             }
         });
-    } else if (ctx && typeof Chart === 'undefined') {
-        console.warn('Chart.js não foi carregado. O gráfico não será exibido.');
     }
 }
 
@@ -156,8 +153,7 @@ async function fetchUsersSafely(status) {
     try {
         return await listUsersByStatus(status);
     } catch (error) {
-        if (error.message && error.message.includes("Não há usuários")) return [];
-        throw error;
+        return [];
     }
 }
 
@@ -234,10 +230,10 @@ function setupApprovalEventListeners() {
 async function executeApproval(userId, isApproved, cardElement) {
     try {
         const msg = await approveOrRejectUser(userId, isApproved);
-        showToast(msg, 'success'); // Corrigido para usar Toast
+        showToast(msg, 'success');
         cardElement.remove();
         loadDashboardStats(); 
     } catch (error) {
-        showToast('Erro: ' + error.message, 'error'); // Corrigido para usar Toast
+        showToast('Erro: ' + error.message, 'error');
     }
 }
