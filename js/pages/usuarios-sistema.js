@@ -13,7 +13,7 @@ const currentUserId = localStorage.getItem('userId');
 // Hierarquia de permissões (quanto maior o número, mais poder)
 const ROLE_WEIGHT = {
     'GESTOR_SECRETARIA': 10,
-    'USUARIO_SECRETARIA': 5, // Dependendo da regra, pode ser menor
+    'USUARIO_SECRETARIA': 5, 
     'GESTOR_INSTITUICAO': 4,
     'USUARIO_INSTITUICAO': 1
 };
@@ -45,7 +45,6 @@ export async function init() {
 }
 
 async function loadMyInstitutionId() {
-    // Se for Gestor de Instituição, precisa saber o ID da sua instituição para validar edições
     if (currentUserCargo === 'GESTOR_INSTITUICAO' || currentUserCargo === 'USUARIO_INSTITUICAO') {
         try {
             const me = await getUserData(currentUserId);
@@ -134,7 +133,6 @@ function renderActiveTable(users) {
 
         let canDeactivate = true;
         if (isMe) canDeactivate = false;
-        // Gestor Secretaria não deve desativar outros Gestores Secretaria (regra de negócio opcional)
         if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'GESTOR_SECRETARIA') canDeactivate = false;
 
         let actionBtn;
@@ -222,7 +220,6 @@ function renderInactiveTable(users) {
         const role = getRoleDisplay(u.cargo);
         let canReactivate = true;
         
-        // Verifica se a instituição está inativa
         let instInactive = false;
         if (u.instituicaoNome && u.instituicaoNome !== '-') {
             const instMatch = state.allInstitutions.find(i => i.nome === u.instituicaoNome);
@@ -262,17 +259,19 @@ function renderInactiveTable(users) {
 }
 
 // =============================================================================
-// FUNÇÃO DE DETALHES COM EDIÇÃO (ATUALIZADA)
+// FUNÇÃO DE DETALHES COM EDIÇÃO (CORRIGIDA)
 // =============================================================================
 
 window.viewUserDetails = async function(id) {
     const modal = document.getElementById('modal-user-full-details');
     const body = document.getElementById('user-full-details-body');
+    const footer = document.getElementById('user-full-details-footer'); // Novo ID para o footer
     
-    if(!modal || !body) return;
+    if(!modal || !body || !footer) return;
 
     modal.classList.add('show');
     body.innerHTML = '<p style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
+    footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="document.getElementById(\'modal-user-full-details\').classList.remove(\'show\')">Fechar</button>';
     
     try {
         const user = await getUserData(id);
@@ -280,30 +279,28 @@ window.viewUserDetails = async function(id) {
         const dataNasc = user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString('pt-BR') : '-';
         const dataCad = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
 
-        // LÓGICA DE PERMISSÃO DE EDIÇÃO
+        // LÓGICA DE PERMISSÃO DE EDIÇÃO (BASEADA NA HIERARQUIA)
         const myWeight = ROLE_WEIGHT[currentUserCargo] || 0;
         const targetWeight = ROLE_WEIGHT[user.cargo] || 0;
         const isMe = (user.id == currentUserId);
 
         let canEdit = false;
 
-        // Regra 1: Não pode editar a si mesmo por aqui (usa o perfil)
-        if (!isMe) {
-            // Regra 2: Gestor Secretaria (Nível 10) pode editar qualquer um abaixo dele
-            if (currentUserCargo === 'GESTOR_SECRETARIA') {
-                canEdit = true; 
-            }
-            // Regra 3: Gestor Instituição (Nível 4) pode editar níveis abaixo (Nível 1) DA MESMA instituição
-            else if (currentUserCargo === 'GESTOR_INSTITUICAO') {
+        // Só permite editar se não for o próprio usuário, se for ativo e se tiver hierarquia maior
+        if (!isMe && user.status === 'ATIVO' && myWeight > targetWeight) {
+            // Regra adicional para GESTOR_INSTITUICAO: só edita da MESMA instituição
+            if (currentUserCargo === 'GESTOR_INSTITUICAO') {
                 const targetInstId = user.instituicao ? user.instituicao.id : null;
-                // Verifica hierarquia E se pertence à mesma instituição
-                if (targetWeight < myWeight && state.myInstId && targetInstId === state.myInstId) {
+                if (state.myInstId && targetInstId === state.myInstId) {
                     canEdit = true;
                 }
+            } else {
+                // Secretaria pode editar todos abaixo dela
+                canEdit = true;
             }
         }
 
-        // Renderiza Formulário
+        // Renderiza Formulário (Inputs começam desabilitados)
         body.innerHTML = `
             <form id="details-user-form">
                 <div class="form-grid-2">
@@ -348,74 +345,74 @@ window.viewUserDetails = async function(id) {
                     <label>Justificativa de Cadastro</label>
                     <textarea rows="2" disabled class="form-control" style="background-color: #f9f9f9;">${user.justificativa || '-'}</textarea>
                 </div>
-
-                <div class="modal-actions" style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-user-full-details').classList.remove('show')">Fechar</button>
-                    ${canEdit ? `<button type="button" id="btn-enable-edit" class="btn btn-primary"><i class="fas fa-pencil-alt"></i> Editar</button>` : ''}
-                    <button type="submit" id="btn-save-edit" class="btn btn-success" style="display:none;"><i class="fas fa-save"></i> Salvar Alterações</button>
-                </div>
             </form>
         `;
 
-        // Eventos de Edição
+        // INJETAR BOTÕES NO FOOTER
+        // 1. Botão Fechar (Sempre presente)
+        let footerHtml = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-user-full-details').classList.remove('show')">Fechar</button>`;
+        
+        // 2. Botão Editar (Se permitido)
+        if (canEdit) {
+            footerHtml += `<button type="button" id="btn-enable-edit" class="btn btn-primary"><i class="fas fa-pencil-alt"></i> Editar</button>`;
+            footerHtml += `<button type="button" id="btn-save-edit" class="btn btn-success" style="display:none;"><i class="fas fa-save"></i> Salvar</button>`;
+        }
+        
+        footer.innerHTML = footerHtml;
+
+        // EVENTOS DE EDIÇÃO
         if (canEdit) {
             const btnEnable = document.getElementById('btn-enable-edit');
             const btnSave = document.getElementById('btn-save-edit');
-            const form = document.getElementById('details-user-form');
             
-            // Inputs editáveis
             const inpNome = document.getElementById('det-nome');
             const inpTelefone = document.getElementById('det-telefone');
-            // Email geralmente é chave de login, cuidado ao editar. Mantive editável mas pode ser removido.
-            const inpEmail = document.getElementById('det-email'); 
-
+            
             btnEnable.addEventListener('click', () => {
+                // Habilita campos
                 inpNome.disabled = false;
                 inpTelefone.disabled = false;
-                // inpEmail.disabled = false; // Descomente se quiser permitir editar email
                 
+                // Muda estilo para indicar edição
+                inpNome.style.borderColor = 'var(--color-primary)';
                 inpNome.focus();
                 
+                // Troca botões
                 btnEnable.style.display = 'none';
-                btnSave.style.display = 'inline-block';
+                btnSave.style.display = 'inline-flex';
             });
 
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            btnSave.addEventListener('click', async () => {
                 btnSave.disabled = true;
-                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
 
                 const payload = {
                     nome: inpNome.value,
                     telefone: inpTelefone.value
-                    // email: inpEmail.value 
                 };
 
                 try {
                     await updateUser(user.id, payload);
-                    showToast('Dados atualizados com sucesso!');
+                    showToast('Usuário atualizado com sucesso!');
                     
-                    // Recarrega as tabelas para refletir mudanças
-                    loadActiveUsers();
-                    loadInactiveUsers();
+                    // Recarrega as tabelas
+                    await Promise.all([loadActiveUsers(), loadInactiveUsers()]);
                     
                     // Fecha modal
                     modal.classList.remove('show');
                 } catch (err) {
                     showToast('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'), 'error');
                     btnSave.disabled = false;
-                    btnSave.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+                    btnSave.innerHTML = '<i class="fas fa-save"></i> Salvar';
                 }
             });
         }
 
     } catch (e) {
         console.error(e);
-        body.innerHTML = '<p class="is-error">Erro ao carregar dados do usuário.</p><div style="text-align:center"><button class="btn btn-secondary" onclick="document.getElementById(\'modal-user-full-details\').classList.remove(\'show\')">Fechar</button></div>';
+        body.innerHTML = '<p class="is-error">Erro ao carregar dados do usuário.</p>';
     }
 };
-
-// ... (Funções auxiliares de Modal de Confirmação e Toast mantidas)
 
 function showConfirmModal(title, message, onConfirm) {
     const existing = document.getElementById('dynamic-confirm-modal');
@@ -506,15 +503,12 @@ function setupInviteUserModalListeners() {
         newBtn.addEventListener('click', async () => {
             modal.classList.add('show');
             
-            // TRAVAMENTO DE INSTITUIÇÃO PARA GESTORES LOCAIS
             const userInstName = localStorage.getItem('userInstituicao');
             
             if (currentUserCargo === 'GESTOR_INSTITUICAO' || currentUserCargo === 'USUARIO_INSTITUICAO') {
                 instGroup.style.display = 'block';
-                // Cria opção única e trava
                 instSelect.innerHTML = `<option value="${userInstName}" selected>${userInstName}</option>`;
                 instSelect.disabled = true; 
-                // Guarda valor para envio (pois disabled não envia em forms nativos, mas aqui pegamos via JS)
                 instSelect.setAttribute('data-locked-value', userInstName);
             } else {
                 instSelect.disabled = false;
@@ -651,8 +645,10 @@ function setupSearchListeners() {
 function getRoleDisplay(cargo) {
     switch(cargo) {
         case 'GESTOR_SECRETARIA': return { text: 'Gestor Sec.', bg: '#fceeee', color: '#d9534f' };
-        case 'USUARIO_SECRETARIA': return { text: 'Secretaria', bg: '#fef8e5', color: '#f0ad4e' };
+        case 'USUARIO_SECRETARIA': return { text: 'Usuário Sec.', bg: '#fef8e5', color: '#f0ad4e' };
         case 'GESTOR_INSTITUICAO': return { text: 'Gestor Inst.', bg: '#e6f7ec', color: '#0d8a4f' };
+        case 'USUARIO_INSTITUICAO': return { text: 'Usuário Inst.', bg: '#e5f1fb', color: '#3178c6' };
+        case 'SECRETARIA': return { text: 'Secretaria', bg: '#f0f0f0', color: '#666' };
         default: return { text: cargo ? cargo.replace(/_/g,' ') : '?', bg: '#eee', color: '#333' };
     }
 }
