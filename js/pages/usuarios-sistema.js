@@ -11,7 +11,9 @@ const currentUserCargo = localStorage.getItem('userCargo');
 const currentUserId = localStorage.getItem('userId');
 
 // Hierarquia de permissões (quanto maior o número, mais poder)
+// ADICIONADO: 'SECRETARIA' com peso maior para garantir acesso total
 const ROLE_WEIGHT = {
+    'SECRETARIA': 20,          // Nível Máximo
     'GESTOR_SECRETARIA': 10,
     'USUARIO_SECRETARIA': 5, 
     'GESTOR_INSTITUICAO': 4,
@@ -133,6 +135,7 @@ function renderActiveTable(users) {
 
         let canDeactivate = true;
         if (isMe) canDeactivate = false;
+        // Se for GESTOR_SECRETARIA, não pode desativar outro GESTOR_SECRETARIA
         if (currentUserCargo === 'GESTOR_SECRETARIA' && u.cargo === 'GESTOR_SECRETARIA') canDeactivate = false;
 
         let actionBtn;
@@ -220,6 +223,7 @@ function renderInactiveTable(users) {
         const role = getRoleDisplay(u.cargo);
         let canReactivate = true;
         
+        // Verifica se a instituição está inativa
         let instInactive = false;
         if (u.instituicaoNome && u.instituicaoNome !== '-') {
             const instMatch = state.allInstitutions.find(i => i.nome === u.instituicaoNome);
@@ -265,12 +269,14 @@ function renderInactiveTable(users) {
 window.viewUserDetails = async function(id) {
     const modal = document.getElementById('modal-user-full-details');
     const body = document.getElementById('user-full-details-body');
-    const footer = document.getElementById('user-full-details-footer'); // Novo ID para o footer
+    const footer = document.getElementById('user-full-details-footer'); 
     
     if(!modal || !body || !footer) return;
 
     modal.classList.add('show');
     body.innerHTML = '<p style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
+    
+    // Reseta o footer apenas com o botão fechar inicialmente
     footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="document.getElementById(\'modal-user-full-details\').classList.remove(\'show\')">Fechar</button>';
     
     try {
@@ -279,28 +285,28 @@ window.viewUserDetails = async function(id) {
         const dataNasc = user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString('pt-BR') : '-';
         const dataCad = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
 
-        // LÓGICA DE PERMISSÃO DE EDIÇÃO (BASEADA NA HIERARQUIA)
+        // --- LÓGICA DE PERMISSÃO DE EDIÇÃO ---
         const myWeight = ROLE_WEIGHT[currentUserCargo] || 0;
         const targetWeight = ROLE_WEIGHT[user.cargo] || 0;
         const isMe = (user.id == currentUserId);
 
         let canEdit = false;
 
-        // Só permite editar se não for o próprio usuário, se for ativo e se tiver hierarquia maior
+        // Regra Principal: Não edita a si mesmo, apenas ativos e hierarquia maior
         if (!isMe && user.status === 'ATIVO' && myWeight > targetWeight) {
-            // Regra adicional para GESTOR_INSTITUICAO: só edita da MESMA instituição
             if (currentUserCargo === 'GESTOR_INSTITUICAO') {
+                // Gestor Inst. só edita se o alvo for da mesma instituição
                 const targetInstId = user.instituicao ? user.instituicao.id : null;
                 if (state.myInstId && targetInstId === state.myInstId) {
                     canEdit = true;
                 }
             } else {
-                // Secretaria pode editar todos abaixo dela
+                // Secretaria / Gestor Secretaria editam qualquer um com peso menor
                 canEdit = true;
             }
         }
 
-        // Renderiza Formulário (Inputs começam desabilitados)
+        // Renderiza Formulário
         body.innerHTML = `
             <form id="details-user-form">
                 <div class="form-grid-2">
@@ -348,36 +354,27 @@ window.viewUserDetails = async function(id) {
             </form>
         `;
 
-        // INJETAR BOTÕES NO FOOTER
-        // 1. Botão Fechar (Sempre presente)
-        let footerHtml = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-user-full-details').classList.remove('show')">Fechar</button>`;
-        
-        // 2. Botão Editar (Se permitido)
+        // Se puder editar, adiciona o botão no footer
         if (canEdit) {
-            footerHtml += `<button type="button" id="btn-enable-edit" class="btn btn-primary"><i class="fas fa-pencil-alt"></i> Editar</button>`;
-            footerHtml += `<button type="button" id="btn-save-edit" class="btn btn-success" style="display:none;"><i class="fas fa-save"></i> Salvar</button>`;
-        }
-        
-        footer.innerHTML = footerHtml;
+            const btnHtml = `
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-user-full-details').classList.remove('show')">Fechar</button>
+                <button type="button" id="btn-enable-edit" class="btn btn-primary"><i class="fas fa-pencil-alt"></i> Editar</button>
+                <button type="button" id="btn-save-edit" class="btn btn-success" style="display:none;"><i class="fas fa-save"></i> Salvar</button>
+            `;
+            footer.innerHTML = btnHtml;
 
-        // EVENTOS DE EDIÇÃO
-        if (canEdit) {
+            // Adiciona listeners aos novos botões
             const btnEnable = document.getElementById('btn-enable-edit');
             const btnSave = document.getElementById('btn-save-edit');
-            
             const inpNome = document.getElementById('det-nome');
             const inpTelefone = document.getElementById('det-telefone');
             
             btnEnable.addEventListener('click', () => {
-                // Habilita campos
                 inpNome.disabled = false;
                 inpTelefone.disabled = false;
-                
-                // Muda estilo para indicar edição
                 inpNome.style.borderColor = 'var(--color-primary)';
                 inpNome.focus();
                 
-                // Troca botões
                 btnEnable.style.display = 'none';
                 btnSave.style.display = 'inline-flex';
             });
@@ -393,12 +390,10 @@ window.viewUserDetails = async function(id) {
 
                 try {
                     await updateUser(user.id, payload);
-                    showToast('Usuário atualizado com sucesso!');
+                    showToast('Dados atualizados com sucesso!');
                     
-                    // Recarrega as tabelas
+                    // Atualiza lista
                     await Promise.all([loadActiveUsers(), loadInactiveUsers()]);
-                    
-                    // Fecha modal
                     modal.classList.remove('show');
                 } catch (err) {
                     showToast('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'), 'error');
@@ -410,7 +405,7 @@ window.viewUserDetails = async function(id) {
 
     } catch (e) {
         console.error(e);
-        body.innerHTML = '<p class="is-error">Erro ao carregar dados do usuário.</p>';
+        body.innerHTML = '<p class="is-error">Erro ao carregar detalhes.</p>';
     }
 };
 
