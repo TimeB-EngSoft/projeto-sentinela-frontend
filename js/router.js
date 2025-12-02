@@ -18,6 +18,14 @@ export class Router {
     }
 
     async loadRoute(hash) {
+        // Verifica se o usuário tem credenciais antes de processar a rota
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            // Redireciona para o login. O caminho é relativo a 'app/index.html'
+            window.location.href = 'authentication/login.html'; 
+            return; // Interrompe a execução imediatamente
+        }
+        // ---------------------------
         // Remove o '#' para comparar com as rotas. Se vazio, vai para /dashboard
         let path = hash ? hash.replace('#', '') : '/dashboard';
         

@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Verificação de Segurança
     const userId = localStorage.getItem('userId');
     if (!userId) {
-        window.location.href = '../authentication/login.html';
+        window.location.href = 'authentication/login.html';
         return;
     }
 
