@@ -47,7 +47,7 @@ export class Router {
 
         // Prepara UI
         this.contentDiv.innerHTML = '';
-        this.loader.style.display = 'block';
+        this.loader.style.display = 'flex';
 
         try {
             // 1. Carrega HTML da View
