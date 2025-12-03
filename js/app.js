@@ -96,41 +96,68 @@ const routes = [
     }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Verificação de Segurança
+document.addEventListener('DOMContentLoaded', async () => {
+    // Captura o elemento do loader
+    const loader = document.getElementById('page-loader');
+
+    // --- SEGURANÇA FAIL-SAFE ---
+    // Força o desaparecimento do loader após 8 segundos, caso algo trave
+    const safetyTimer = setTimeout(() => {
+        if (loader && !loader.classList.contains('hidden')) {
+            console.warn("Loader removido por tempo limite de segurança.");
+            loader.classList.add('hidden');
+        }
+    }, 3000); 
+    // ---------------------------
+
+    // 1. Verificação de Segurança (Login)
     const userId = localStorage.getItem('userId');
     if (!userId) {
         window.location.href = 'authentication/login.html';
         return;
     }
 
-    // 2. Carregar Sidebar e Header User Navigation
-    initNavigation();
-    setupGlobalSidebar();
-    setupNotifications();
-    
-    // **NOVA CHAMADA AQUI**
-    setupHeaderUserNavigation(); 
+    try {
+        // Carrega Sidebar e Navegação
+        initNavigation();
+        setupGlobalSidebar();
+        
+        // Tenta carregar notificações e user data
+        // Usamos Promise.allSettled para que, se um falhar, não trave o outro
+        await Promise.allSettled([
+            setupNotifications(),
+            setupHeaderUserNavigation()
+        ]);
 
-    // 3. Configurar Usuário no Header
-    const userName = localStorage.getItem('userName');
-    const headerName = document.getElementById('headerUserName');
-    if(headerName) headerName.textContent = userName || 'Usuário';
+        // Configurar nome do utilizador
+        const userName = localStorage.getItem('userName');
+        const headerName = document.getElementById('headerUserName');
+        if(headerName) headerName.textContent = userName || 'Usuário';
 
-    // 4. Iniciar Router (Hash Mode)
-    const router = new Router(routes);
-    
-    // LÓGICA DE REDIRECIONAMENTO POR CARGO
-    const userCargo = localStorage.getItem('userCargo');
-    let defaultRoute = '#/dashboard';
+        // Iniciar Router
+        const router = new Router(routes);
+        
+        const userCargo = localStorage.getItem('userCargo');
+        let defaultRoute = '#/dashboard';
 
-    // Se for Usuário Instituição ou Secretaria, a home é o cadastro
-    if (userCargo === 'USUARIO_INSTITUICAO' || userCargo === 'USUARIO_SECRETARIA') {
-        defaultRoute = '#/cadastrar-denuncia';
+        if (userCargo === 'USUARIO_INSTITUICAO' || userCargo === 'USUARIO_SECRETARIA') {
+            defaultRoute = '#/cadastrar-denuncia';
+        }
+
+        // Carrega a rota
+        await router.loadRoute(window.location.hash || defaultRoute);
+
+    } catch (error) {
+        console.error("Erro na inicialização do painel:", error);
+    } finally {
+        // REMOVE O LOADER (Sucesso ou Erro)
+        clearTimeout(safetyTimer); // Cancela o timer de segurança pois carregou normal
+        if (loader) {
+            setTimeout(() => {
+                loader.classList.add('hidden');
+            }, 500); // Pequeno delay para suavidade
+        }
     }
-
-    // Carrega a rota baseada no Hash atual ou vai para o padrão definido acima
-    router.loadRoute(window.location.hash || defaultRoute);
 });
 
 // ... (Resto do código: setupGlobalSidebar e setupNotifications mantidos iguais)

@@ -1,23 +1,47 @@
 import { listUsersByStatus, listarInstituicoes, listarConflitos, listarDenuncias, approveOrRejectUser } from '../services/apiService.js';
 
-// Cores Padrão
+// --- CONFIGURAÇÕES VISUAIS PROFISSIONAIS ---
+Chart.defaults.font.family = "'Poppins', sans-serif";
+Chart.defaults.color = '#666';
+Chart.defaults.scale.grid.color = '#f0f0f0';
+Chart.defaults.scale.grid.borderColor = 'transparent'; // Remove borda dura dos eixos
+
 const COLORS = {
-    primary: '#D44716',
-    secondary: '#F59E0B',
-    info: '#3B82F6',
-    success: '#10B981',
-    danger: '#EF4444',
-    gray: '#9CA3AF',
-    palette: ['#D44716', '#F59E0B', '#2196F3', '#4CAF50', '#9C27B0', '#607D8B']
+    primary: '#D44716',     // Laranja forte (Identidade)
+    primaryLight: 'rgba(212, 71, 22, 0.1)',
+    secondary: '#F59E0B',   // Amarelo/Laranja
+    success: '#10B981',     // Verde
+    info: '#3B82F6',        // Azul
+    danger: '#EF4444',      // Vermelho
+    gray: '#9CA3AF',        // Cinza
+    text: '#374151',
+    // Paleta sofisticada para gráficos de pizza/doughnut
+    palette: [
+        '#D44716', // Laranja
+        '#3B82F6', // Azul
+        '#10B981', // Verde
+        '#F59E0B', // Amarelo
+        '#8B5CF6', // Roxo
+        '#64748B'  // Slate
+    ]
+};
+
+// Configuração de Marcadores do Mapa
+const MARKER_CONFIG = {
+    conflito: { color: '#e74c3c', label: 'Conflito', icon: 'fa-exclamation' },
+    denuncia: { color: '#f39c12', label: 'Denúncia', icon: 'fa-bullhorn' }
 };
 
 let dashboardMap = null;
+let markerClusterGroup = null;
 
+// --- INICIALIZAÇÃO ---
 export async function init() {
-    console.log('Dashboard Iniciado...');
+    console.log('Dashboard Secretaria iniciado (Visual Pro).');
     const data = await loadDashboardData();
     loadPendingUsers();
     
+    // Pequeno delay para garantir que o container do mapa tenha tamanho definido
     if(data) {
         setTimeout(() => {
             initDashboardMap(data.conflicts, data.denuncias);
@@ -35,7 +59,7 @@ async function loadDashboardData() {
             listarDenuncias().catch(() => [])
         ]);
 
-        // KPIs
+        // KPIs (Indicadores)
         updateText('stat-total-gestores', ativos.filter(u => u.cargo?.includes('GESTOR')).length);
         updateText('stat-instituicoes', institutions.filter(i => i.status === 'ATIVO').length);
         updateText('stat-conflitos', conflicts.filter(c => c.status === 'ATIVO').length);
@@ -47,7 +71,7 @@ async function loadDashboardData() {
         const badge = document.getElementById('pending-users-badge');
         if(badge) badge.textContent = pendentes.length;
 
-        // Gráficos
+        // Renderização dos Gráficos Profissionais
         renderConflictsTypeChart(conflicts);
         renderDenunciasStatusChart(denuncias);
         renderTopCitiesChart(conflicts, denuncias);
@@ -61,7 +85,7 @@ async function loadDashboardData() {
     }
 }
 
-// --- MAPA CORRIGIDO (ESTILO CLARO / GRAYSCALE) ---
+// --- MAPA (Cluster Vermelho + Borda Azul + Ícones Customizados) ---
 function initDashboardMap(conflitos, denuncias) {
     const container = document.getElementById('dashboard-map');
     if (!container) return;
@@ -70,55 +94,117 @@ function initDashboardMap(conflitos, denuncias) {
         dashboardMap.remove();
     }
 
-    // 1. Configuração do Mapa
     dashboardMap = L.map('dashboard-map', {
-        center: [-8.4, -37.5], // Centro PE
+        center: [-8.4, -37.5], // Centro aproximado de PE
         zoom: 7,
         zoomControl: false, 
         attributionControl: false
     });
 
-    // 2. TileLayer Voyager (Claro) com classe de filtro grayscale
+    // TileLayer "Voyager" (Limpo/Claro)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 19,
-        className: 'map-tiles-grayscale' // Aplica o filtro do CSS
+        className: 'map-tiles-grayscale' // CSS Grayscale class
     }).addTo(dashboardMap);
 
-    // Adiciona Borda de PE (Opcional, para consistência com o outro mapa)
-    addStateBorder(dashboardMap);
+    // Configuração do Cluster (Cores Quentes: Laranja -> Vermelho)
+    if (L.markerClusterGroup) {
+        markerClusterGroup = L.markerClusterGroup({
+            showCoverageOnHover: false,
+            maxClusterRadius: 50,
+            iconCreateFunction: function(cluster) {
+                const childCount = cluster.getChildCount();
+                let bgColor = 'rgba(241, 196, 15, 0.6)'; // Amarelo/Laranja claro
+                
+                if (childCount >= 10 && childCount < 50) {
+                    bgColor = 'rgba(230, 126, 34, 0.7)'; // Laranja Médio
+                } else if (childCount >= 50) {
+                    bgColor = 'rgba(231, 76, 60, 0.8)';  // Vermelho Intenso
+                }
 
-    const plotCircles = (items, color, radius) => {
-        items.forEach(item => {
-            let lat = item.latitude || (item.localizacao ? item.localizacao.latitude : null);
-            let lng = item.longitude || (item.localizacao ? item.localizacao.longitude : null);
-
-            if (lat && lng) {
-                L.circleMarker([lat, lng], {
-                    radius: radius,
-                    fillColor: color,
-                    color: null, 
-                    weight: 0,
-                    opacity: 1,
-                    fillOpacity: 0.6 // Mais opaco para ver melhor no fundo claro
-                }).addTo(dashboardMap)
-                .bindPopup(`
-                    <div style="text-align:center; color:#333; font-size:0.9rem;">
-                        <strong>${item.tituloConflito || item.tituloDenuncia}</strong><br>
-                        <small>${item.municipio || (item.localizacao ? item.localizacao.municipio : '')}</small>
-                    </div>
-                `);
+                return new L.DivIcon({ 
+                    html: `<div style="
+                        background-color: ${bgColor};
+                        width: 35px; height: 35px;
+                        border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center;
+                        font-weight: bold; color: white;
+                        border: 3px solid rgba(255,255,255,0.5);
+                        font-family: 'Poppins', sans-serif; font-size: 0.85rem;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <span>${childCount}</span>
+                        </div>`, 
+                    className: 'custom-cluster-icon', 
+                    iconSize: new L.Point(35, 35) 
+                });
             }
         });
-    };
+        dashboardMap.addLayer(markerClusterGroup);
+    }
 
-    // 3. Cores Padrão (Vermelho/Laranja)
+    // Adiciona Borda de PE (Azul)
+    addStateBorder(dashboardMap);
+
+    // Plotagem dos Marcadores
     const activeConflicts = conflitos.filter(c => c.status === 'ATIVO');
-    plotCircles(activeConflicts, '#e74c3c', 10); // Vermelho
-
     const activeDenuncias = denuncias.filter(d => d.status === 'PENDENTE');
-    plotCircles(activeDenuncias, '#f39c12', 8);  // Laranja
+
+    activeConflicts.forEach(item => addMarkerToCluster(item, 'conflito'));
+    activeDenuncias.forEach(item => addMarkerToCluster(item, 'denuncia'));
+}
+
+function addMarkerToCluster(item, type) {
+    let lat = item.latitude || (item.localizacao ? item.localizacao.latitude : null);
+    let lng = item.longitude || (item.localizacao ? item.localizacao.longitude : null);
+
+    if (lat && lng) {
+        const config = MARKER_CONFIG[type];
+        
+        // Ícone HTML Personalizado (Exclamação ou Megafone)
+        const htmlIcon = `
+            <div style="
+                background-color: ${config.color};
+                width: 28px; height: 28px;
+                border-radius: 50%;
+                border: 2px solid white;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                display: flex; align-items: center; justify-content: center;
+                color: white; font-size: 13px;"> 
+                <i class="fas ${config.icon}"></i>
+            </div>
+        `;
+
+        const icon = L.divIcon({
+            className: 'custom-dashboard-marker',
+            html: htmlIcon,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14]
+        });
+
+        const marker = L.marker([lat, lng], { icon: icon })
+            .bindPopup(`
+                <div style="text-align:center; color:#333; font-family: 'Poppins', sans-serif;">
+                    <div style="font-size: 0.7rem; color:${config.color}; font-weight:700; text-transform:uppercase; margin-bottom:2px;">
+                        ${config.label}
+                    </div>
+                    <div style="font-size:0.95rem; font-weight:600; line-height:1.2; margin-bottom:4px;">
+                        ${item.tituloConflito || item.tituloDenuncia}
+                    </div>
+                    <div style="font-size:0.85rem; color:#666;">
+                        <i class="fas fa-map-marker-alt"></i> ${item.municipio || (item.localizacao ? item.localizacao.municipio : 'N/I')}
+                    </div>
+                </div>
+            `);
+
+        if (markerClusterGroup) {
+            markerClusterGroup.addLayer(marker);
+        } else {
+            marker.addTo(dashboardMap);
+        }
+    }
 }
 
 async function addStateBorder(mapInstance) {
@@ -126,19 +212,22 @@ async function addStateBorder(mapInstance) {
         const response = await fetch('https://servicodados.ibge.gov.br/api/v3/malhas/estados/26?formato=application/vnd.geo+json');
         if (!response.ok) return;
         const data = await response.json();
+        
         L.geoJSON(data, {
-            style: { color: '#0d6efd', weight: 2, opacity: 0.3, fill: false }
+            style: { 
+                color: '#0d6efd', // Azul solicitado
+                weight: 2, 
+                opacity: 0.8, 
+                fillColor: '#0d6efd',
+                fillOpacity: 0.03 // Levíssimo preenchimento azul
+            }
         }).addTo(mapInstance);
-    } catch (e) {}
+    } catch (e) { console.error("Erro malha:", e); }
 }
 
-function updateText(id, val) {
-    const el = document.getElementById(id);
-    if(el) el.innerText = val;
-}
+// --- GRÁFICOS (VISUAL DETALHADO E PROFISSIONAL) ---
 
-// --- GRÁFICOS (Mantidos) ---
-
+// 1. Doughnut Chart (Tipos)
 function renderConflictsTypeChart(conflitos) {
     const ctx = document.getElementById('conflitosTypeChart');
     if (!ctx) return;
@@ -157,18 +246,31 @@ function renderConflictsTypeChart(conflitos) {
             datasets: [{
                 data: Object.values(counts),
                 backgroundColor: COLORS.palette,
-                borderWidth: 1
+                borderWidth: 0, // Sem borda para visual flat
+                hoverOffset: 15
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+            cutout: '70%', // Anel mais fino e elegante
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 20,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: getProfessionalTooltipConfig()
+            }
         }
     });
 }
 
+// 2. Bar Chart (Status) - Minimalista com Borda Arredondada
 function renderDenunciasStatusChart(denuncias) {
     const ctx = document.getElementById('denunciasStatusChart');
     if (!ctx) return;
@@ -185,31 +287,44 @@ function renderDenunciasStatusChart(denuncias) {
         data: {
             labels: ['Pendente', 'Aprovada', 'Arquivada'],
             datasets: [{
-                label: 'Qtd',
+                label: 'Ocorrências',
                 data: Object.values(counts),
                 backgroundColor: [COLORS.secondary, COLORS.success, COLORS.gray],
-                barThickness: 40,
-                borderRadius: 4
+                borderRadius: 6, // Arredondado
+                barThickness: 45,
+                borderSkipped: false
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: getProfessionalTooltipConfig()
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    grid: { color: '#f3f4f6', borderDash: [5, 5] },
+                    ticks: { font: { size: 11 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { weight: 500 } }
+                }
+            }
         }
     });
 }
 
+// 3. Horizontal Bar Chart (Municípios)
 function renderTopCitiesChart(conflitos, denuncias) {
     const ctx = document.getElementById('topCitiesChart');
     if (!ctx) return;
 
     const cityCounts = {};
     [...conflitos, ...denuncias].forEach(item => {
-        let city = 'N/I';
-        if(item.localizacao?.municipio) city = item.localizacao.municipio;
-        else if(item.municipio) city = item.municipio;
+        let city = item.localizacao?.municipio || item.municipio || 'N/I';
         cityCounts[city] = (cityCounts[city] || 0) + 1;
     });
 
@@ -224,23 +339,48 @@ function renderTopCitiesChart(conflitos, denuncias) {
                 label: 'Total',
                 data: sortedCities.map(([,v]) => v),
                 backgroundColor: COLORS.info,
-                borderRadius: 4
+                borderRadius: 4,
+                barThickness: 20
             }]
         },
         options: {
-            indexAxis: 'y',
+            indexAxis: 'y', // Barra horizontal
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: getProfessionalTooltipConfig()
+            },
+            scales: {
+                x: { 
+                    beginAtZero: true,
+                    grid: { color: '#f3f4f6' }
+                },
+                y: {
+                    grid: { display: false }
+                }
+            }
         }
     });
 }
 
+// 4. Line Chart (Evolução) com Degradê
 function renderEvolutionChart(denuncias, conflitos) {
     const ctx = document.getElementById('evolutionChart');
     if (!ctx) return;
 
+    // Configura o Degradê (Gradient)
+    const chartCtx = ctx.getContext('2d');
+    
+    const gradientDen = chartCtx.createLinearGradient(0, 0, 0, 300);
+    gradientDen.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); // Laranja claro topo
+    gradientDen.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); // Transparente base
+
+    const gradientConf = chartCtx.createLinearGradient(0, 0, 0, 300);
+    gradientConf.addColorStop(0, 'rgba(212, 71, 22, 0.4)'); // Vermelho topo
+    gradientConf.addColorStop(1, 'rgba(212, 71, 22, 0.0)'); // Transparente base
+
+    // Lógica de Datas
     const months = [];
     const today = new Date();
     for(let i=5; i>=0; i--) {
@@ -271,27 +411,69 @@ function renderEvolutionChart(denuncias, conflitos) {
                     label: 'Denúncias',
                     data: countMonth(denuncias, 'dataOcorrido'),
                     borderColor: COLORS.secondary,
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    backgroundColor: gradientDen,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.4, // Curva suave
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: COLORS.secondary,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Conflitos',
                     data: countMonth(conflitos, 'dataInicio'),
                     borderColor: COLORS.primary,
-                    backgroundColor: 'rgba(212, 71, 22, 0.05)',
+                    backgroundColor: gradientConf,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.4, // Curva suave
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: COLORS.primary,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top', align: 'end' } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } }
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: { position: 'top', align: 'end' },
+                tooltip: getProfessionalTooltipConfig()
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f3f4f6', borderDash: [5, 5] },
+                    ticks: { precision: 0 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
         }
     });
+}
+
+// Configuração de Tooltip Reutilizável
+function getProfessionalTooltipConfig() {
+    return {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#333',
+        bodyColor: '#555',
+        borderColor: '#eee',
+        borderWidth: 1,
+        padding: 10,
+        boxPadding: 4,
+        usePointStyle: true,
+        shadowOffsetX: 2,
+        shadowOffsetY: 2,
+        shadowBlur: 10,
+        shadowColor: 'rgba(0,0,0,0.1)'
+    };
 }
 
 function destroyChart(canvas) {
@@ -299,6 +481,12 @@ function destroyChart(canvas) {
     if(chart) chart.destroy();
 }
 
+function updateText(id, val) {
+    const el = document.getElementById(id);
+    if(el) el.innerText = val;
+}
+
+// --- LISTAGEM DE APROVAÇÕES (Mantida) ---
 async function loadPendingUsers() {
     const container = document.getElementById('approval-list-container');
     if(!container) return;
