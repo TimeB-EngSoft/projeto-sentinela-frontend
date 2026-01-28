@@ -12,7 +12,7 @@ const ENVIRONMENTS = {
     production: {
         name: 'production',
         // Troque pelo endpoint oficial assim que estiver disponível.
-        apiBaseUrl: 'https://projeto-sentinela-backend-production.up.railway.app'
+        apiBaseUrl: 'https://serene-beyond-01511-6c0e17f4c92b.herokuapp.com/'
     }
 };
 
