@@ -31,3 +31,43 @@
 @import url('3-pages/_relatorios.css');
 @import url('3-pages/_secretaria.css');
 @import url('3-pages/_usuarios-sistema.css');
+
+/* LOADER - TELA DE CARREGAMENTO */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--secondary-color, #fdfaf6);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Transição suave para desaparecer */
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Esta é a classe CRUCIAL para esconder o loader */
+.loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Garante que não bloqueie cliques quando invisível */
+}
+
+.loader-spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(192, 90, 56, 0.2);
+    border-top: 6px solid var(--primary-color, #c05a38);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,38 +1,135 @@
 import { registrarDenunciaExterna, getUserData } from '../services/apiService.js';
 
-// Variáveis para armazenar coordenadas em memória (já que o form de denúncia não tem inputs visíveis de lat/long)
+// Variáveis de estado
 let currentCoords = { lat: null, long: null };
+let pendingDenunciaData = null; 
 
 export async function init() {
-    prefillUserData();
-    setupDenunciaForm();
-    setupCepBlur();
+    // --- 1. CONFIGURAÇÃO DO LOADER ---
+    const loader = document.getElementById('global-loader');
+    const content = document.getElementById('main-content');
+    
+    if (loader && content) {
+        loader.style.display = 'flex';
+        content.style.display = 'none';
+    }
+
+    try {
+        setupInputMasks(); 
+        
+        // Aguarda o preenchimento dos dados do usuário antes de liberar a tela
+        await prefillUserData(); 
+        
+        setupDenunciaForm(); 
+        setupCepBlur();
+        setupModals(); // Garante que os modais estejam configurados
+
+    } catch (error) {
+        console.error("Erro ao inicializar tela de denúncia:", error);
+    } finally {
+        // --- 2. REMOVE O LOADER ---
+        if (loader && content) {
+            loader.style.display = 'none';
+            content.style.display = 'block';
+        }
+    }
 }
 
-// --- 1. FUNÇÃO DE BUSCA DE COORDENADAS (ROBUSTA) ---
+// --- 0. MÁSCARAS E VALIDAÇÕES VISUAIS ---
+function setupInputMasks() {
+    const cpfInput = document.getElementById('cpf');
+    const telInput = document.getElementById('telefone');
+    const cepInput = document.getElementById('cep');
+
+    if (cpfInput) {
+        cpfInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+
+    if (telInput) {
+        telInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+            value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+
+    if (cepInput) {
+        cepInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.slice(0, 8);
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+}
+
+// --- 1. CONFIGURAÇÃO DE MODAIS ---
+function setupModals() {
+    const modalConfirm = document.getElementById('modal-confirmar-sem-coords');
+    const btnConfirmar = document.getElementById('btn-confirmar-envio');
+    const btnCancelar = document.getElementById('btn-cancelar-envio');
+    const submitButton = document.querySelector('#denunciaFormInternal button[type="submit"]');
+
+    // Remove listeners antigos clonando os botões (previne duplicação)
+    if (btnConfirmar) {
+        const newBtn = btnConfirmar.cloneNode(true);
+        btnConfirmar.parentNode.replaceChild(newBtn, btnConfirmar);
+        
+        newBtn.onclick = async () => {
+            if (modalConfirm) modalConfirm.classList.remove('show');
+            if (pendingDenunciaData) {
+                await enviarDenuncia(pendingDenunciaData, submitButton);
+            }
+        };
+    }
+
+    if (btnCancelar) {
+        const newBtn = btnCancelar.cloneNode(true);
+        btnCancelar.parentNode.replaceChild(newBtn, btnCancelar);
+
+        newBtn.onclick = () => {
+            if (modalConfirm) modalConfirm.classList.remove('show');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Registrar Denúncia';
+            }
+            pendingDenunciaData = null;
+        };
+    }
+}
+
+// --- 2. FUNÇÃO DE BUSCA DE COORDENADAS ---
 async function fetchCoordinates(cep) {
     try {
         const cleanCep = cep.replace(/\D/g, '');
         if (cleanCep.length !== 8) return null;
         
-        // Usa a BrasilAPI V2
         const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
         if (!res.ok) return null;
         
         const data = await res.json();
         
-        // Preenche campos de endereço automaticamente se existirem
+        // Preenche campos de endereço visualmente
         if (data.street) document.getElementById('rua').value = data.street;
         if (data.neighborhood) document.getElementById('bairro').value = data.neighborhood;
         if (data.city) document.getElementById('cidade').value = data.city;
         if (data.state) document.getElementById('estado').value = data.state;
 
+        // Tenta capturar coordenadas
         if (data.location && data.location.coordinates) {
-            const lat = data.location.coordinates.latitude;
-            const long = data.location.coordinates.longitude;
+            const lat = parseFloat(data.location.coordinates.latitude);
+            const long = parseFloat(data.location.coordinates.longitude);
             
-            // Validação extra para garantir que não é undefined
-            if (lat !== undefined && long !== undefined) {
+            if (!isNaN(lat) && !isNaN(long)) {
                 return { latitude: lat, longitude: long };
             }
         }
@@ -58,42 +155,35 @@ async function prefillUserData() {
             const user = await getUserData(userId);
             if(user.nome) nomeInput.value = user.nome;
             if(user.email) emailInput.value = user.email;
-            if(user.cpf) {
-                cpfInput.value = user.cpf;
-                cpfInput.readOnly = true; 
-                cpfInput.style.backgroundColor = "#eee";
-            }
+            if(user.cpf) cpfInput.value = user.cpf; 
             if(user.telefone) telInput.value = user.telefone;
-
+            
+            cpfInput.dispatchEvent(new Event('input'));
+            telInput.dispatchEvent(new Event('input'));
         } catch (e) {
-            console.warn("Não foi possível carregar dados completos do usuário.");
+            console.warn("Não foi possível carregar dados do usuário.");
         }
     }
 }
 
-// --- 2. CONFIGURAÇÃO DO EVENTO DE SAÍDA DO CEP ---
 function setupCepBlur() {
     const cepInput = document.getElementById('cep');
     if (!cepInput) return;
 
-    // Remove listeners antigos clonando o elemento
     const newCepInput = cepInput.cloneNode(true);
     cepInput.parentNode.replaceChild(newCepInput, cepInput);
+    setupInputMasks();
 
     newCepInput.addEventListener('blur', async () => {
         const cepValue = newCepInput.value.replace(/\D/g, '');
         if (cepValue.length === 8) {
-            // Feedback visual sutil (mudando cursor ou placeholder)
             newCepInput.style.cursor = 'wait';
-            
             const coords = await fetchCoordinates(cepValue);
-            
             newCepInput.style.cursor = 'text';
             
             if (coords) {
                 currentCoords.lat = coords.latitude;
                 currentCoords.long = coords.longitude;
-                console.log("Coordenadas obtidas no Blur:", currentCoords);
             } else {
                 currentCoords = { lat: null, long: null };
             }
@@ -101,99 +191,96 @@ function setupCepBlur() {
     });
 }
 
+// --- 3. CONFIGURAÇÃO DO FORMULÁRIO ---
 function setupDenunciaForm() {
     const form = document.getElementById('denunciaFormInternal');
     const feedback = document.getElementById('denunciaFeedback');
     const successModal = document.getElementById('modal-success-denuncia');
     const btnCloseSuccess = document.getElementById('btn-close-success');
-
+    
     if (!form) return;
 
+    const hideFeedback = () => {
+        feedback.className = 'form-alert';
+        feedback.style.display = 'none';
+    };
     const showFeedback = (msg) => {
         feedback.textContent = msg;
         feedback.className = 'form-alert is-error is-visible';
         feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    const hideFeedback = () => {
-        feedback.className = 'form-alert';
-        feedback.style.display = 'none';
-    };
-
     if(btnCloseSuccess) {
         const newBtn = btnCloseSuccess.cloneNode(true);
         btnCloseSuccess.parentNode.replaceChild(newBtn, btnCloseSuccess);
-        
-        newBtn.addEventListener('click', () => {
+        newBtn.onclick = () => {
             successModal.classList.remove('show');
             window.location.hash = '#/denuncias'; 
-        });
+        };
     }
 
     const newForm = form.cloneNode(true);
     form.parentNode.replaceChild(newForm, form);
+    setupInputMasks(); 
 
+    const submitButton = newForm.querySelector('button[type="submit"]');
+
+    // --- SUBMIT DO FORMULÁRIO ---
     newForm.addEventListener('submit', async function(event) {
-        event.preventDefault(); // 1. Previne envio nativo IMEDIATAMENTE
+        event.preventDefault(); 
         hideFeedback();
 
-        const submitButton = newForm.querySelector('button[type="submit"]');
         const originalBtnText = submitButton.textContent;
+        submitButton.disabled = true;
         
-        // --- VALIDAÇÃO BÁSICA ---
+        const cepRaw = document.getElementById('cep').value;
+        const cepClean = cepRaw ? cepRaw.replace(/\D/g, '') : '';
+        
+        // 1. Verifica se precisa buscar endereço
+        let needsFetch = false;
+        const estadoVal = document.getElementById('estado').value;
+        const cidadeVal = document.getElementById('cidade').value;
+        
+        if (cepClean.length === 8) {
+            if (!estadoVal || !cidadeVal || currentCoords.lat === null) {
+                needsFetch = true;
+            }
+        }
+
+        if (needsFetch) {
+            submitButton.innerHTML = '<i class="fas fa-search fa-spin"></i> Verificando endereço...';
+            const coords = await fetchCoordinates(cepClean);
+            if (coords) {
+                currentCoords.lat = coords.latitude;
+                currentCoords.long = coords.longitude;
+            }
+        }
+
+        // 2. Coleta dados
         const titulo = document.getElementById('titulo').value.trim();
         const tipo = document.getElementById('tipo-conflito').value;
         const descricao = document.getElementById('descricao').value.trim();
         const dataOcorrido = document.getElementById('data-ocorrido').value;
-        
-        // Limpeza do CEP para validação e envio
-        const cepRaw = document.getElementById('cep').value;
-        const cepClean = cepRaw ? cepRaw.replace(/\D/g, '') : '';
-        const estado = document.getElementById('estado').value;
-        const cidade = document.getElementById('cidade').value;
-        
-        if (!titulo || !tipo || !descricao || !dataOcorrido || cepClean.length !== 8 || !estado || !cidade) {
-            showFeedback('Por favor, preencha todos os campos obrigatórios (*). Verifique se o CEP possui 8 dígitos.');
+        const cpfRaw = document.getElementById('cpf').value;
+        const estadoFinal = document.getElementById('estado').value;
+        const cidadeFinal = document.getElementById('cidade').value;
+
+        // 3. Validações
+        if (cpfRaw && cpfRaw.replace(/\D/g, '').length !== 11) {
+            showFeedback('O CPF deve conter 11 dígitos.');
+            submitButton.disabled = false;
+            submitButton.textContent = originalBtnText; 
+            return; 
+        }
+
+        if (!titulo || !tipo || !descricao || !dataOcorrido || cepClean.length !== 8 || !estadoFinal || !cidadeFinal) {
+            showFeedback('Por favor, preencha todos os campos obrigatórios.');
+            submitButton.disabled = false;
+            submitButton.textContent = originalBtnText;
             return;
         }
 
-        submitButton.disabled = true;
-        
-        // --- LÓGICA DE COORDENADAS (Igual ao Conflitos) ---
-        
-        // Se as coordenadas ainda não foram capturadas pelo Blur, tenta agora
-        if (currentCoords.lat === null || currentCoords.long === null) {
-            submitButton.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> Geolocalizando...';
-            try {
-                console.log("Tentando buscar coordenadas no submit para:", cepClean);
-                const coords = await fetchCoordinates(cepClean);
-                if (coords) {
-                    currentCoords.lat = coords.latitude;
-                    currentCoords.long = coords.longitude;
-                }
-            } catch (e) {
-                console.warn("Falha ao buscar coordenadas no submit.");
-            }
-        }
-
-        // --- POP-UP DE CONFIRMAÇÃO SE NÃO HOUVER COORDENADAS ---
-        if (currentCoords.lat === null || currentCoords.long === null) {
-            const confirmarSemCoords = confirm(
-                "⚠️ Atenção: Coordenadas não identificadas!\n\n" +
-                "O sistema não conseguiu obter a Latitude/Longitude automaticamente para este CEP.\n" +
-                "A denúncia será salva, mas não aparecerá no mapa com precisão exata.\n\n" +
-                "Deseja enviar mesmo assim?"
-            );
-
-            if (!confirmarSemCoords) {
-                submitButton.disabled = false;
-                submitButton.textContent = originalBtnText;
-                return; // Cancela o envio
-            }
-        }
-
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-
+        // 4. Prepara Objeto
         const userId = localStorage.getItem('userId');
         let instituicaoId = null;
         let fonte = null;
@@ -205,60 +292,69 @@ function setupDenunciaForm() {
                 if (userFull && userFull.instituicao && userFull.instituicao.id) {
                     instituicaoId = userFull.instituicao.id;
                 }
-            } catch(e) { 
-                console.warn("Erro ao buscar instituição do usuário para vínculo"); 
-            }
+            } catch(e) { console.warn("Erro vínculo inst."); }
         }
 
         const denunciaData = {
             nomeDenunciante: document.getElementById('nome').value,
             emailDenunciante: document.getElementById('email').value,
-            cpfDenunciante: document.getElementById('cpf').value,
-            telefoneDenunciante: document.getElementById('telefone').value,
-            
+            cpfDenunciante: cpfRaw.replace(/\D/g, ''),
+            telefoneDenunciante: document.getElementById('telefone').value.replace(/\D/g, ''),
             tipoDenuncia: tipo, 
-            
             tituloDenuncia: titulo,
             descricaoDenuncia: descricao,
             descricaoPartesEnvolvidas: document.getElementById('partes-envolvidas').value,
             dataOcorrido: dataOcorrido + 'T00:00:00',
-
-            // --- CAMPOS DE LOCALIZAÇÃO (CEP LIMPO) ---
-            cep: cepClean, // Envia só números para o banco
-            estado: estado,
-            municipio: cidade,
+            cep: cepClean, 
+            estado: estadoFinal,
+            municipio: cidadeFinal,
             bairro: document.getElementById('bairro').value,
             rua: document.getElementById('rua').value,
             numero: document.getElementById('numero').value,
             referencia: document.getElementById('referencia').value,
-            
-            // Envia coordenadas (ou null se usuário confirmou sem elas)
             latitude: currentCoords.lat,
             longitude: currentCoords.long,
-            
             instituicaoId: instituicaoId,
             fonteDenuncia: fonte
         };
 
-        console.log("Payload Denúncia:", denunciaData); // Debug
-
-        try {
-            await registrarDenunciaExterna(denunciaData);
-            
-            successModal.classList.add('show');
-            newForm.reset();
-            // Reseta coordenadas
-            currentCoords = { lat: null, long: null };
-            prefillUserData();
-
-        } catch (error) {
-            console.error(error);
-            let msg = 'Erro ao registrar. Tente novamente.';
-            if(error.message && error.message.includes('Erro')) msg = error.message;
-            showFeedback(msg);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Registrar Denúncia';
+        // 5. Verifica Coordenadas
+        if (currentCoords.lat === null || currentCoords.long === null) {
+            pendingDenunciaData = denunciaData; 
+            document.getElementById('modal-confirmar-sem-coords').classList.add('show');
+            return; 
         }
+
+        // 6. Envio direto
+        await enviarDenuncia(denunciaData, submitButton);
     });
+}
+
+// Função isolada de envio
+async function enviarDenuncia(data, submitButton) {
+    const successModal = document.getElementById('modal-success-denuncia');
+    const feedback = document.getElementById('denunciaFeedback');
+    
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    try {
+        await registrarDenunciaExterna(data);
+        successModal.classList.add('show');
+        document.getElementById('denunciaFormInternal').reset();
+        currentCoords = { lat: null, long: null };
+        prefillUserData(); 
+
+    } catch (error) {
+        console.error(error);
+        let msg = 'Erro ao registrar. Tente novamente.';
+        if(error.message) msg = error.message;
+        
+        feedback.textContent = msg;
+        feedback.className = 'form-alert is-error is-visible';
+        feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Registrar Denúncia';
+        pendingDenunciaData = null;
+    }
 }

@@ -44,7 +44,7 @@ async function loadLogs() {
         }
 
         logs.forEach(log => {
-            const date = new Date(log.dataHora).toLocaleString();
+            const date = new Date(log.dataHora.replace(" ", "T")).toLocaleString();
             const levelClass = log.nivel.toLowerCase(); // INFO, AVISO, ERRO
             
             const row = `

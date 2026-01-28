@@ -1,5 +1,27 @@
 import { gerarRelatorio } from '../services/apiService.js';
 
+// --- Função auxiliar para exibir toast ---
+function showToast(message, type = 'success', title = null) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const titleText = title || (type === 'success' ? 'Sucesso' : 'Atenção');
+    toast.innerHTML = `
+        <i class="fas ${icon}" style="font-size: 1.2rem;"></i>
+        <div class="toast-content">
+            <span class="toast-title">${titleText}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 export async function init() {
     // Mantém a lista mockada de "recentes" ou cria um endpoint para isso no futuro
     renderRecentReports(); 
@@ -49,13 +71,12 @@ function setupGenerateButton() {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
-
+            
             // Adiciona à lista de recentes com o formato correto
             addToRecentList(filtros.tipoRelatorio || 'Relatório Personalizado', extension);
-
         } catch (error) {
             console.error(error);
-            alert("Erro ao gerar relatório: " + (error.message || "Erro desconhecido"));
+            showToast('Erro ao gerar relatório: ' + (error.message || 'Erro desconhecido'), 'error');
         } finally {
             newBtn.disabled = false;
             newBtn.innerHTML = '<i class="fas fa-file-export"></i> Gerar Relatório';

@@ -28,6 +28,16 @@ function showToast(message, type = 'success', title = null) {
     }, 3000);
 }
 
+export function getCurrentUser() {
+    return {
+        id: localStorage.getItem('userId'),
+        nome: localStorage.getItem('userName'),
+        email: localStorage.getItem('userEmail'),
+        cargo: localStorage.getItem('userCargo'),
+        instituicao: localStorage.getItem('userInstituicao')
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     // --- LÓGICA DE LOGIN ---
